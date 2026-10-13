@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "description": "PMO Portfolio API settings, read at startup by app/config.py. Fabric and OneLake values are referenced by name: each {file, path} points at a key in a shared config file (config/shared, or the folder named by CONFIG_DIR). No workspace IDs, URLs, or secrets are stored in this file.",
+  "api": {
+    "title": "PMO Portfolio Prioritization API",
+    "description": "Portfolio data, data entry, uploads, pipeline control, PMO decisions, and quick-add intake for the PMO Portfolio Prioritization solution. OneLake (the Fabric lakehouse) is the only data store.",
+    "version": "1.0.0",
+    "routePrefix": "/v1",
+    "docsPath": "/docs",
+    "openApiPath": "/openapi.json",
+    "tags": [
+      { "name": "health", "description": "Process status and lake data availability." },
+      { "name": "options", "description": "Data-entry contract. Forms are built from this response." },
+      { "name": "portfolio", "description": "Portfolio export and portfolio entries." },
+      { "name": "projects", "description": "Projects, project entries, and project uploads." },
+      { "name": "pipeline", "description": "Start and monitor the Fabric data pipeline." },
+      { "name": "capacity", "description": "Capacity what-if scenarios." },
+      { "name": "decisions", "description": "PMO decisions per project." },
+      { "name": "templates", "description": "Intake workbook template with no data rows." },
+      { "name": "intake", "description": "Quick add: drafts, documents, AI prefill, review, and submit." }
+    ]
+  },
+  "hosting": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "startupCommand": "uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+  },
+  "cache": {
+    "ttlSeconds": 120
+  },
+  "paging": {
+    "defaultPageSize": 25,
+    "maxPageSize": 100
+  },
+  "auth": {
+    "storageScope": "https://storage.azure.com/.default",
+    "fabricScope": "https://api.fabric.microsoft.com/.default"
+  },
+  "sharedConfig": {
+    "environmentVariable": "CONFIG_DIR",
+    "defaultDirectory": "config/shared",
+    "files": {
+      "dataEntry": { "fileName": "data-entry.json", "repoSource": "config/data-entry.json" },
+      "dataSources": { "fileName": "data-sources.json", "repoSource": "config/data-sources.json" },
+      "fabricItems": { "fileName": "fabric-items.json", "repoSource": "config/fabric-items.json" },
+      "deployment": { "fileName": "pmo-deployment.json", "repoSource": "infra/config/pmo-deployment.json" },
+      "aiPrefill": { "fileName": "ai-prefill.json", "repoSource": "config/ai-prefill.json" }
+    }
+  },
+  "fabric": {
+    "timeoutSeconds": 30,
+    "pipelineItemType": "DataPipeline",
+    "workspaceName": { "file": "deployment", "path": "fabric.workspaceName" },
+    "workspaceId": { "file": "deployment", "path": "fabric.workspaceId" },
+    "lakehouseName": { "file": "deployment", "path": "fabric.lakehouseName" },
+    "apiBaseUrl": { "file": "fabricItems", "path": "api.baseUrl" },
+    "pipelineDisplayName": { "file": "dataEntry", "path": "pipeline.displayName" },
+    "pipelineJobType": { "file": "dataEntry", "path": "pipeline.jobType" }
+  },
+  "oneLake": {
+    "dfsEndpoint": { "file": "fabricItems", "path": "oneLake.dfsEndpoint" },
+    "itemSuffix": ".Lakehouse",
+    "rawRoot": { "file": "fabricItems", "path": "lakehouse.rawRoot" },
+    "exportsRoot": { "file": "fabricItems", "path": "lakehouse.exportsRoot" },
+    "exportFiles": {
+      "portfolio": "portfolio.json",
+      "capacityScenarios": "capacity_scenarios.json"
+    },
+    "uiEntryFolders": {
+      "decisions": "ui_entries/decisions",
+      "drafts": "ui_entries/drafts"
+    }
+  },
+  "openApi": {
+    "outputFile": { "file": "deployment", "path": "create.apimApi.openApiFile" }
+  },
+  "validation": {
+    "emailPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+    "slugPattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+    "codePattern": "^[A-Z0-9]+(-[A-Z0-9]+)*$",
+    "programDisplayName": { "minLength": 3, "maxLength": 80 },
+    "programCode": { "minLength": 2, "maxLength": 8 }
+  },
+  "projects": {
+    "idAssignmentAttempts": 5,
+    "statusProcessed": "processed",
+    "statusPending": "pending",
+    "projectNameField": "projectName"
+  },
+  "uploads": {
+    "maxOriginalNameLength": 120,
+    "unsafeFileNameCharacters": "[^A-Za-z0-9._-]",
+    "fallbackFileName": "upload"
+  },
+  "decisions": {
+    "idPrefix": "DEC-",
+    "tiers": ["Must-do-now", "Proceed", "Can wait", "Candidate to deprioritize"],
+    "reasonMinLength": 10,
+    "reasonMaxLength": 1000,
+    "decidedByMaxLength": 80
+  },
+  "pipeline": {
+    "acceptedStatus": "Accepted"
+  },
+  "problems": {
+    "typeBase": "/problems/"
+  },
+  "templates": {
+    "intakeWorkbook": {
+      "fileName": "pmo_intake_template.xlsx",
+      "sourceKey": "excel_intake",
+      "tableName": "intake_10_signals",
+      "listsSheetName": "Lists",
+      "dropdownRows": 500,
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "identifierColumns": [
+        { "header": "Project ID", "fieldKey": null },
+        { "header": "Project Name", "fieldKey": "projectName" },
+        { "header": "Portfolio", "fieldKey": "portfolioKey" },
+        { "header": "Business Unit", "fieldKey": "businessUnit" },
+        { "header": "Site", "fieldKey": "site" },
+        { "header": "Sponsor Name", "fieldKey": "sponsorName" }
+      ],
+      "signalColumns": [
+        "1 Timing Urgency - Go-Live Date",
+        "2 Business Value (1-5)",
+        "3 Sponsor Priority (Exec/Dir/Mgr/IC)",
+        "4 Regulatory or Security (Y/N)",
+        "5 Skill-Phase Demand (Skill: FTE)",
+        "6 Cost Estimate (USD)",
+        "7 Dependencies (count)",
+        "8 Risk (Low/Med/High/Critical)",
+        "9 DT Alignment (Y/N)",
+        "10 Effort (person-weeks)"
+      ]
+    }
+  },
+  "intake": {
+    "draftIdPrefix": "DRF-",
+    "schemaName": "pmo_quick_add_fields",
+    "statuses": {
+      "draft": "draft",
+      "prefilled": "prefilled",
+      "submitted": "submitted"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 2,
+  "description": "Nonsecret deployment contract for the PMO Portfolio Prioritization solution. Read by infra/bicep (loadJsonContent) and infra/terraform (jsondecode(file())). Holds identifiers and names only, never secrets. OneLake (the Fabric lakehouse) is the single data store for everything the UI and API show or write.",
+  "tenantId": "12a4b86b-e64c-43f9-af05-d9130a72dfd2",
+  "subscriptionId": "cf824570-a8ba-497a-a184-0a52f1830aa9",
+  "resourceGroup": "m365-myaacoub",
+  "location": "westus2",
+  "reuse": {
+    "description": "Existing shared resources. IaC references them as read-only and never modifies or deletes them.",
+    "fabricCapacity": {
+      "name": "caldovafabricmyaacoub",
+      "id": "37fcefa2-236a-47c0-a528-2c80137dfec0",
+      "location": "westus2"
+    },
+    "apim": {
+      "name": "caldova-apim-westus",
+      "resourceGroup": "m365-myaacoub",
+      "location": "westus"
+    },
+    "foundryAccount": {
+      "name": "foundry-myaacoub",
+      "resourceGroup": "m365-myaacoub",
+      "location": "westus"
+    },
+    "appServicePlan": {
+      "name": "caldova-tokenomics-api-plan",
+      "resourceGroup": "m365-myaacoub",
+      "location": "westus2",
+      "os": "linux"
+    },
+    "vnetIntegrationSubnetId": "/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.Network/virtualNetworks/caldova-dbx-vnet-westus2/subnets/genie-obo-integration"
+  },
+  "create": {
+    "description": "New resources created for this solution inside the shared resource group.",
+    "foundryProject": {
+      "name": "pmo-portfolio",
+      "displayName": "PMO Portfolio Prioritization"
+    },
+    "apimApi": {
+      "name": "pmo-portfolio",
+      "displayName": "PMO Portfolio Prioritization API",
+      "path": "pmo",
+      "productName": "pmo-portfolio",
+      "productDisplayName": "PMO Portfolio Prioritization",
+      "openApiFile": "docs/api/openapi.json"
+    },
+    "apps": {
+      "ui": {
+        "name": "caldova-pmo-ui",
+        "runtimeStack": "PYTHON|3.12",
+        "artifactFolder": "ui"
+      },
+      "api": {
+        "name": "caldova-pmo-api",
+        "runtimeStack": "PYTHON|3.12",
+        "artifactFolder": "api"
+      }
+    }
+  },
+  "fabric": {
+    "description": "Fabric items are created by fabric/scripts (deploy scripts), not by IaC. The API identity needs Contributor on the workspace so it can read and write OneLake and run the pipeline.",
+    "workspaceName": "PMO-Portfolio-Prioritization",
+    "workspaceId": "39c02d65-d2cb-4355-9e77-cbf442d7fc8b",
+    "lakehouseName": "pmo_lakehouse",
+    "lakehouseId": "44a0e48d-ed47-4d30-8e1e-6db662ea9324"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "description": "Fabric item definitions. Workspace, capacity, and lakehouse identifiers live in infra/config/pmo-deployment.json. This file holds item names, local paths, run order, and lakehouse layout used by scripts/provision-fabric.ps1, the Fabric deploy scripts, and the notebooks.",
+  "api": {
+    "baseUrl": "https://api.fabric.microsoft.com/v1",
+    "tokenResource": "https://api.fabric.microsoft.com"
+  },
+  "oneLake": {
+    "dfsEndpoint": "https://onelake.dfs.fabric.microsoft.com",
+    "tokenResource": "https://storage.azure.com"
+  },
+  "longRunning": {
+    "pollSeconds": 3,
+    "maxAttempts": 60
+  },
+  "mlNotebooksFolder": "ML Notebooks",
+  "lakehouse": {
+    "enableSchemas": true,
+    "defaultSchema": "dbo",
+    "rawRoot": "Files/raw",
+    "configRoot": "Files/config",
+    "exportsRoot": "Files/exports",
+    "modelsRoot": "Files/models",
+    "silverSchema": "silver",
+    "goldSchema": "gold"
+  },
+  "notebooks": [
+    {
+      "key": "feature-engineering-training",
+      "displayName": "01_PMO_Feature_Engineering_Training",
+      "localPath": "notebooks/01_PMO_Feature_Engineering_Training.ipynb",
+      "runOrder": 1
+    },
+    {
+      "key": "inference-predictions",
+      "displayName": "02_PMO_Inference_Predictions",
+      "localPath": "notebooks/02_PMO_Inference_Predictions.ipynb",
+      "runOrder": 2
+    }
+  ],
+  "semanticModel": {
+    "displayName": "PMO Portfolio Semantic Model",
+    "localFolder": "powerbi/PMO Portfolio Semantic Model.SemanticModel",
+    "directLakeSchemas": ["gold"]
+  },
+  "report": {
+    "displayName": "PMO Portfolio Prioritization",
+    "localFolder": "powerbi/PMO Portfolio Prioritization.Report"
+  }
+}

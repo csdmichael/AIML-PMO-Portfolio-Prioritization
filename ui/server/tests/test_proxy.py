@@ -122,6 +122,20 @@ def test_bare_mount_path_maps_to_the_gateway_root(client: TestClient, upstream: 
     assert upstream.state.received[-1]["path"] == f"{UPSTREAM_PATH}/"
 
 
+def test_accept_encoding_the_client_sent_is_forwarded_unchanged(client: TestClient, upstream: FastAPI) -> None:
+    assert client.get("/api/v1/items", headers={"accept-encoding": "br"}).status_code == 200
+    assert received_values(upstream, "accept-encoding") == ["br"]
+
+
+def test_without_accept_encoding_the_gateway_is_asked_for_an_unencoded_body(
+    client: TestClient,
+    upstream: FastAPI,
+) -> None:
+    del client.headers["accept-encoding"]
+    assert client.get("/api/v1/items").status_code == 200
+    assert received_values(upstream, "accept-encoding") == ["identity"]
+
+
 def test_paths_outside_the_mount_point_are_not_proxied(client: TestClient, upstream: FastAPI) -> None:
     response = client.get("/apiary")
     assert response.status_code == 200

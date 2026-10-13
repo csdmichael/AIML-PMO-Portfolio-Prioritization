@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonIcon, IonButton } from '@ionic/angular';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
@@ -7,10 +7,11 @@ import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { ExportTableData, FileExportService } from '../../services/file-export.service';
+import { ConfigService } from '../../services/config.service';
 
 echarts.use([BarChart, LineChart, PieChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
-type ChartType = 'bar' | 'line' | 'pie';
+type ChartType = 'bar' | 'line' | 'stackedBar' | 'donut' | 'pie';
 
 @Component({
   selector: 'app-result-block',
@@ -94,6 +95,7 @@ type ChartType = 'bar' | 'line' | 'pie';
               class="type-btn"
               [class.active]="chartType() === 'bar'"
               (click)="chartType.set('bar')"
+              title="Bar chart"
             >
               <ion-icon name="bar-chart-outline"></ion-icon>
             </button>
@@ -102,14 +104,34 @@ type ChartType = 'bar' | 'line' | 'pie';
               class="type-btn"
               [class.active]="chartType() === 'line'"
               (click)="chartType.set('line')"
+              title="Line chart"
             >
               <ion-icon name="trending-up-outline"></ion-icon>
             </button>
             <button
               type="button"
               class="type-btn"
+              [class.active]="chartType() === 'stackedBar'"
+              (click)="chartType.set('stackedBar')"
+              title="Stacked bar chart"
+            >
+              <ion-icon name="layers-outline"></ion-icon>
+            </button>
+            <button
+              type="button"
+              class="type-btn"
+              [class.active]="chartType() === 'donut'"
+              (click)="chartType.set('donut')"
+              title="Donut chart"
+            >
+              <ion-icon name="ellipse-outline"></ion-icon>
+            </button>
+            <button
+              type="button"
+              class="type-btn"
               [class.active]="chartType() === 'pie'"
               (click)="chartType.set('pie')"
+              title="Pie chart"
             >
               <ion-icon name="pie-chart-outline"></ion-icon>
             </button>
@@ -259,7 +281,8 @@ export class ResultBlockComponent {
   readonly activeTab = signal<'table' | 'chart'>('table');
   readonly chartType = signal<ChartType>('bar');
 
-  constructor(private readonly exportService: FileExportService) {}
+  private readonly configService = inject(ConfigService);
+  private readonly exportService = inject(FileExportService);
 
   onExportCsv(): void {
     this.exportService.exportToCsv(this.table());
@@ -286,6 +309,9 @@ export class ResultBlockComponent {
       return isNaN(num) ? 1 : num;
     });
 
+    const chartsConfig = this.configService.config.charts;
+    const primaryColor = this.configService.config.tokens['--pmo-primary'] || '#0078D4';
+
     if (this.chartType() === 'pie') {
       return {
         tooltip: { trigger: 'item' },
@@ -294,6 +320,39 @@ export class ResultBlockComponent {
             type: 'pie',
             radius: '65%',
             data: categories.map((c, i) => ({ name: c, value: values[i] })),
+          },
+        ],
+      };
+    }
+
+    if (this.chartType() === 'donut') {
+      return {
+        tooltip: { trigger: 'item' },
+        series: [
+          {
+            type: 'pie',
+            radius: [chartsConfig.donutRadiusInner, chartsConfig.donutRadiusOuter],
+            data: categories.map((c, i) => ({ name: c, value: values[i] })),
+          },
+        ],
+      };
+    }
+
+    if (this.chartType() === 'stackedBar') {
+      return {
+        tooltip: { trigger: 'axis' },
+        xAxis: {
+          type: 'category',
+          data: categories,
+          axisLabel: { interval: 0, rotate: 20, fontSize: 10 },
+        },
+        yAxis: { type: 'value' },
+        series: [
+          {
+            type: 'bar',
+            stack: 'total',
+            data: values,
+            itemStyle: { color: primaryColor },
           },
         ],
       };
@@ -311,7 +370,7 @@ export class ResultBlockComponent {
         {
           type: this.chartType() === 'line' ? 'line' : 'bar',
           data: values,
-          itemStyle: { color: '#0078D4' },
+          itemStyle: { color: primaryColor },
         },
       ],
     };

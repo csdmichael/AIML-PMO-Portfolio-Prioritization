@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "description": "Data source contract: one entry per raw source. Read by the data generator (writes localRawRoot), the OneLake uploader, and the PySpark ingestion in notebook 01 (reads Files/raw/<folder>/<file>). Table names are the lakehouse Delta tables under each schema.",
+  "localRawRoot": "data",
+  "lakehouseRawRoot": "Files/raw",
+  "sources": [
+    {
+      "key": "planview",
+      "folder": "planview",
+      "lakehouseSchema": "src_planview",
+      "format": "csv",
+      "tables": [
+        { "name": "portfolio_items", "files": ["planview/planview_portfolio_export_2026-10-12.csv"] }
+      ]
+    },
+    {
+      "key": "powerapps",
+      "folder": "powerapps",
+      "lakehouseSchema": "src_powerapps",
+      "format": "json",
+      "tables": [
+        { "name": "intake_requests", "files": ["powerapps/powerapps_intake_requests.json"] }
+      ]
+    },
+    {
+      "key": "ado",
+      "folder": "ado",
+      "lakehouseSchema": "src_ado",
+      "format": "csv",
+      "tables": [
+        { "name": "work_items", "files": ["ado/ado_workitems_export.csv"] }
+      ]
+    },
+    {
+      "key": "jira",
+      "folder": "jira",
+      "lakehouseSchema": "src_jira",
+      "format": "json",
+      "tables": [
+        { "name": "issues", "files": ["jira/jira_issues_export.json"] }
+      ]
+    },
+    {
+      "key": "ms_project",
+      "folder": "ms_project",
+      "lakehouseSchema": "src_ms_project",
+      "format": "xml",
+      "tables": [
+        {
+          "name": "tasks",
+          "files": [
+            "ms_project/it_infosec.xml",
+            "ms_project/it_software_development.xml",
+            "ms_project/it_infrastructure.xml",
+            "ms_project/ai_team.xml",
+            "ms_project/data_analytics.xml"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "smartsheet",
+      "folder": "smartsheet",
+      "lakehouseSchema": "src_smartsheet",
+      "format": "csv",
+      "tables": [
+        { "name": "milestones", "files": ["smartsheet/smartsheet_golive_tracker.csv"] }
+      ]
+    },
+    {
+      "key": "spreadsheets",
+      "folder": "spreadsheets",
+      "lakehouseSchema": "src_spreadsheets",
+      "format": "xlsx",
+      "tables": [
+        {
+          "name": "bu_tracker",
+          "files": [
+            "spreadsheets/bu_tracker_FAB-OPS.xlsx",
+            "spreadsheets/bu_tracker_SPE.xlsx",
+            "spreadsheets/bu_tracker_DT.xlsx",
+            "spreadsheets/bu_tracker_SUPPLY.xlsx"
+          ],
+          "sheet": "Tracker",
+          "headerRow": 3
+        },
+        {
+          "name": "pmo_decisions",
+          "files": ["spreadsheets/pmo_decision_history.xlsx"],
+          "sheet": "Decisions",
+          "headerRow": 1
+        }
+      ]
+    },
+    {
+      "key": "bu_repositories",
+      "folder": "bu_repositories",
+      "lakehouseSchema": "src_bu_repositories",
+      "format": "json",
+      "tables": [
+        { "name": "documents", "files": ["bu_repositories/bu_document_index.json"] }
+      ]
+    },
+    {
+      "key": "hr_capacity",
+      "folder": "hr_capacity",
+      "lakehouseSchema": "src_hr_capacity",
+      "format": "csv",
+      "tables": [
+        { "name": "allocations", "files": ["hr_capacity/hr_capacity_allocations.csv"] }
+      ]
+    },
+    {
+      "key": "hr_roster",
+      "folder": "hr_roster",
+      "lakehouseSchema": "src_hr_roster",
+      "format": "csv",
+      "tables": [
+        { "name": "employees", "files": ["hr_roster/hr_roster_export.csv"] }
+      ]
+    },
+    {
+      "key": "cost",
+      "folder": "cost",
+      "lakehouseSchema": "src_cost",
+      "format": "csv",
+      "tables": [
+        { "name": "project_cost_monthly", "files": ["cost/finance_project_cost_monthly.csv"] }
+      ]
+    },
+    {
+      "key": "excel_intake",
+      "folder": "excel_intake",
+      "lakehouseSchema": "src_excel_intake",
+      "format": "xlsx",
+      "tables": [
+        {
+          "name": "intake_10_signals",
+          "files": ["excel_intake/pmo_intake_10_signals.xlsx"],
+          "sheet": "Intake",
+          "headerRow": 1
+        }
+      ]
+    }
+  ]
+}

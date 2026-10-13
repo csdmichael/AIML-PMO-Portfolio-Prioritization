@@ -20,9 +20,9 @@
     { "id": "overview", "label": "Overview", "icon": "pie-chart-outline", "route": "/overview" },
     { "id": "prioritization", "label": "Prioritization", "icon": "funnel-outline", "route": "/prioritization" },
     { "id": "hierarchy", "label": "Hierarchy", "icon": "git-network-outline", "route": "/hierarchy" },
-    { "id": "quick-add", "label": "Add project", "icon": "sparkles-outline", "route": "/quick-add" },
-    { "id": "data-entry", "label": "Data Entry", "icon": "create-outline", "route": "/data-entry" },
     { "id": "powerbi", "label": "Power BI dashboards", "icon": "analytics-outline", "route": "/powerbi" },
+    { "id": "quick-add", "label": "Quick add", "icon": "sparkles-outline", "route": "/quick-add" },
+    { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },
     { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" }
   ],
   "breakpoints": {
@@ -72,7 +72,8 @@
   },
   "table": {
     "pageSize": 25,
-    "pageSizes": [10, 25, 50, 100]
+    "pageSizes": [10, 25, 50, 100],
+    "exportFileName": "pmo-portfolio"
   },
   "charts": {
     "driverChartHeight": 240,

@@ -86,6 +86,7 @@ export interface FooterConfig {
 export interface TableConfig {
   pageSize: number;
   pageSizes: number[];
+  exportFileName?: string;
 }
 
 export interface ChartSettingsConfig {

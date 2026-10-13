@@ -23,12 +23,15 @@
     "@azure/msal-browser": "^5.25.0",
     "@capacitor/core": "9.0.1-dev-20260305T153051.0",
     "@ionic/angular": "^9.0.0",
+    "docx": "^9.8.1",
     "echarts": "^6.1.0",
     "ionicons": "^8.1.0",
     "ngx-echarts": "^22.0.0",
     "powerbi-client": "^2.25.0",
+    "pptxgenjs": "^4.0.1",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@angular/build": "22.1.8",

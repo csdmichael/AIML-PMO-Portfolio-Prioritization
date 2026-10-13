@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "description": "Capacity what-if scenarios for notebook 05. Each scenario is data: a type and parameters. Notebook 05 applies them to gold.project_predictions and gold.capacity_by_skill and writes gold.capacity_scenarios and gold.scenario_summary.",
+  "baselineScenarioId": "baseline",
+  "scenarios": [
+    {
+      "id": "baseline",
+      "name": "Current plan",
+      "type": "none",
+      "parameters": {}
+    },
+    {
+      "id": "pause-candidates",
+      "name": "Pause Candidate tier",
+      "type": "pauseTier",
+      "parameters": { "tier": "Candidate to deprioritize" }
+    },
+    {
+      "id": "add-main-portfolio-fte",
+      "name": "Add 2 FTE to the main portfolio's top skill",
+      "type": "addFte",
+      "parameters": { "portfolioRole": "main", "fte": 2.0, "skill": "top" }
+    },
+    {
+      "id": "shift-2028-2029",
+      "name": "Shift 2028 and 2029 go-lives by 6 months",
+      "type": "shiftGoLive",
+      "parameters": { "goLiveFrom": "2028-01-01", "goLiveTo": "2029-12-31", "months": 6 }
+    },
+    {
+      "id": "divert-uc-capacity",
+      "name": "Divert UC capacity from Can wait to Must-do-now",
+      "type": "divertSkill",
+      "parameters": { "skill": "UC", "fromTier": "Can wait", "toTier": "Must-do-now" }
+    }
+  ],
+  "outputs": {
+    "scenarioTable": "capacity_scenarios",
+    "summaryTable": "scenario_summary",
+    "exportFile": "capacity_scenarios.json"
+  }
+}
