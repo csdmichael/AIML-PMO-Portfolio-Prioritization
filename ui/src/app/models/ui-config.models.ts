@@ -1,0 +1,109 @@
+export interface ApiConfig {
+  basePath: string;
+  timeoutMs: number;
+  pipelinePollIntervalMs: number;
+}
+
+export interface MicrosoftLogoConfig {
+  wordmark: string;
+  wordmarkColor: string;
+  squareRed: string;
+  squareGreen: string;
+  squareBlue: string;
+  squareYellow: string;
+}
+
+export interface BrandConfig {
+  title: string;
+  subtitle: string;
+  logo: MicrosoftLogoConfig;
+}
+
+export interface NavigationItem {
+  id: string;
+  label: string;
+  icon: string;
+  route: string;
+}
+
+export interface BreakpointsConfig {
+  xl: number;
+  md: number;
+}
+
+export interface ConfidenceThresholds {
+  high: number;
+  medium: number;
+}
+
+export interface ConfidenceColors {
+  high: string;
+  medium: string;
+  low: string;
+  none: string;
+  human: string;
+}
+
+export interface ConfidenceConfig {
+  thresholds: ConfidenceThresholds;
+  labels: {
+    high: string;
+    medium: string;
+    low: string;
+    none: string;
+  };
+  colors: ConfidenceColors;
+}
+
+export interface TierColors {
+  mustDoNow: string;
+  proceed: string;
+  canWait: string;
+  deprioritize: string;
+}
+
+export interface TierLabels {
+  mustDoNow: string;
+  proceed: string;
+  canWait: string;
+  deprioritize: string;
+}
+
+export interface TiersConfig {
+  labels: TierLabels;
+  colors: TierColors;
+}
+
+export interface FooterConfig {
+  authorName: string;
+  authorRole: string;
+  linkedInUrl: string;
+  linkedInLabel: string;
+  gitHubUrl: string;
+  gitHubLabel: string;
+}
+
+export interface TableConfig {
+  pageSize: number;
+  pageSizes: number[];
+}
+
+export interface ChartSettingsConfig {
+  driverChartHeight: number;
+  kpiCardHeight: number;
+  donutRadiusInner: string;
+  donutRadiusOuter: string;
+}
+
+export interface UiConfig {
+  api: ApiConfig;
+  brand: BrandConfig;
+  navigation: NavigationItem[];
+  breakpoints: BreakpointsConfig;
+  confidence: ConfidenceConfig;
+  tiers: TiersConfig;
+  footer: FooterConfig;
+  table: TableConfig;
+  charts: ChartSettingsConfig;
+  tokens: Record<string, string>;
+}

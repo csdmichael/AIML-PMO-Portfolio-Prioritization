@@ -1,0 +1,9 @@
+In Fabric, create a new workspace for PMO-Portfolio-Prioritization. Generate data that looks real for 100 projects from Planview, PowerApps, ADO, JIRA, MS Project, Smartsheet, Spreadsheets, BU repositories, HR capacity, roster & cost data. Each source raw data should be in different schema in onelake. Some projects will not have data in multiple of these source systems randomly, others will be just excel input for 10 data fields mentioned in attached pdf slide 3. Create a folder in same workspace for ML Notebooks as follows:
+    - Use PySpark to handle large scale
+    - Implement one ML notebook for training / feature engineering / etc and another one for inference / predictions
+Generate powerbi dashboards, reports with tables, hierarchical data, charts, graphs. Implement ionic angular, typescript ui with different layout to optimize user experience for web, tablet, mobile. Add Microsoft logo in header and Michael Yaacoub | Sr Solution Engineer, linkedin (https://www.linkedin.com/in/michael-yaacoub-7a46436/) and this github repo link in footer. For ML algos per project, show confidence score based on quality and completeness of data provided per project and provide filters by confidence level to group projects and prioritize them and other filtering capabilities in very rich UI
+
+Gereate readme with TOC that start with Architecture diagram and its explaination in first section.
+For ML Algos, provide algorithm, describe it, most important feature, output table in one lake, sample output, algo used.
+
+Create ACR readme and add reference to it in main reame. ACR readme should break down azure consumption in dollars by service by environment dev/test/prod in one table and totals summary

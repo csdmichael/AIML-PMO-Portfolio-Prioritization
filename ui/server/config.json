@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "description": "UI web host settings for ui/server (Python FastAPI). It serves the built Ionic app from the static folder with SPA fallback, and proxies the mount path to the API behind APIM. Secrets are never stored here: the environment variables named below hold the APIM base URL and the subscription key, and they are read on every proxied request.",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "portEnvVar": "PORT",
+    "staticDirectory": "../www",
+    "indexFile": "index.html",
+    "spaFallback": true,
+    "indexCacheControl": "no-cache",
+    "healthzPath": "/healthz",
+    "mimeTypes": {
+      ".js": "text/javascript",
+      ".mjs": "text/javascript",
+      ".css": "text/css",
+      ".json": "application/json",
+      ".svg": "image/svg+xml",
+      ".wasm": "application/wasm",
+      ".webmanifest": "application/manifest+json"
+    }
+  },
+  "proxy": {
+    "mountPath": "/api",
+    "upstreamBaseUrlEnvVar": "APIM_BASE_URL",
+    "subscriptionKeyEnvVar": "APIM_SUBSCRIPTION_KEY",
+    "subscriptionHeaderName": "Ocp-Apim-Subscription-Key",
+    "timeoutSeconds": 120
+  },
+  "hosting": {
+    "startupCommand": "uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+  },
+  "messages": {
+    "uiNotBuilt": "UI build output not found at {staticDirectory}. Build the UI first, then restart this server.",
+    "notFound": "The requested UI file was not found.",
+    "upstreamBaseUrlMissing": "Environment variable {envVar} is not set. Set it to the APIM gateway base URL.",
+    "upstreamBaseUrlInvalid": "Environment variable {envVar} must be an absolute http or https URL with no query string.",
+    "subscriptionKeyMissing": "Environment variable {envVar} is not set. Set the APIM subscription key in the environment. It is never stored in files.",
+    "upstreamUnavailable": "The API gateway could not be reached.",
+    "upstreamTimeout": "The API gateway did not respond within {timeoutSeconds:g} seconds."
+  }
+}

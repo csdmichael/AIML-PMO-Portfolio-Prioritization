@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "description": "Settings for the Azure Consumption Report (ACR). Read by scripts/cost/generate-acr-readme.mjs. Subscription and resource group come from infra/config/pmo-deployment.json, so they are not repeated here. Every label and heading used in the generated report is defined here.",
+  "report": {
+    "title": "Azure Consumption Report (ACR)",
+    "outputPath": "docs/ACR-README.md",
+    "armEndpoint": "https://management.azure.com",
+    "source": "Azure Cost Management ActualCost query (Microsoft.CostManagement/query)",
+    "apiVersion": "2023-03-01",
+    "costType": "ActualCost",
+    "currency": "USD",
+    "decimals": 2,
+    "period": {
+      "label": "September 2026 (last full month)",
+      "from": "2026-09-01T00:00:00+00:00",
+      "to": "2026-09-30T23:59:59+00:00"
+    },
+    "scope": {
+      "configFile": "infra/config/pmo-deployment.json",
+      "subscriptionIdPath": "subscriptionId",
+      "resourceGroupPath": "resourceGroup"
+    }
+  },
+  "environments": {
+    "tagKey": "environment",
+    "columns": [
+      { "key": "dev", "label": "Dev" },
+      { "key": "test", "label": "Test" },
+      { "key": "prod", "label": "Prod" },
+      { "key": "unassigned", "label": "Unassigned" }
+    ],
+    "tagValueMap": {
+      "production": "prod",
+      "demo": "dev",
+      "customer": "test",
+      "caldova": "unassigned"
+    },
+    "untaggedKey": "unassigned"
+  },
+  "table": {
+    "sortBy": "total",
+    "sortDirection": "desc",
+    "hideZeroRows": true
+  },
+  "retry": {
+    "throttleMarker": "Too Many Requests",
+    "maxAttempts": 6,
+    "initialDelaySeconds": 30,
+    "backoffFactor": 2
+  },
+  "labels": {
+    "service": "Service",
+    "total": "Total",
+    "unknownService": "Unknown service",
+    "consumptionHeading": "Consumption by service and environment (USD)",
+    "summaryHeading": "Totals summary",
+    "notesHeading": "Notes",
+    "environmentColumn": "Environment",
+    "costColumn": "Cost (USD)",
+    "shareColumn": "Share of total",
+    "metadataPeriod": "Period",
+    "metadataScope": "Scope (resource group)",
+    "metadataCurrency": "Currency",
+    "metadataSource": "Source",
+    "metadataGenerated": "Generated (UTC)",
+    "servicesWithCost": "Services with cost",
+    "largestService": "Largest service"
+  },
+  "notes": [
+    "Costs are actual charges (ActualCost) for resources in the scope above. Forecasts and reservation amortization are excluded.",
+    "Environment comes from the resource tag named in environments.tagKey. Tag values are mapped with environments.tagValueMap. Any other value, including no tag, is reported as Unassigned.",
+    "Dev, Test, and Prod include only resources in this resource group that carry the mapped tags (demo to Dev, customer to Test, production to Prod). The PMO Portfolio Prioritization environments are not deployed yet, so they add nothing to these columns until the IaC deploys them with an environment tag.",
+    "Totals come from the same query rows as the table, so the environment columns always add up to the service totals."
+  ]
+}

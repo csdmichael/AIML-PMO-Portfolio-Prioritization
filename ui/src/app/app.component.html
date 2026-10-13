@@ -1,0 +1,41 @@
+<ion-app>
+  <ion-split-pane contentId="main-content" [when]="splitPaneBreakpoint">
+    <!-- LEFT Side Menu (ion-menu side="start") -->
+    <ion-menu contentId="main-content" side="start" menuId="main-menu" type="overlay">
+      <ion-header>
+        <ion-toolbar color="light">
+          <ion-title class="menu-brand-title">
+            <span class="menu-title-text">{{ brandConfig.title }}</span>
+          </ion-title>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content>
+        <ion-list lines="none" class="nav-list">
+          @for (item of navigationItems; track item.id) {
+            <ion-menu-toggle auto-hide="false">
+              <ion-item
+                [routerLink]="[item.route]"
+                routerDirection="root"
+                routerLinkActive="active-nav-item"
+                [attr.aria-label]="item.label"
+                class="nav-item"
+                button
+              >
+                <ion-icon slot="start" [name]="item.icon"></ion-icon>
+                <ion-label>{{ item.label }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+          }
+        </ion-list>
+      </ion-content>
+    </ion-menu>
+
+    <!-- Main Content Area with Header, Router Outlet, and Footer -->
+    <div class="ion-page" id="main-content">
+      <app-header [asOfDate]="store.dataset()?.asOfDate ?? null"></app-header>
+      <ion-router-outlet id="main-router-outlet"></ion-router-outlet>
+      <app-footer></app-footer>
+    </div>
+  </ion-split-pane>
+</ion-app>

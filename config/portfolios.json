@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "description": "Portfolio scope for the demo. The IT InfoSec portfolio is the main portfolio. The other IT portfolios are coupled to it through cross-portfolio dependencies. Read by the data generator, the notebooks (uploaded to Files/config), the API, the UI, and Power BI. Canonical project IDs stay GIS-0001 to GIS-0100.",
+  "mainPortfolioKey": "it-infosec",
+  "totalProjects": 100,
+  "portfolios": [
+    {
+      "key": "it-infosec",
+      "displayName": "IT InfoSec",
+      "code": "INFOSEC",
+      "role": "main",
+      "projectCount": 40,
+      "msProjectFile": "ms_project/it_infosec.xml",
+      "jiraProjectKey": "GISSEC",
+      "adoAreaRoot": "INFOSEC",
+      "programs": [
+        { "key": "zero-trust-identity", "displayName": "Zero Trust and Identity", "code": "ZTI" },
+        { "key": "security-operations", "displayName": "Security Operations", "code": "SOC" },
+        { "key": "cloud-endpoint-security", "displayName": "Cloud and Endpoint Security", "code": "CES" },
+        { "key": "governance-compliance", "displayName": "Governance and Compliance", "code": "GRC" }
+      ]
+    },
+    {
+      "key": "it-software-development",
+      "displayName": "IT Software Development",
+      "code": "SWDEV",
+      "role": "coupled",
+      "projectCount": 20,
+      "msProjectFile": "ms_project/it_software_development.xml",
+      "jiraProjectKey": "GISENG",
+      "adoAreaRoot": "SWDEV",
+      "programs": [
+        { "key": "application-platform", "displayName": "Application Platform", "code": "APP" },
+        { "key": "integration-apis", "displayName": "Integration and APIs", "code": "INTG" }
+      ]
+    },
+    {
+      "key": "it-infrastructure",
+      "displayName": "IT Infrastructure",
+      "code": "INFRA",
+      "role": "coupled",
+      "projectCount": 15,
+      "msProjectFile": "ms_project/it_infrastructure.xml",
+      "jiraProjectKey": "GISOPS",
+      "adoAreaRoot": "INFRA",
+      "programs": [
+        { "key": "network-collaboration", "displayName": "Network and Collaboration", "code": "NET" },
+        { "key": "datacenter-cloud", "displayName": "Datacenter and Cloud", "code": "DC" }
+      ]
+    },
+    {
+      "key": "ai-team",
+      "displayName": "AI Team",
+      "code": "AI",
+      "role": "coupled",
+      "projectCount": 10,
+      "msProjectFile": "ms_project/ai_team.xml",
+      "jiraProjectKey": "GISAI",
+      "adoAreaRoot": "AI",
+      "programs": [
+        { "key": "ai-platform", "displayName": "AI Platform and Copilots", "code": "AIP" }
+      ]
+    },
+    {
+      "key": "data-analytics",
+      "displayName": "Data and Analytics",
+      "code": "DATA",
+      "role": "coupled",
+      "projectCount": 15,
+      "msProjectFile": "ms_project/data_analytics.xml",
+      "jiraProjectKey": "GISDATA",
+      "adoAreaRoot": "DATA",
+      "programs": [
+        { "key": "data-platform", "displayName": "Data Platform and Lakehouse", "code": "DPL" }
+      ]
+    }
+  ],
+  "coupling": {
+    "description": "Cross-portfolio dependency graph. Every link is a predecessor (from_project) to successor (to_project) relationship.",
+    "linksFromMainProjectMin": 0,
+    "linksFromMainProjectMax": 3,
+    "linksFromCoupledProjectMin": 0,
+    "linksFromCoupledProjectMax": 2,
+    "relationshipTypes": ["FinishToStart", "StartToStart", "SharedResource", "DataDependency", "SecurityGate"],
+    "crossPortfolioCriticalPathRule": "R5_CROSS_PORTFOLIO_CRITICAL_PATH",
+    "crossPortfolioCriticalPathMinSuccessors": 2
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 2,
+  "description": "Values that must match across config files. Evaluated by scripts/ci/check-config.mjs. Each side names a JSON file (relative to the repo root) and a dot path.",
+  "rules": [
+    {
+      "name": "Fabric workspace ID in Power BI embed config",
+      "left": { "file": "infra/config/pmo-deployment.json", "path": "fabric.workspaceId" },
+      "right": { "file": "ui/src/assets/config/powerbi-embed.json", "path": "workspaceId" }
+    },
+    {
+      "name": "Entra tenant in Power BI embed config",
+      "left": { "file": "infra/config/pmo-deployment.json", "path": "tenantId" },
+      "right": { "file": "ui/src/assets/config/powerbi-embed.json", "path": "tenantId" }
+    },
+    {
+      "name": "Local raw data root",
+      "left": { "file": "config/data-sources.json", "path": "localRawRoot" },
+      "right": { "file": "config/ci.json", "path": "components.data.generatedDirectory" }
+    },
+    {
+      "name": "OpenAPI export path matches APIM import",
+      "left": { "file": "infra/config/pmo-deployment.json", "path": "create.apimApi.openApiFile" },
+      "right": { "file": "config/ci.json", "path": "components.api.openApiExport" }
+    }
+  ]
+}

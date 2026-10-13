@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "description": "CI/CD settings for GitHub Actions. Azure and Fabric identifiers come from infra/config/pmo-deployment.json, read at runtime by scripts/ci/read-config.mjs. Workflow path filters are static in each workflow file and must match the component folders below.",
+  "python": {
+    "version": "3.12"
+  },
+  "node": {
+    "version": "22"
+  },
+  "terraform": {
+    "version": "1.9.8"
+  },
+  "bicep": {
+    "minimumVersion": "0.30.0"
+  },
+  "powershell": {
+    "shell": "pwsh"
+  },
+  "components": {
+    "ui": {
+      "workingDirectory": "ui",
+      "buildCommand": "npm ci && npm run build",
+      "artifactDirectory": "ui/www"
+    },
+    "api": {
+      "workingDirectory": "api",
+      "buildCommand": "uv sync --frozen && uv run pytest",
+      "artifactDirectory": "api",
+      "openApiExport": "docs/api/openapi.json"
+    },
+    "fabric": {
+      "notebooksDirectory": "notebooks",
+      "powerbiDirectory": "powerbi",
+      "deployScript": "scripts/fabric/deploy-fabric-items.ps1"
+    },
+    "data": {
+      "workingDirectory": "data-generator",
+      "generatedDirectory": "data",
+      "generateCommand": "npm ci && node generate-pmo-data.mjs"
+    },
+    "infraBicep": {
+      "templateFile": "infra/bicep/main.bicep",
+      "configFile": "infra/config/pmo-deployment.json"
+    },
+    "infraTerraform": {
+      "workingDirectory": "infra/terraform",
+      "configFile": "infra/config/pmo-deployment.json"
+    }
+  }
+}

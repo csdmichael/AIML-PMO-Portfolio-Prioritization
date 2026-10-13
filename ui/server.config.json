@@ -1,0 +1,8 @@
+{
+  "port": 8080,
+  "staticFolder": "www",
+  "spaFallback": true,
+  "apiProxyPath": "/api",
+  "apimBaseUrlEnv": "APIM_BASE_URL",
+  "apimSubscriptionKeyEnv": "APIM_SUBSCRIPTION_KEY"
+}

@@ -1,0 +1,113 @@
+import { describe, it, expect } from 'vitest';
+import {
+  DEFAULT_FILTER_CRITERIA,
+  filterProjects,
+  sortProjects,
+  groupProjects,
+  buildHierarchyTree,
+} from './portfolio-filter';
+import { Project } from '../models/portfolio.models';
+
+function createDummyProject(id: string, name: string, bu: string, site: string, priority: number, conf: number, cost: number): Project {
+  return {
+    projectId: id,
+    projectName: name,
+    portfolio: 'GIS Portfolio',
+    businessUnit: bu,
+    site,
+    projectManager: 'PM',
+    executiveSponsor: 'Sponsor',
+    sponsorLevel: 'Executive',
+    projectStatus: 'Active',
+    goLiveDate: '2027-01-01',
+    monthsToGoLive: 6,
+    businessValue: 5,
+    regulatorySecurity: true,
+    dtAlignment: true,
+    protectedProgram: false,
+    primarySkill: 'Application Development',
+    skillDemandFte: 4,
+    costEstimateUsd: cost,
+    dependencyCount: 2,
+    riskRating: 'Low',
+    effortPersonWeeks: 50,
+    sourcesPresent: 8,
+    sourcesTotal: 11,
+    sources: {
+      planview: true,
+      powerapps: true,
+      ado: true,
+      jira: false,
+      msProject: true,
+      smartsheet: true,
+      buTrackers: true,
+      buRepositories: true,
+      hrCapacity: true,
+      cost: false,
+      excelIntake: false,
+    },
+    completeness: 0.8,
+    quality: 0.9,
+    modelCertainty: 0.85,
+    confidenceScore: conf,
+    confidenceLevel: conf >= 75 ? 'High' : conf >= 50 ? 'Medium' : 'Low',
+    mlTier: 'Proceed',
+    finalTier: 'Proceed',
+    tierProbabilities: { mustDoNow: 0.1, proceed: 0.8, canWait: 0.1, deprioritize: 0.0 },
+    priorityScore: priority,
+    ruleOverrides: [],
+    recommendedAction: 'Proceed',
+    cluster: 'Platform',
+    topDrivers: [],
+    dataIssues: [],
+  };
+}
+
+describe('Portfolio Filter, Sort, Group, and Rollup logic', () => {
+  const p1 = createDummyProject('GIS-0001', 'Alpha Project', 'Fab Operations', 'Fremont', 90, 85, 2000000);
+  const p2 = createDummyProject('GIS-0002', 'Beta Project', 'Fab Operations', 'Singapore', 70, 60, 1000000);
+  const p3 = createDummyProject('GIS-0003', 'Gamma Project', 'Supply Chain', 'Fremont', 80, 45, 3000000);
+  const list = [p1, p2, p3];
+
+  it('filters by search term across ID and name', () => {
+    const res = filterProjects(list, { ...DEFAULT_FILTER_CRITERIA, search: 'Beta' });
+    expect(res.length).toBe(1);
+    expect(res[0].projectId).toBe('GIS-0002');
+  });
+
+  it('filters by confidence level', () => {
+    const res = filterProjects(list, { ...DEFAULT_FILTER_CRITERIA, confidenceLevels: ['High'] });
+    expect(res.length).toBe(1);
+    expect(res[0].projectId).toBe('GIS-0001');
+  });
+
+  it('sorts projects by priority descending', () => {
+    const sorted = sortProjects(list, 'priority', 'desc');
+    expect(sorted.map((p) => p.projectId)).toEqual(['GIS-0001', 'GIS-0003', 'GIS-0002']);
+  });
+
+  it('sorts projects by cost ascending', () => {
+    const sorted = sortProjects(list, 'cost', 'asc');
+    expect(sorted.map((p) => p.projectId)).toEqual(['GIS-0002', 'GIS-0001', 'GIS-0003']);
+  });
+
+  it('groups projects by business unit with correct counts and costs', () => {
+    const groups = groupProjects(list, 'businessUnit');
+    expect(groups.length).toBe(2);
+    const fabOps = groups.find((g) => g.key === 'Fab Operations');
+    expect(fabOps).toBeDefined();
+    expect(fabOps!.count).toBe(2);
+    expect(fabOps!.totalCost).toBe(3000000);
+    expect(fabOps!.avgConfidence).toBe(72.5);
+  });
+
+  it('builds hierarchy tree rolling up BU > Site > Project', () => {
+    const tree = buildHierarchyTree(list);
+    expect(tree.length).toBe(2); // Fab Operations & Supply Chain
+    const fabOps = tree.find((n) => n.name === 'Fab Operations');
+    expect(fabOps).toBeDefined();
+    expect(fabOps!.count).toBe(2);
+    expect(fabOps!.children.length).toBe(2); // Fremont and Singapore
+    expect(fabOps!.totalCost).toBe(3000000);
+  });
+});

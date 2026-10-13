@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "description": "Data entry contract shared by the API, the UI data-entry pages, and notebook 01. Field keys are the canonical names used in Files/raw/ui_entries/projects/<projectId>.json. Options, limits, and upload rules live here, never in code.",
+  "projectIdPattern": "^GIS-\\d{4}$",
+  "projectIdPrefix": "GIS-",
+  "projectIdDigits": 4,
+  "firstNewProjectNumber": 101,
+  "options": {
+    "businessUnits": [
+      "Semiconductor Process Equipment",
+      "Fab Operations",
+      "Global Supply Chain",
+      "Digital Transformation",
+      "Finance and Controls",
+      "Human Resources",
+      "Information Security",
+      "Manufacturing Engineering",
+      "Customer Services",
+      "Corporate IT"
+    ],
+    "sites": ["Fremont", "Tualatin", "Singapore", "Penang", "Hsinchu", "Global Remote"],
+    "projectStatuses": ["Planning", "Active", "On Hold"],
+    "sponsorLevels": ["Executive", "Director", "Manager", "Individual"],
+    "riskRatings": ["Low", "Medium", "High", "Critical"],
+    "skills": [
+      { "key": "UC", "displayName": "Unified Communications" },
+      { "key": "NET", "displayName": "Network Engineering" },
+      { "key": "APP", "displayName": "Application Development" },
+      { "key": "DATA", "displayName": "Data Engineering" },
+      { "key": "CLOUD", "displayName": "Cloud and Infrastructure" },
+      { "key": "SEC", "displayName": "Cybersecurity" },
+      { "key": "INT", "displayName": "Integration (iPaaS)" },
+      { "key": "PM", "displayName": "Project Management" }
+    ],
+    "relationshipTypes": ["FinishToStart", "StartToStart", "SharedResource", "DataDependency", "SecurityGate"]
+  },
+  "projectFields": [
+    { "key": "projectName", "label": "Project name", "type": "text", "required": true, "minLength": 3, "maxLength": 120 },
+    { "key": "portfolioKey", "label": "Portfolio", "type": "select", "required": true, "source": "portfolios" },
+    { "key": "programKey", "label": "Program", "type": "select", "required": true, "source": "programsOfPortfolio" },
+    { "key": "businessUnit", "label": "Business unit", "type": "select", "required": true, "source": "options.businessUnits" },
+    { "key": "site", "label": "Site", "type": "select", "required": true, "source": "options.sites" },
+    { "key": "sponsorName", "label": "Executive sponsor", "type": "text", "required": true, "minLength": 3, "maxLength": 80 },
+    { "key": "sponsorEmail", "label": "Sponsor email", "type": "email", "required": false },
+    { "key": "projectManager", "label": "Project manager", "type": "text", "required": false, "maxLength": 80 },
+    { "key": "projectStatus", "label": "Status", "type": "select", "required": true, "source": "options.projectStatuses" },
+    { "key": "goLiveDate", "label": "Go-live date", "type": "date", "required": true, "minDate": "2026-01-01", "maxDate": "2032-12-31" },
+    { "key": "businessValue", "label": "Business value estimate (1 to 5)", "type": "integer", "required": true, "min": 1, "max": 5 },
+    { "key": "userBase", "label": "User base (number of users)", "type": "integer", "required": true, "min": 0, "max": 100000000 },
+    { "key": "estimatedAnnualBenefitUsd", "label": "Estimated annual benefit (USD)", "type": "number", "required": false, "min": 0, "max": 10000000000 },
+    { "key": "sponsorLevel", "label": "Sponsor level", "type": "select", "required": true, "source": "options.sponsorLevels" },
+    { "key": "regulatorySecurity", "label": "Regulatory or security driven", "type": "boolean", "required": true },
+    { "key": "dtAlignment", "label": "Digital transformation aligned", "type": "boolean", "required": true },
+    { "key": "protectedProgram", "label": "Protected program", "type": "boolean", "required": false },
+    { "key": "primarySkill", "label": "Primary skill", "type": "select", "required": true, "source": "options.skills" },
+    { "key": "skillDemandFte", "label": "Skill demand (FTE)", "type": "number", "required": true, "min": 0.5, "max": 12 },
+    { "key": "costEstimateUsd", "label": "Cost estimate (USD)", "type": "number", "required": true, "min": 10000, "max": 100000000 },
+    { "key": "dependencies", "label": "Dependencies", "type": "dependencyList", "required": false, "maxItems": 10 },
+    { "key": "riskRating", "label": "Risk rating", "type": "select", "required": true, "source": "options.riskRatings" },
+    { "key": "effortPersonWeeks", "label": "Effort (person-weeks)", "type": "number", "required": true, "min": 1, "max": 2000 },
+    { "key": "notes", "label": "Notes", "type": "text", "required": false, "maxLength": 1000 }
+  ],
+  "portfolioFields": [
+    { "key": "key", "label": "Portfolio key", "type": "slug", "required": true, "minLength": 3, "maxLength": 40 },
+    { "key": "displayName", "label": "Portfolio name", "type": "text", "required": true, "minLength": 3, "maxLength": 80 },
+    { "key": "code", "label": "Portfolio code", "type": "code", "required": true, "minLength": 2, "maxLength": 8 },
+    { "key": "role", "label": "Role", "type": "select", "required": true, "options": ["main", "coupled"] },
+    { "key": "jiraProjectKey", "label": "JIRA project key", "type": "code", "required": false, "maxLength": 10 },
+    { "key": "adoAreaRoot", "label": "ADO area root", "type": "code", "required": false, "maxLength": 20 },
+    { "key": "programs", "label": "Programs", "type": "programList", "required": true, "minItems": 1, "maxItems": 10 }
+  ],
+  "uploads": {
+    "maxFilesPerSourcePerProject": 5,
+    "maxFileBytes": 10485760,
+    "oneLakeFolderTemplate": "{rawRoot}/{sourceFolder}/ui_uploads/{projectId}",
+    "fileNameTemplate": "{uploadId}_{originalName}",
+    "acceptedBySource": {
+      "planview": { "extensions": [".csv"] },
+      "powerapps": { "extensions": [".json"] },
+      "ado": { "extensions": [".csv"] },
+      "jira": { "extensions": [".json"] },
+      "ms_project": { "extensions": [".xml"] },
+      "smartsheet": { "extensions": [".csv"] },
+      "spreadsheets": { "extensions": [".xlsx"] },
+      "bu_repositories": { "extensions": [".json"] },
+      "hr_capacity": { "extensions": [".csv"] },
+      "hr_roster": { "extensions": [".csv"] },
+      "cost": { "extensions": [".csv"] },
+      "excel_intake": { "extensions": [".xlsx"] }
+    }
+  },
+  "lake": {
+    "manualProjectsFolder": "Files/raw/ui_entries/projects",
+    "manualPortfoliosFolder": "Files/raw/ui_entries/portfolios"
+  },
+  "pipeline": {
+    "displayName": "PMO Full Pipeline",
+    "folderKey": "pipelines",
+    "notebookRunOrder": ["feature-engineering", "priority-tier-training", "archetype-clustering", "batch-inference", "capacity-what-if"],
+    "jobType": "Pipeline",
+    "pollSeconds": 15,
+    "maxWaitMinutes": 90
+  }
+}
