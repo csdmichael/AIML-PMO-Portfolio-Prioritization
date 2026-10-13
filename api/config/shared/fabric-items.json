@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "description": "Fabric item definitions. Workspace, capacity, and lakehouse identifiers live in infra/config/pmo-deployment.json. This file holds item names, local paths, run order, and lakehouse layout used by scripts/provision-fabric.ps1, the Fabric deploy scripts, and the notebooks.",
+  "schemaVersion": 2,
+  "description": "Fabric item definitions (v2). Every Fabric asset lives under fabric/. Workspace, capacity, and lakehouse IDs live in infra/config/pmo-deployment.json. This file holds folder layout, item names, local paths, run order, and the lakehouse layout used by fabric/scripts and the notebooks. Keys in notebooks[] and the pipeline activity list must match config/data-entry.json pipeline.notebookRunOrder.",
   "api": {
     "baseUrl": "https://api.fabric.microsoft.com/v1",
     "tokenResource": "https://api.fabric.microsoft.com"
@@ -10,11 +10,35 @@
     "tokenResource": "https://storage.azure.com"
   },
   "longRunning": {
-    "pollSeconds": 3,
-    "maxAttempts": 60
+    "pollSeconds": 5,
+    "maxAttempts": 240
   },
   "mlNotebooksFolder": "ML Notebooks",
+  "workspaceFolders": [
+    {
+      "key": "ml-notebooks",
+      "displayName": "ML Notebooks",
+      "children": [
+        { "key": "ml-notebooks/01-feature-engineering", "displayName": "01 Feature Engineering" },
+        { "key": "ml-notebooks/02-priority-tier-training", "displayName": "02 Priority Tier Training" },
+        { "key": "ml-notebooks/03-archetype-clustering", "displayName": "03 Archetype Clustering" },
+        { "key": "ml-notebooks/04-batch-inference", "displayName": "04 Batch Inference and Predictions" },
+        { "key": "ml-notebooks/05-capacity-what-if", "displayName": "05 Capacity What-If" }
+      ]
+    },
+    { "key": "pipelines", "displayName": "Pipelines" },
+    {
+      "key": "powerbi",
+      "displayName": "Power BI",
+      "children": [
+        { "key": "powerbi/semantic-models", "displayName": "Semantic Models" },
+        { "key": "powerbi/reports", "displayName": "Reports and Dashboards" },
+        { "key": "powerbi/paginated", "displayName": "Paginated Reports" }
+      ]
+    }
+  ],
   "lakehouse": {
+    "name": "pmo_lakehouse",
     "enableSchemas": true,
     "defaultSchema": "dbo",
     "rawRoot": "Files/raw",
@@ -26,25 +50,94 @@
   },
   "notebooks": [
     {
-      "key": "feature-engineering-training",
-      "displayName": "01_PMO_Feature_Engineering_Training",
-      "localPath": "notebooks/01_PMO_Feature_Engineering_Training.ipynb",
+      "key": "feature-engineering",
+      "displayName": "01_PMO_Feature_Engineering",
+      "folderKey": "ml-notebooks/01-feature-engineering",
+      "localPath": "fabric/ml-notebooks/01-feature-engineering/01_PMO_Feature_Engineering.ipynb",
+      "sourceParts": "fabric/ml-notebooks/01-feature-engineering/src",
       "runOrder": 1
     },
     {
-      "key": "inference-predictions",
-      "displayName": "02_PMO_Inference_Predictions",
-      "localPath": "notebooks/02_PMO_Inference_Predictions.ipynb",
+      "key": "priority-tier-training",
+      "displayName": "02_PMO_Priority_Tier_Training",
+      "folderKey": "ml-notebooks/02-priority-tier-training",
+      "localPath": "fabric/ml-notebooks/02-priority-tier-training/02_PMO_Priority_Tier_Training.ipynb",
+      "sourceParts": "fabric/ml-notebooks/02-priority-tier-training/src",
       "runOrder": 2
+    },
+    {
+      "key": "archetype-clustering",
+      "displayName": "03_PMO_Archetype_Clustering",
+      "folderKey": "ml-notebooks/03-archetype-clustering",
+      "localPath": "fabric/ml-notebooks/03-archetype-clustering/03_PMO_Archetype_Clustering.ipynb",
+      "sourceParts": "fabric/ml-notebooks/03-archetype-clustering/src",
+      "runOrder": 3
+    },
+    {
+      "key": "batch-inference",
+      "displayName": "04_PMO_Batch_Inference",
+      "folderKey": "ml-notebooks/04-batch-inference",
+      "localPath": "fabric/ml-notebooks/04-batch-inference/04_PMO_Batch_Inference.ipynb",
+      "sourceParts": "fabric/ml-notebooks/04-batch-inference/src",
+      "runOrder": 4
+    },
+    {
+      "key": "capacity-what-if",
+      "displayName": "05_PMO_Capacity_What_If",
+      "folderKey": "ml-notebooks/05-capacity-what-if",
+      "localPath": "fabric/ml-notebooks/05-capacity-what-if/05_PMO_Capacity_What_If.ipynb",
+      "sourceParts": "fabric/ml-notebooks/05-capacity-what-if/src",
+      "runOrder": 5
     }
   ],
+  "dataPipeline": {
+    "displayName": "PMO Full Pipeline",
+    "folderKey": "pipelines",
+    "localPath": "fabric/pipelines/pmo-full-pipeline/pipeline-content.json",
+    "notebookKeysInOrder": ["feature-engineering", "priority-tier-training", "archetype-clustering", "batch-inference", "capacity-what-if"]
+  },
   "semanticModel": {
     "displayName": "PMO Portfolio Semantic Model",
-    "localFolder": "powerbi/PMO Portfolio Semantic Model.SemanticModel",
+    "folderKey": "powerbi/semantic-models",
+    "localPath": "fabric/powerbi/semantic-model/PMO Portfolio Semantic Model.SemanticModel",
     "directLakeSchemas": ["gold"]
   },
-  "report": {
-    "displayName": "PMO Portfolio Prioritization",
-    "localFolder": "powerbi/PMO Portfolio Prioritization.Report"
+  "reports": [
+    {
+      "key": "executive-dashboard",
+      "displayName": "PMO Executive Dashboard",
+      "folderKey": "powerbi/reports",
+      "localPath": "fabric/powerbi/reports/PMO Executive Dashboard.Report"
+    },
+    {
+      "key": "prioritization-board",
+      "displayName": "PMO Prioritization Board",
+      "folderKey": "powerbi/reports",
+      "localPath": "fabric/powerbi/reports/PMO Prioritization Board.Report"
+    },
+    {
+      "key": "data-ml-operations",
+      "displayName": "PMO Data and ML Operations",
+      "folderKey": "powerbi/reports",
+      "localPath": "fabric/powerbi/reports/PMO Data and ML Operations.Report"
+    }
+  ],
+  "paginatedReports": [
+    {
+      "key": "portfolio-register",
+      "displayName": "PMO Portfolio Register",
+      "folderKey": "powerbi/paginated",
+      "localPath": "fabric/powerbi/paginated/PMO Portfolio Register.rdl"
+    },
+    {
+      "key": "capacity-plan",
+      "displayName": "PMO Capacity Plan",
+      "folderKey": "powerbi/paginated",
+      "localPath": "fabric/powerbi/paginated/PMO Capacity Plan.rdl"
+    }
+  ],
+  "paginatedDatasource": {
+    "localPath": "fabric/powerbi/paginated/datasource.json",
+    "semanticModelDisplayName": "PMO Portfolio Semantic Model"
   }
 }

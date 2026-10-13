@@ -5,7 +5,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { AppComponent } from './app.component';
 import { ConfigService } from './services/config.service';
 
-const MOCK_CONFIG = {
+const TEST_CONFIG = {
   api: { basePath: '/api/v1', timeoutMs: 30000, pipelinePollIntervalMs: 15000 },
   brand: {
     title: 'PMO Prioritization',
@@ -55,7 +55,7 @@ describe('AppComponent', () => {
         provideHttpClientTesting(),
         {
           provide: ConfigService,
-          useValue: { config: MOCK_CONFIG },
+          useValue: { config: TEST_CONFIG },
         },
       ],
     }).compileComponents();

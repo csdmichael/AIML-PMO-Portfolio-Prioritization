@@ -50,10 +50,10 @@ const TEST_UI_CONFIG: UiConfig = {
 
 describe('DataApiService', () => {
   let service: DataApiService;
-  let httpMock: HttpTestingController;
+  let httpController: HttpTestingController;
 
   beforeEach(() => {
-    const configServiceMock = {
+    const fakeConfigService = {
       config: TEST_UI_CONFIG,
     };
 
@@ -61,39 +61,39 @@ describe('DataApiService', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ConfigService, useValue: configServiceMock },
+        { provide: ConfigService, useValue: fakeConfigService },
         DataApiService,
       ],
     });
 
     service = TestBed.inject(DataApiService);
-    httpMock = TestBed.inject(HttpTestingController);
+    httpController = TestBed.inject(HttpTestingController);
   });
 
   it('should call GET /options under configured basePath', () => {
     service.getOptions().subscribe();
-    const req = httpMock.expectOne('/api/v1/options');
+    const req = httpController.expectOne('/api/v1/options');
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
 
   it('should call GET /portfolio under configured basePath', () => {
     service.getPortfolio().subscribe();
-    const req = httpMock.expectOne('/api/v1/portfolio');
+    const req = httpController.expectOne('/api/v1/portfolio');
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
 
   it('should call GET /portfolios under configured basePath', () => {
     service.getPortfolios().subscribe();
-    const req = httpMock.expectOne('/api/v1/portfolios');
+    const req = httpController.expectOne('/api/v1/portfolios');
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
 
   it('should call POST /intake/drafts for Quick Add', () => {
     service.createIntakeDraft('Test Name', 'Test Desc').subscribe();
-    const req = httpMock.expectOne('/api/v1/intake/drafts');
+    const req = httpController.expectOne('/api/v1/intake/drafts');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ projectName: 'Test Name', description: 'Test Desc' });
     req.flush({ draftId: 'draft-123', status: 'draft' });
@@ -101,7 +101,7 @@ describe('DataApiService', () => {
 
   it('should call GET /pipeline/runs/{runId}', () => {
     service.getPipelineRunStatus('run-999').subscribe();
-    const req = httpMock.expectOne('/api/v1/pipeline/runs/run-999');
+    const req = httpController.expectOne('/api/v1/pipeline/runs/run-999');
     expect(req.request.method).toBe('GET');
     req.flush({ runId: 'run-999', status: 'Completed' });
   });
@@ -115,7 +115,7 @@ describe('DataApiService', () => {
       },
     });
 
-    const req = httpMock.expectOne('/api/v1/portfolio');
+    const req = httpController.expectOne('/api/v1/portfolio');
     req.flush(
       {
         type: 'https://tools.ietf.org/html/rfc9457',

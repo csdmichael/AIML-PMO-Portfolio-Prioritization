@@ -23,10 +23,10 @@ class PortfolioService:
         catalog: Catalog,
         contract: DataEntryContract,
         validation: ValidationSettings,
-            statuses: ProjectSettings,
-        ) -> None:
-            self._statuses = statuses
-            self._entries = entries
+        statuses: ProjectSettings,
+    ) -> None:
+        self._statuses = statuses
+        self._entries = entries
         self._paths = paths
         self._catalog = catalog
         self._contract = contract

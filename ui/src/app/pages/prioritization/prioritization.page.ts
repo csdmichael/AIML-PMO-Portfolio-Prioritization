@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -27,6 +27,7 @@ import { LoadingSkeletonComponent } from '../../components/loading-skeleton/load
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { ResultBlockComponent } from '../../components/result-block/result-block.component';
 import { ExportTableData } from '../../services/file-export.service';
+import { ConfigService } from '../../services/config.service';
 
 @Component({
   selector: 'app-prioritization-page',
@@ -225,7 +226,7 @@ import { ExportTableData } from '../../services/file-export.service';
               </div>
             }
 
-            <!-- VIEW: TABLE (Sortable, sticky header, virtual-scroll styling) -->
+            <!-- VIEW: TABLE (Sortable, sticky header, virtual-scroll styling, pagination) -->
             @if (store.activeView() === 'table') {
               <div class="table-view-container">
                 <table class="pmo-table">
@@ -244,7 +245,7 @@ import { ExportTableData } from '../../services/file-export.service';
                     </tr>
                   </thead>
                   <tbody>
-                    @for (p of store.sortedFilteredProjects(); track p.projectId) {
+                    @for (p of paginatedProjects(); track p.projectId) {
                       <tr
                         [class.selected-row]="store.selectedProjectId() === p.projectId"
                         (click)="store.selectProject(p.projectId)"
@@ -274,6 +275,42 @@ import { ExportTableData } from '../../services/file-export.service';
                     }
                   </tbody>
                 </table>
+
+                <!-- Pagination footer -->
+                <div class="table-pagination-footer">
+                  <div class="pagination-info">
+                    Showing {{ paginationStart() }}-{{ paginationEnd() }} of {{ totalProjectsCount() }}
+                  </div>
+                  <div class="pagination-controls">
+                    <span class="page-size-label">Rows per page:</span>
+                    <select
+                      class="page-size-select"
+                      [ngModel]="pageSize()"
+                      (ngModelChange)="onPageSizeChange($event)"
+                    >
+                      @for (sz of availablePageSizes(); track sz) {
+                        <option [value]="sz">{{ sz }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="page-btn"
+                      [disabled]="currentPage() <= 1"
+                      (click)="onPageChange(currentPage() - 1)"
+                    >
+                      ‹ Prev
+                    </button>
+                    <span class="current-page-num">{{ currentPage() }} / {{ totalPages() }}</span>
+                    <button
+                      type="button"
+                      class="page-btn"
+                      [disabled]="currentPage() >= totalPages()"
+                      (click)="onPageChange(currentPage() + 1)"
+                    >
+                      Next ›
+                    </button>
+                  </div>
+                </div>
               </div>
             }
 
@@ -610,6 +647,52 @@ import { ExportTableData } from '../../services/file-export.service';
         border-radius: 4px;
         font-weight: 600;
       }
+      .table-pagination-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        background: #f8f9fb;
+        border-top: 1px solid var(--pmo-border, #e0e0e0);
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.8rem;
+      }
+      .pagination-info {
+        color: var(--pmo-muted, #666666);
+      }
+      .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .page-size-label {
+        color: #555555;
+      }
+      .page-size-select {
+        padding: 3px 6px;
+        font-size: 0.78rem;
+        border: 1px solid var(--pmo-border, #e0e0e0);
+        border-radius: 4px;
+        background: #ffffff;
+      }
+      .page-btn {
+        padding: 4px 8px;
+        border: 1px solid var(--pmo-border, #e0e0e0);
+        background: #ffffff;
+        color: #333333;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+      }
+      .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .current-page-num {
+        font-weight: 600;
+        padding: 0 4px;
+      }
 
       /* HIERARCHY INLINE */
       .hierarchy-inline-container {
@@ -694,7 +777,59 @@ import { ExportTableData } from '../../services/file-export.service';
 })
 export class PrioritizationPageComponent {
   readonly store = inject(PortfolioStore);
+  private readonly configService = inject(ConfigService);
   readonly showTableTools = signal<boolean>(false);
+
+  // Pagination state derived from ui.json config
+  readonly pageSize = signal<number>(this.configService.config.table?.pageSize ?? 25);
+  readonly currentPage = signal<number>(1);
+
+  readonly availablePageSizes = computed<number[]>(() => {
+    return this.configService.config.table?.pageSizes ?? [10, 25, 50, 100];
+  });
+
+  readonly totalProjectsCount = computed<number>(() => {
+    return this.store.sortedFilteredProjects().length;
+  });
+
+  readonly totalPages = computed<number>(() => {
+    const total = this.totalProjectsCount();
+    const sz = this.pageSize();
+    return Math.max(1, Math.ceil(total / sz));
+  });
+
+  readonly paginatedProjects = computed<Project[]>(() => {
+    const all = this.store.sortedFilteredProjects();
+    const page = Math.min(this.currentPage(), this.totalPages());
+    const sz = this.pageSize();
+    const start = (page - 1) * sz;
+    return all.slice(start, start + sz);
+  });
+
+  readonly paginationStart = computed<number>(() => {
+    const total = this.totalProjectsCount();
+    if (total === 0) return 0;
+    const page = Math.min(this.currentPage(), this.totalPages());
+    return (page - 1) * this.pageSize() + 1;
+  });
+
+  readonly paginationEnd = computed<number>(() => {
+    const total = this.totalProjectsCount();
+    const page = Math.min(this.currentPage(), this.totalPages());
+    return Math.min(page * this.pageSize(), total);
+  });
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    const size = Number(newSize) || 25;
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+  }
 
   onViewChange(event: CustomEvent): void {
     const val = event.detail.value;
