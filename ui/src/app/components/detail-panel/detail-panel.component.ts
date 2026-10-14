@@ -21,7 +21,7 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { PortfolioStore } from '../../services/portfolio.store';
 import { DataApiService } from '../../services/data-api.service';
 import { ConfidenceRingComponent } from '../confidence-ring/confidence-ring.component';
-import { Project, DecisionAction } from '../../models/portfolio.models';
+import { Project, DecisionAction, LocalDecision } from '../../models/portfolio.models';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
@@ -678,14 +678,14 @@ export class DetailPanelComponent {
 
   submitDecision(projectId: string, action: DecisionAction): void {
     if (!this.decisionReason.trim()) return;
-    const decision = {
+    const decision: LocalDecision = {
       projectId,
       action,
       reason: this.decisionReason.trim(),
       timestamp: new Date().toISOString(),
     };
     this.api.createDecision(decision).subscribe({
-      next: (saved) => {
+      next: (saved: LocalDecision) => {
         this.store.recordDecision(saved);
       },
       error: () => {

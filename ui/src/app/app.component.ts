@@ -20,6 +20,7 @@ import { ConfigService } from './services/config.service';
 import { PortfolioStore } from './services/portfolio.store';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { AgentFabComponent } from './components/agent-fab/agent-fab.component';
 
 @Component({
   selector: 'app-root',
@@ -44,6 +45,7 @@ import { FooterComponent } from './components/footer/footer.component';
     IonRouterOutlet,
     HeaderComponent,
     FooterComponent,
+    AgentFabComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

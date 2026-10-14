@@ -144,7 +144,18 @@ import { ConfigService } from '../../services/config.service';
                 title="Toggle Table Tools & Multi-Format Exports"
               >
                 <ion-icon name="document-text-outline"></ion-icon>
-                <span>Export Tools</span>
+                <span>Export</span>
+              </button>
+
+              <!-- Mobile/Tablet Filters Toggle -->
+              <button
+                type="button"
+                class="mobile-filter-btn"
+                (click)="mobileFiltersOpen.update(v => !v)"
+                title="Filters"
+              >
+                <ion-icon name="funnel-outline"></ion-icon>
+                <span>Filters</span>
               </button>
             </div>
           </div>
@@ -197,7 +208,7 @@ import { ConfigService } from '../../services/config.service';
                         <div
                           class="project-card"
                           [class.selected]="store.selectedProjectId() === p.projectId"
-                          (click)="store.selectProject(p.projectId)"
+                          (click)="onSelectProject(p.projectId)"
                         >
                           <div class="card-top">
                             <div class="card-id-row">
@@ -248,7 +259,7 @@ import { ConfigService } from '../../services/config.service';
                     @for (p of paginatedProjects(); track p.projectId) {
                       <tr
                         [class.selected-row]="store.selectedProjectId() === p.projectId"
-                        (click)="store.selectProject(p.projectId)"
+                        (click)="onSelectProject(p.projectId)"
                       >
                         <td class="td-priority">
                           <strong>{{ p.priorityScore }}</strong>
@@ -352,6 +363,34 @@ import { ConfigService } from '../../services/config.service';
           <app-detail-panel></app-detail-panel>
         </aside>
       </div>
+
+      <!-- Mobile Filters Drawer -->
+      @if (mobileFiltersOpen()) {
+        <div class="mobile-modal-backdrop" (click)="mobileFiltersOpen.set(false)"></div>
+        <div class="mobile-drawer-sheet">
+          <div class="mobile-sheet-header">
+            <h4>Filter Projects</h4>
+            <button class="close-sheet-btn" (click)="mobileFiltersOpen.set(false)">&times;</button>
+          </div>
+          <div class="mobile-sheet-body">
+            <app-filter-panel></app-filter-panel>
+          </div>
+        </div>
+      }
+
+      <!-- Mobile Detail Drawer -->
+      @if (mobileDetailOpen() && store.selectedProject()) {
+        <div class="mobile-modal-backdrop" (click)="mobileDetailOpen.set(false)"></div>
+        <div class="mobile-drawer-sheet detail-sheet">
+          <div class="mobile-sheet-header">
+            <h4>{{ store.selectedProject()?.projectId }} Details</h4>
+            <button class="close-sheet-btn" (click)="mobileDetailOpen.set(false)">&times;</button>
+          </div>
+          <div class="mobile-sheet-body">
+            <app-detail-panel></app-detail-panel>
+          </div>
+        </div>
+      }
     </ion-content>
   `,
   styles: [
@@ -755,6 +794,73 @@ import { ConfigService } from '../../services/config.service';
         color: #555555;
       }
 
+      .mobile-filter-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid var(--pmo-border, #e0e0e0);
+        color: var(--pmo-primary, #0078d4);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .mobile-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 10000;
+        backdrop-filter: blur(2px);
+      }
+      .mobile-drawer-sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 85vh;
+        background: #ffffff;
+        border-radius: 16px 16px 0 0;
+        z-index: 10001;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+        animation: slideUp 0.25s ease-out;
+      }
+      @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      .mobile-sheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 18px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .mobile-sheet-header h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+      }
+      .close-sheet-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #666666;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .mobile-sheet-body {
+        padding: 14px;
+        overflow-y: auto;
+      }
+      .mobile-drawer-sheet.detail-sheet {
+        max-height: 90vh;
+      }
+
       /* Responsive adjustments */
       @media (max-width: 1200px) {
         .prioritization-layout {
@@ -771,6 +877,9 @@ import { ConfigService } from '../../services/config.service';
         .sidebar-filters {
           display: none;
         }
+        .mobile-filter-btn {
+          display: inline-flex;
+        }
       }
     `,
   ],
@@ -779,6 +888,8 @@ export class PrioritizationPageComponent {
   readonly store = inject(PortfolioStore);
   private readonly configService = inject(ConfigService);
   readonly showTableTools = signal<boolean>(false);
+  readonly mobileFiltersOpen = signal<boolean>(false);
+  readonly mobileDetailOpen = signal<boolean>(false);
 
   // Pagination state derived from ui.json config
   readonly pageSize = signal<number>(this.configService.config.table?.pageSize ?? 25);
@@ -818,6 +929,13 @@ export class PrioritizationPageComponent {
     const page = Math.min(this.currentPage(), this.totalPages());
     return Math.min(page * this.pageSize(), total);
   });
+
+  onSelectProject(projectId: string): void {
+    this.store.selectProject(projectId);
+    if (typeof window !== 'undefined' && window.innerWidth < 1200) {
+      this.mobileDetailOpen.set(true);
+    }
+  }
 
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {

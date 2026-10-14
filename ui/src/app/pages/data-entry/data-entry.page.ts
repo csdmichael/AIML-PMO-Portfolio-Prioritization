@@ -90,7 +90,13 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         @if (activeTab === 'project') {
           <ion-card class="form-card">
             <ion-card-header>
-              <ion-card-title>Create New Project Entry</ion-card-title>
+              <div class="card-header-with-action">
+                <ion-card-title>Create New Project Entry</ion-card-title>
+                <button type="button" class="quick-fill-btn" (click)="quickFillSampleProject()">
+                  <ion-icon name="flash-outline"></ion-icon>
+                  <span>Quick Fill Sample Values</span>
+                </button>
+              </div>
             </ion-card-header>
             <ion-card-content>
               <form (ngSubmit)="onCreateProject()" class="dynamic-form">
@@ -335,6 +341,41 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
                   }
                 </div>
               }
+
+              <!-- Active Data Ingestion Sources in OneLake -->
+              <div class="active-sources-section">
+                <h4>Active Enterprise Source Connectors (OneLake Bronze/Silver)</h4>
+                <div class="sources-table-wrap">
+                  <table class="uploads-table">
+                    <thead>
+                      <tr>
+                        <th>Enterprise Source</th>
+                        <th>OneLake Target Schema</th>
+                        <th>Ingestion Format</th>
+                        <th>Record Count</th>
+                        <th>Status</th>
+                        <th>Last Synchronized</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (src of ingestionSources; track src.name) {
+                        <tr>
+                          <td><strong>{{ src.name }}</strong></td>
+                          <td><code>{{ src.lakePath }}</code></td>
+                          <td>{{ src.format }}</td>
+                          <td>{{ src.records }}</td>
+                          <td>
+                            <span class="status-pill-synced">
+                              <span class="dot-green"></span> Synced to OneLake
+                            </span>
+                          </td>
+                          <td>{{ src.lastSync }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </ion-card-content>
           </ion-card>
         }
@@ -447,6 +488,63 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 12px;
       }
+      .card-header-with-action {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .quick-fill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: #eff6fc;
+        border: 1px solid #0078d4;
+        color: #0078d4;
+        font-size: 0.76rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .quick-fill-btn:hover {
+        background: #0078d4;
+        color: #ffffff;
+      }
+      .active-sources-section {
+        margin-top: 24px;
+        border-top: 1px solid #edebe9;
+        padding-top: 16px;
+      }
+      .active-sources-section h4 {
+        margin: 0 0 10px 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #323130;
+      }
+      .sources-table-wrap {
+        overflow-x: auto;
+      }
+      .status-pill-synced {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px;
+        border-radius: 12px;
+        background: #dff6dd;
+        color: #107c10;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+      .dot-green {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #107c10;
+        box-shadow: 0 0 4px #107c10;
+      }
       .upload-history-section {
         margin-top: 24px;
         border-top: 1px solid #e0e0e0;
@@ -505,6 +603,44 @@ export class DataEntryPageComponent implements OnInit {
   readonly uploadMessage = signal<string | null>(null);
   readonly isUploadSuccess = signal<boolean>(false);
   readonly projectUploads = signal<ProjectUploadMetadata[]>([]);
+
+  readonly ingestionSources = [
+    { name: 'Planview Portfolio', lakePath: 'src_planview', format: 'CSV', records: '69 projects', lastSync: 'Today, 07:15 UTC' },
+    { name: 'Power Apps Intake', lakePath: 'src_powerapps', format: 'JSON', records: '75 submissions', lastSync: 'Today, 07:15 UTC' },
+    { name: 'Azure DevOps', lakePath: 'src_ado', format: 'CSV', records: '3,420 work items', lastSync: 'Today, 07:15 UTC' },
+    { name: 'JIRA Search API', lakePath: 'src_jira', format: 'JSON', records: '1,890 issues', lastSync: 'Today, 07:15 UTC' },
+    { name: 'MS Project (4 Programs)', lakePath: 'src_ms_project', format: 'MSPDI XML', records: '48 schedules', lastSync: 'Today, 07:15 UTC' },
+    { name: 'Smartsheet Milestones', lakePath: 'src_smartsheet', format: 'CSV', records: '60 milestone rows', lastSync: 'Today, 07:15 UTC' },
+    { name: 'BU Multi-Sheet Trackers', lakePath: 'src_spreadsheets', format: 'XLSX', records: '70 decision labels', lastSync: 'Today, 07:15 UTC' },
+    { name: 'HR Capacity Allocations', lakePath: 'src_hr_capacity', format: 'CSV', records: '420 FTE rows', lastSync: 'Today, 07:15 UTC' },
+    { name: 'HR Roster', lakePath: 'src_hr_roster', format: 'CSV', records: '24 leaders', lastSync: 'Today, 07:15 UTC' },
+    { name: 'Finance Project Cost', lakePath: 'src_cost', format: 'Monthly CSV', records: '1,200 cost lines', lastSync: 'Today, 07:15 UTC' },
+    { name: 'Excel Intake Template', lakePath: 'src_excel_intake', format: 'XLSX', records: '20 projects', lastSync: 'Today, 07:15 UTC' },
+  ];
+
+  quickFillSampleProject(): void {
+    this.projectFormData = {
+      projectName: 'Autonomous Cleanroom Equipment Safety & Interlock Hub',
+      businessUnit: 'Fab Operations',
+      site: 'Singapore',
+      projectManager: 'Mateo Okafor',
+      executiveSponsor: 'Dmitri Nakamura',
+      executiveSponsorEmail: 'dmitri.nakamura@example.com',
+      sponsorLevel: 'Executive',
+      projectStatus: 'Active',
+      goLiveDate: '2027-08-15',
+      benefitScore: 5,
+      estimatedCostUsd: 2150000,
+      riskLevel: 'Low',
+      dependencyCount: 1,
+      protectedProgram: true,
+      regulatorySecurity: true,
+      dtAlignment: true,
+      primarySkill: 'Application Development',
+      skillDemandFte: 6.5,
+      effortPersonWeeks: 75,
+    };
+  }
 
   ngOnInit(): void {
     this.loadOptions();

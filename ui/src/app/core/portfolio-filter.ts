@@ -310,7 +310,7 @@ export function buildHierarchyTree(projects: readonly Project[]): HierarchyNode[
         avgConfidence: siteAvgConf,
         totalCost: siteTotalCost,
         children: projNodes,
-        expanded: false,
+        expanded: true,
       });
 
       buTotalCost += siteTotalCost;

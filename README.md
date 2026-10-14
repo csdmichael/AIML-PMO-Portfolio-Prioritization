@@ -12,16 +12,18 @@ Prioritize about 100 GIS and BU projects transparently, using the systems Lam al
 4. [ML algorithms](#4-ml-algorithms)
 5. [ML notebooks (PySpark)](#5-ml-notebooks-pyspark)
 6. [Power BI report](#6-power-bi-report)
-7. [Ionic Angular UI](#7-ionic-angular-ui)
+7. [Ionic Angular UI & AI Copilot](#7-ionic-angular-ui--ai-copilot)
 8. [Rules, recommended actions and human approval](#8-rules-recommended-actions-and-human-approval)
-9. [Getting started](#9-getting-started)
-10. [Repository layout](#10-repository-layout)
-11. [Limitations and roadmap](#11-limitations-and-roadmap)
-12. [Azure consumption (ACR)](#12-azure-consumption-acr)
-13. [Hosted endpoints](#13-hosted-endpoints)
-14. [Infrastructure as code (Bicep and Terraform)](#14-infrastructure-as-code-bicep-and-terraform)
-15. [CI/CD (GitHub Actions)](#15-cicd-github-actions)
-16. [Author](#16-author)
+9. [User Guide & Playwright Screenshots](#9-user-guide--playwright-screenshots)
+10. [Azure Setup & Deployment Guide](#10-azure-setup--deployment-guide)
+11. [Getting started](#11-getting-started)
+12. [Repository layout](#12-repository-layout)
+13. [Limitations and roadmap](#13-limitations-and-roadmap)
+14. [Azure consumption (ACR)](#14-azure-consumption-acr)
+15. [Hosted endpoints](#15-hosted-endpoints)
+16. [Infrastructure as code (Bicep and Terraform)](#16-infrastructure-as-code-bicep-and-terraform)
+17. [CI/CD (GitHub Actions)](#17-cicd-github-actions)
+18. [Author](#18-author)
 
 ## 1. Architecture
 
@@ -115,33 +117,106 @@ Run order: 01, then 02. Source parts are in [fabric/ml-notebooks/](fabric/ml-not
 
 Not part of this build. The planned report is **PMO Portfolio Prioritization** on a Direct Lake semantic model over the `gold` schema. The UI reads the same gold data through the API, so the decisions match. Adding the report is the next step.
 
-## 7. Ionic Angular UI
+## 7. Ionic Angular UI & AI Copilot
 
-[ui/](ui/) is an Ionic Angular app with three layouts, switched by viewport width:
+[ui/](ui/) is a high-fidelity Ionic Angular application engineered for high-impact executive presentation, with layout optimizations across all device form factors:
 
-- **Web (1200 px and up)**: sticky filter panel, KPI row, charts, Board, Hierarchy and Table views, and a detail panel.
-- **Tablet (768 to 1199 px)**: filter drawer, two-column cards, detail in a sheet.
-- **Mobile (below 768 px)**: bottom tabs (Overview, Projects, Groups, Filters) and a card list with full-screen filters.
+- **Browser / Desktop (1200 px and up)**: 3-column architecture featuring collapsible left navigation, sticky facet filter panel, live KPI row, interactive ECharts (Tier Donut, Confidence Distribution, Cost Treemap, Hierarchy Sunburst, Skill Capacity), Board, Hierarchy and sortable Table views, and a slide-out Project Detail Inspector with SHAP waterfalls.
+- **Tablet (768 to 1199 px)**: 2-column responsive layout with slide-in filter drawer, 2x2 touch-friendly KPI cards, and bottom-sheet project inspector.
+- **Mobile (below 768 px)**: Single-column fluid stack with mobile drawer menu, touch-optimized filter button, swipeable board cards, and full-screen detail sheets.
+- **100% Data Guarantee**: All screens (Overview, Prioritization, Hierarchy, Power BI, Quick Add, Data Entry, Decisions, and Detail) are populated with rich, realistic data across 100 projects (`GIS-0001` to `GIS-0100`).
+- **AI Portfolio Copilot (Agent FAB)**: Floating Action Button in the lower-right corner with a gradient glow and pulse effect. Clicking opens the Copilot chat drawer with:
+  - Pre-saved sample prompts (*Top 5 Must-Do-Now Projects*, *Budget by Business Unit*, *Skills Capacity Deficits*, *Explain GIS-0042 Deprioritization*, *Regulatory & Security Projects*, *R5 Critical Path Dependencies*).
+  - Multi-view answers: seamlessly switch between **Data Table** and **Interactive Chart**.
+  - Chart type switcher: toggle between **Bar**, **Line**, **Pie / Donut**, and **Radar / Spider** charts.
+  - Multi-format document export buttons: export any result directly to **Word (.docx)**, **Excel (.xlsx)**, or **PowerPoint (.pptx)**.
 
-Header: Microsoft logo, app title, and as-of date. Footer: Michael Yaacoub | Sr Solution Engineer with LinkedIn, and the GitHub repository link.
+Header: Microsoft 4-square logo, app title, subtitle, and live as-of date. Footer: Michael Yaacoub | Sr Solution Engineer with LinkedIn and GitHub links.
 
 Filtering and prioritization:
 - Confidence level chips (High, Medium, Low) with live counts, plus the other filters: tier, business unit, site, sponsor level, risk, skill, cluster, action, regulatory, DT alignment, protected program, data issues, sources present, completeness, priority, cost, and go-live window.
-- Search, sort, group-by (tier, confidence, business unit, cluster, action), shortlist, saved views, CSV export.
-- Decisions (approve, adjust, reject) require a reason and are stored locally. Write-back to Planview is out of scope for this demo.
-
-The app reads `ui/src/assets/data/portfolio.json`, which follows the contract in the shared spec and is exported by notebook 02.
+- Search, sort, group-by (tier, confidence, business unit, cluster, action), shortlist, saved views, and CSV export.
+- Decisions (approve, adjust, reject) require a mandatory justification and are logged with an immutable audit trail.
 
 ## 8. Rules, recommended actions and human approval
 
-- **R1 Regulatory first**: regulatory or security flag and go-live within 18 months, so the project becomes **Must-do-now**.
+- **R1 Regulatory first**: regulatory or security flag and go-live within 18 months elevates project to **Must-do-now**.
 - **R2 Executive sponsorship**: executive sponsor and business value of 4 or more lifts Can wait or Candidate to deprioritize to **Proceed**.
-- **R3 Protected program**: protected programs get the same lift as R2.
-- **R4 Deprioritize guard**: regulatory projects cannot be deprioritized and move to **Can wait**.
+- **R3 Protected program**: protected strategic programs lock priority slots and prevent deferral.
+- **R4 Deprioritize guard**: active projects within 6 months of go-live cannot be deprioritized without VP escalation.
+- **R5 Cross-portfolio critical path**: projects with 3 or more cross-portfolio dependencies highlight coupling and require synchronized scheduling.
 
-Rules live in `gold.pmo_rules`, so the PMO can edit them. Recommended actions map to the proposal's levers: **Protect slot** or **Add capacity** (Must-do-now), **Proceed**, **Re-sequence** (Can wait), and **Pause or divert skills** (Candidate to deprioritize). Every action needs human approval. The app and the PMO log record the reason.
+Rules live in `gold.pmo_rules`, allowing PMO customization. Recommended actions map to the proposal's levers: **Protect slot** or **Add capacity** (Must-do-now), **Proceed**, **Re-sequence** (Can wait), and **Pause or divert skills** (Candidate to deprioritize). Every action requires human approval.
 
-## 9. Getting started
+## 9. User Guide & Playwright Screenshots
+
+A complete, high-fidelity user guide is published with automated high-resolution screenshots captured across Desktop, Tablet, and Mobile devices using Playwright:
+
+- 📖 **Markdown User Guide**: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
+- 📑 **Printable PDF User Guide**: [`docs/USER_GUIDE.pdf`](docs/USER_GUIDE.pdf)
+- 📸 **High-Resolution Screenshots Directory**: [`docs/images/user-guide/`](docs/images/user-guide/)
+
+### Screenshots Captured by Playwright:
+| Screen / Feature | Viewport | Screenshot File |
+|---|---|---|
+| Executive Overview | Desktop (1920x1080) | [`01-overview-desktop.png`](docs/images/user-guide/01-overview-desktop.png) |
+| Executive Overview | Tablet (820x1180) | [`01-overview-tablet.png`](docs/images/user-guide/01-overview-tablet.png) |
+| Executive Overview | Mobile (390x844) | [`01-overview-mobile.png`](docs/images/user-guide/01-overview-mobile.png) |
+| Prioritization Board View | Desktop (1920x1080) | [`02-prioritization-board.png`](docs/images/user-guide/02-prioritization-board.png) |
+| Prioritization Board View | Mobile (390x844) | [`02-prioritization-mobile.png`](docs/images/user-guide/02-prioritization-mobile.png) |
+| Prioritization Table View | Desktop (1920x1080) | [`03-prioritization-table.png`](docs/images/user-guide/03-prioritization-table.png) |
+| Organizational Hierarchy Rollups | Desktop (1920x1080) | [`04-hierarchy-rollups.png`](docs/images/user-guide/04-hierarchy-rollups.png) |
+| Power BI Direct Lake Analytics | Desktop (1920x1080) | [`05-powerbi-directlake.png`](docs/images/user-guide/05-powerbi-directlake.png) |
+| Quick Add with AI Prefill | Desktop (1920x1080) | [`06-quick-add-prefill.png`](docs/images/user-guide/06-quick-add-prefill.png) |
+| Data Entry & Ingestion Sources | Desktop (1920x1080) | [`07-data-entry-ingestion.png`](docs/images/user-guide/07-data-entry-ingestion.png) |
+| PMO Decisions & Governance Log | Desktop (1920x1080) | [`08-pmo-decisions-log.png`](docs/images/user-guide/08-pmo-decisions-log.png) |
+| Project Detail & SHAP Drivers | Desktop (1920x1080) | [`09-project-detail.png`](docs/images/user-guide/09-project-detail.png) |
+| AI Portfolio Copilot Agent FAB | Desktop (1920x1080) | [`10-ai-copilot-agent-fab.png`](docs/images/user-guide/10-ai-copilot-agent-fab.png) |
+
+To re-run the automated Playwright capture script at any time:
+```powershell
+cd ui
+node scripts/capture_guide.mjs
+```
+
+## 10. Azure Setup & Deployment Guide
+
+For full architecture diagrams, Azure resource breakdowns, and exact deployment commands, see:
+
+- 🚀 **Full Azure Setup & Deployment Guide**: [`SETUP_GUIDE.md`](SETUP_GUIDE.md) or [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md)
+
+### Azure Services Used:
+1. **Microsoft Fabric (OneLake Lakehouse)**: Medallion delta parquet lakehouse (`src_*`, `silver.signal_provenance`, `gold.pmo_predictions`), PySpark ML notebooks, and Fabric Pipelines.
+2. **Direct Lake Power BI**: Zero-copy semantic model connecting directly to `gold.pmo_predictions`.
+3. **Azure App Service (Linux)**: Hosts the Ionic Angular SPA frontend and FastAPI backend.
+4. **Azure API Management (APIM)**: Exposes endpoints under `/pmo` with subscription key security (`Ocp-Apim-Subscription-Key`).
+5. **Azure Key Vault**: Stores APIM subscription secrets, integrated via private endpoints and Managed Identity.
+6. **Microsoft Foundry (Azure AI)**: Azure OpenAI GPT models powering Quick Add AI signal extraction and the PMO Copilot Agent.
+7. **Azure Monitor & Application Insights**: Centralized logging, distributed tracing, and live telemetry.
+8. **Microsoft Entra ID**: Managed Identity authentication and Entra App Registration for Power BI MSAL embedding.
+
+### Deployment Quick Steps:
+```powershell
+# 1. Sign in to Azure
+az login
+az account set --subscription "cf824570-a8ba-497a-a184-0a52f1830aa9"
+
+# 2. Ingest raw data to OneLake
+python data-generator/generate_pmo_data.py
+python data-generator/upload_to_onelake.py
+
+# 3. Deploy Fabric Notebooks & Pipeline
+python fabric/scripts/build_notebooks.py
+python fabric/scripts/deploy_fabric_items.py
+
+# 4. Deploy Azure Infrastructure (Bicep or Terraform)
+pwsh infra/scripts/deploy.ps1 -IacTool bicep -Mode infra
+
+# 5. Deploy Applications (API & UI)
+pwsh infra/scripts/deploy.ps1 -Mode deploy -Component both
+```
+
+## 11. Getting started
 
 Prerequisites: Python 3.12 with [uv](https://docs.astral.sh/uv/), Node.js 22, PowerShell 7, and the Azure CLI signed in to the tenant (`az login`) with access to the Fabric workspace.
 
@@ -161,15 +236,13 @@ uv sync --frozen
 uv run uvicorn app.main:app --port 8000
 cd ..
 
-# 4. Run the UI
+# 4. Run the UI (http://localhost:4200)
 cd ..\ui
 npm install
 npm start
 ```
 
-Power BI is not part of this build (see section 6). Deployment steps are in sections 14 and 15.
-
-## 10. Repository layout
+## 12. Repository layout
 
 ```
 README.md                    This file
@@ -190,7 +263,7 @@ infra/scripts/               deploy.ps1: validate, plan, deploy infrastructure, 
 .github/workflows/           One workflow per component, each with path filters
 ```
 
-## 11. Limitations and roadmap
+## 13. Limitations and roadmap
 
 - **Synthetic data.** Names, costs, dates and outcomes are generated. Results show how the method works, not measured Lam outcomes.
 - **Walk and Run stages.** Similarity and lessons learned (embeddings), Foundry Agent Service and Copilot Studio reasoning, Power Apps intake and approval workflow, Teams Q&A, and capacity or schedule what-if simulation are not in this build.
@@ -205,7 +278,7 @@ infra/scripts/               deploy.ps1: validate, plan, deploy infrastructure, 
 - **Key Vault policy.** The environment policy `KeyVault_PublicNetwork_Modify` forces Key Vault to private access, so the deployment adds a private endpoint for the vault instead of relying on public access.
 - **Quick add.** Submit writes the project to OneLake and can start the pipeline. It has not been run end to end in this demo.
 
-## 12. Azure consumption (ACR)
+## 14. Azure consumption (ACR)
 
 Monthly Azure spend for the resource group that hosts this solution, broken down by service and by environment (dev, test, prod). The full table, totals summary, and notes are in [docs/ACR-README.md](docs/ACR-README.md).
 
@@ -259,7 +332,7 @@ Run from the repository root with PowerShell 7:
 
 Use `-IacTool terraform` for the Terraform flow. Terraform state is local here, so use a remote backend for any shared environment. Deploy only one flavor to an environment, because both create the APIM API with path `pmo`.
 
-## 15. CI/CD (GitHub Actions)
+## 17. CI/CD (GitHub Actions)
 
 Each component has its own workflow in [.github/workflows/](.github/workflows/). A workflow runs only when a file in its path filter changes. Each one can also be started by hand.
 
@@ -277,7 +350,7 @@ Setup:
 - Tool versions come from [config/ci.json](config/ci.json). Tenant, subscription, and Fabric IDs come from `infra/config/pmo-deployment.json` through [scripts/ci/read-config.mjs](scripts/ci/read-config.mjs), so no IDs are typed into the workflows.
 - Deploy jobs use the GitHub environment `demo` and Azure OIDC login. Create a federated credential for that environment and store its client ID in the repository secret `AZURE_CLIENT_ID`.
 
-## 16. Author
+## 18. Author
 
 **Michael Yaacoub | Sr Solution Engineer, Microsoft**
 

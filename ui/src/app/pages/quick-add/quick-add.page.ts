@@ -85,6 +85,22 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
             </ion-card-header>
 
             <ion-card-content>
+              <div class="sample-templates-bar">
+                <span class="templates-label">Sample Prompts:</span>
+                <button type="button" class="template-chip" (click)="applySamplePrompt('iot')">
+                  <ion-icon name="hardware-chip-outline"></ion-icon>
+                  <span>Fab Sensor IoT Pipeline</span>
+                </button>
+                <button type="button" class="template-chip" (click)="applySamplePrompt('identity')">
+                  <ion-icon name="shield-checkmark-outline"></ion-icon>
+                  <span>Zero Trust IAM Modernization</span>
+                </button>
+                <button type="button" class="template-chip" (click)="applySamplePrompt('yield')">
+                  <ion-icon name="analytics-outline"></ion-icon>
+                  <span>Autonomous Wafer Yield AI</span>
+                </button>
+              </div>
+
               <div class="form-group">
                 <ion-item lines="none" class="input-item">
                   <ion-label position="stacked">
@@ -399,6 +415,42 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         color: var(--pmo-muted, #666666);
         margin: 4px 0 0 0;
       }
+      .sample-templates-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+        padding: 10px 14px;
+        background: #f4f8fc;
+        border-radius: 8px;
+        border: 1px solid #d0e2f2;
+      }
+      .templates-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #004578;
+      }
+      .template-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #0078d4;
+        color: #0078d4;
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .template-chip:hover {
+        background: #0078d4;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 120, 212, 0.25);
+      }
       .form-group {
         margin-bottom: 14px;
       }
@@ -632,6 +684,22 @@ export class QuickAddPageComponent implements OnInit, OnDestroy {
   readonly submitWarning = signal<string | null>(null);
 
   private pollIntervalHandle?: ReturnType<typeof setInterval>;
+
+  applySamplePrompt(type: 'iot' | 'identity' | 'yield'): void {
+    if (type === 'iot') {
+      this.projectName = 'NextGen Fab Telemetry & Real-Time Sensor Ingestion';
+      this.description =
+        'Deploy real-time streaming telemetry across 45 semiconductor etch and deposition chambers in Fremont and Singapore. Connects via IoT Edge gateways to OneLake Lakehouse, providing millisecond-level pressure, temperature, and RF power monitoring for automated equipment safety and yield optimization. Estimated budget $1.85M, requires Application Development and Cloud Infrastructure FTEs with Q3 2027 target go-live.';
+    } else if (type === 'identity') {
+      this.projectName = 'Enterprise Zero Trust PAM & Cloud Identity Modernization';
+      this.description =
+        'Implement privileged access management (PAM) and microsegmentation for all fab engineering and corporate workstations to comply with SEC cybersecurity disclosure rules and ISO 27001 requirements. Protects access to cleanroom tooling and SCADA networks with executive sponsorship. Capital budget $1.2M, 50 person weeks effort, Low risk.';
+    } else {
+      this.projectName = 'Autonomous Wafer Defect Detection & Computer Vision Co-Pilot';
+      this.description =
+        'Develop an AI-driven deep learning inspection pipeline using high-resolution wafer SEM imagery to detect micro-cracks and particle contamination in real time. Deploys custom edge inference models on GPU nodes connected to Fabric MLflow registry. High business value (5/5), estimated $2.4M cost, DT Initiative strategic tag.';
+    }
+  }
 
   ngOnInit(): void {
     this.loadOptions();

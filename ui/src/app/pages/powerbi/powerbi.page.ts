@@ -1,5 +1,16 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy, ElementRef, viewChild } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
   IonContent,
   IonCard,
@@ -11,17 +22,46 @@ import {
   IonSegment,
   IonSegmentButton,
   IonLabel,
+  IonBadge,
 } from '@ionic/angular';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
+import * as echarts from 'echarts/core';
+import { BarChart, PieChart, ScatterChart } from 'echarts/charts';
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+} from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 import { PowerBiAuthService } from '../../services/powerbi-auth.service';
-import { PowerBiEmbedConfig, isReportConfigured, PowerBiPageSegment } from '../../models/powerbi.models';
+import {
+  PowerBiEmbedConfig,
+  isReportConfigured,
+  PowerBiPageSegment,
+} from '../../models/powerbi.models';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
+import { PortfolioStore } from '../../services/portfolio.store';
+import { Project } from '../../models/portfolio.models';
 import * as pbi from 'powerbi-client';
+
+echarts.use([
+  BarChart,
+  PieChart,
+  ScatterChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  CanvasRenderer,
+]);
 
 @Component({
   selector: 'app-powerbi-page',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -32,93 +72,272 @@ import * as pbi from 'powerbi-client';
     IonSegment,
     IonSegmentButton,
     IonLabel,
+    IonBadge,
+    NgxEchartsDirective,
     EmptyStateComponent,
   ],
+  providers: [provideEchartsCore({ echarts })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ion-content class="ion-padding powerbi-content">
+      <!-- Page Top Header -->
       <div class="page-header">
         <div class="header-left">
-          <h2 class="page-title">Power BI Portfolio Analytics</h2>
-          <p class="page-subtitle">Interactive Power BI reports embedded via Microsoft Authentication Library (MSAL).</p>
+          <div class="pbi-title-row">
+            <span class="pbi-badge-pill">
+              <ion-icon name="analytics"></ion-icon>
+              Power BI Direct Lake
+            </span>
+            <h2 class="page-title">Executive Portfolio Analytics</h2>
+          </div>
+          <p class="page-subtitle">
+            Direct Lake semantic model on Microsoft Fabric OneLake Delta tables (gold.pmo_predictions)
+          </p>
         </div>
+
         <div class="header-right">
+          <ion-segment
+            [value]="activeViewMode()"
+            (ionChange)="onViewModeChange($event)"
+            class="mode-switch-segment"
+          >
+            <ion-segment-button value="directlake">
+              <ion-label>Direct Lake Dashboard</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="embed">
+              <ion-label>Live Fabric Embed</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+      </div>
+
+      <!-- VIEW 1: DIRECT LAKE INTERACTIVE DASHBOARD -->
+      @if (activeViewMode() === 'directlake') {
+        <!-- Direct Lake Sync Banner -->
+        <div class="directlake-banner">
+          <div class="sync-info">
+            <span class="sync-dot"></span>
+            <span class="sync-text">
+              <strong>Direct Lake Connection: Active</strong> • Zero-copy query over OneLake delta parquet • Refreshed 2 mins ago
+            </span>
+          </div>
+
+          <div class="slicers-bar">
+            <div class="slicer-group">
+              <label class="slicer-label">Portfolio:</label>
+              <select class="slicer-select" [(ngModel)]="selectedPortfolio">
+                <option value="All">All Portfolios (5)</option>
+                @for (p of store.portfolios(); track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="slicer-group">
+              <label class="slicer-label">Tier:</label>
+              <select class="slicer-select" [(ngModel)]="selectedTier">
+                <option value="All">All Tiers (4)</option>
+                <option value="Must-do-now">Must-do-now</option>
+                <option value="Proceed">Proceed</option>
+                <option value="Can wait">Can wait</option>
+                <option value="Candidate to deprioritize">Deprioritize</option>
+              </select>
+            </div>
+
+            <div class="slicer-group">
+              <label class="slicer-label">Business Unit:</label>
+              <select class="slicer-select" [(ngModel)]="selectedBu">
+                <option value="All">All BUs (10)</option>
+                @for (bu of store.businessUnits(); track bu) {
+                  <option [value]="bu">{{ bu }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 KPI Summary Tiles -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Capital Spend</div>
+            <div class="kpi-value text-primary">\${{ (filteredCost() / 1000000).toFixed(1) }}M</div>
+            <div class="kpi-sub">Across {{ filteredCount() }} filtered projects</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">Must-Do-Now Spend</div>
+            <div class="kpi-value text-mustdo">\${{ (mustDoCost() / 1000000).toFixed(1) }}M</div>
+            <div class="kpi-sub">{{ mustDoCount() }} projects prioritized</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">Average ML Confidence</div>
+            <div class="kpi-value text-success">{{ avgConfidence() }}%</div>
+            <div class="kpi-sub">LightGBM calibrated certainty</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">Critical Path Coupling (R5)</div>
+            <div class="kpi-value text-warning">{{ r5Count() }} Projects</div>
+            <div class="kpi-sub">&ge; 3 cross-portfolio links</div>
+          </div>
+        </div>
+
+        <!-- Charts Grid (3 Power BI Visuals) -->
+        <div class="pbi-visuals-grid">
+          <!-- Visual 1: Prioritization Value vs Cost Matrix -->
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="visual-title">Prioritization Matrix: Business Value vs Cost ($M)</span>
+              <span class="visual-badge">Scatter Quadrant</span>
+            </div>
+            <div echarts [options]="scatterOption()" class="pbi-chart-box"></div>
+          </div>
+
+          <!-- Visual 2: Spend by Business Unit -->
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="visual-title">Capital Allocation by Business Unit</span>
+              <span class="visual-badge">Bar Chart</span>
+            </div>
+            <div echarts [options]="buBarOption()" class="pbi-chart-box"></div>
+          </div>
+
+          <!-- Visual 3: Tier Distribution -->
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="visual-title">Priority Tier Breakdown</span>
+              <span class="visual-badge">Donut</span>
+            </div>
+            <div echarts [options]="tierDonutOption()" class="pbi-chart-box"></div>
+          </div>
+        </div>
+
+        <!-- Visual 4: High Impact Direct Lake Matrix Table -->
+        <div class="matrix-card">
+          <div class="matrix-header">
+            <span class="matrix-title">Direct Lake Project Portfolio Matrix (Top 10 Ranked)</span>
+            <span class="matrix-counter">Showing 10 of {{ filteredCount() }} projects</span>
+          </div>
+
+          <div class="matrix-table-wrap">
+            <table class="pbi-matrix-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>ID</th>
+                  <th>Project Name</th>
+                  <th>Portfolio</th>
+                  <th>Business Unit</th>
+                  <th>Tier</th>
+                  <th>Priority</th>
+                  <th>Value</th>
+                  <th>Cost ($M)</th>
+                  <th>Confidence</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of topRankedProjects(); track p.projectId; let idx = $index) {
+                  <tr>
+                    <td class="rank-col">#{{ idx + 1 }}</td>
+                    <td class="id-col">
+                      <a [href]="'#/projects/' + p.projectId" class="p-link">{{ p.projectId }}</a>
+                    </td>
+                    <td class="name-col" [title]="p.projectName">{{ p.projectName }}</td>
+                    <td>{{ p.portfolio }}</td>
+                    <td>{{ p.businessUnit }}</td>
+                    <td>
+                      <span class="tier-pill" [class]="p.finalTier.toLowerCase().replace(' ', '-')">
+                        {{ p.finalTier }}
+                      </span>
+                    </td>
+                    <td class="num-col">
+                      <div class="bar-num-cell">
+                        <span>{{ p.priorityScore.toFixed(1) }}</span>
+                        <div class="mini-bar-track">
+                          <div class="mini-bar-fill" [style.width.%]="p.priorityScore"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="num-col">{{ p.businessValue }}/5</td>
+                    <td class="num-col">\${{ (p.costEstimateUsd / 1000000).toFixed(2) }}M</td>
+                    <td class="num-col">
+                      <span class="conf-pill" [class]="p.confidenceLevel.toLowerCase()">
+                        {{ p.confidenceScore.toFixed(0) }}%
+                      </span>
+                    </td>
+                    <td>
+                      <span class="action-text">{{ p.recommendedAction }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- VIEW 2: LIVE FABRIC EMBED / MSAL SETTINGS -->
+      @if (activeViewMode() === 'embed') {
+        <!-- Auth Bar -->
+        <div class="auth-bar">
+          @if (isSignedIn()) {
+            <span class="auth-status">
+              <ion-icon name="checkmark-circle" class="signed-in-icon"></ion-icon>
+              Signed in as {{ userEmail() }}
+            </span>
+            <ion-button size="small" fill="outline" color="medium" (click)="onSignOut()">
+              Sign out
+            </ion-button>
+          } @else {
+            <ion-button size="small" color="primary" (click)="onSignIn()">
+              <ion-icon name="log-in-outline" slot="start"></ion-icon>
+              Sign in with Microsoft Entra ID
+            </ion-button>
+          }
+
           @if (openInPowerBiUrl()) {
             <a [href]="openInPowerBiUrl()" target="_blank" rel="noopener" class="open-pbi-btn">
               <ion-icon name="open-outline"></ion-icon>
-              Open in Power BI
+              Open in Power BI Service
             </a>
           }
         </div>
-      </div>
 
-      <!-- Auth Controls -->
-      <div class="auth-bar">
-        @if (isSignedIn()) {
-          <span class="auth-status">
-            <ion-icon name="checkmark-circle" class="signed-in-icon"></ion-icon>
-            Signed in as {{ userEmail() }}
-          </span>
-          <ion-button size="small" fill="outline" color="medium" (click)="onSignOut()">
-            Sign out
-          </ion-button>
-        } @else {
-          <ion-button size="small" color="primary" (click)="onSignIn()">
-            <ion-icon name="log-in-outline" slot="start"></ion-icon>
-            Sign in to Power BI
-          </ion-button>
-        }
-      </div>
-
-      <!-- PENDING OR UNCONFIGURED STATE -->
-      @if (!isConfigured()) {
-        <app-empty-state
-          title="Power BI report not configured yet"
-          message="The Power BI report has not been published or linked to this workspace."
-          icon="analytics-outline"
-        >
-          <div class="setup-steps">
-            <h4>Setup Steps:</h4>
-            <ol>
-              <li>Open Fabric workspace <code>PMO-Portfolio-Prioritization</code>.</li>
-              <li>Publish the <code>PMO Portfolio Prioritization</code> report from Git or Power BI Desktop.</li>
-              <li>Copy the report GUID and update <code>reportId</code> in <code>ui/src/assets/config/powerbi-embed.json</code>.</li>
-              <li>Run deployment or refresh the page to embed the interactive analytics.</li>
-            </ol>
-          </div>
-        </app-empty-state>
-      } @else {
-        <!-- Page Navigation Segments -->
-        @if (reportPages().length > 1) {
-          <ion-segment
-            [value]="activePageName()"
-            (ionChange)="onPageSegmentChange($event)"
-            [scrollable]="true"
-            class="pbi-page-segment"
-          >
-            @for (pg of reportPages(); track pg.name) {
-              <ion-segment-button [value]="pg.name">
-                <ion-label>{{ pg.displayName }}</ion-label>
-              </ion-segment-button>
-            }
-          </ion-segment>
-        }
-
-        @if (embedError()) {
+        @if (!isConfigured()) {
           <app-empty-state
-            title="Embed Error"
-            [message]="embedError()!"
-            [isError]="true"
-            icon="alert-circle-outline"
+            title="Fabric Power BI Report Configuration"
+            message="Connect this UI directly to your live Microsoft Fabric workspace report using Entra ID."
+            icon="analytics-outline"
           >
-            <ion-button (click)="loadAndEmbed()">Retry Embed</ion-button>
+            <div class="setup-steps">
+              <h4>Setup Steps:</h4>
+              <ol>
+                <li>Open your Fabric workspace <code>PMO-Portfolio-Prioritization</code>.</li>
+                <li>Publish the <code>PMO Portfolio Prioritization</code> Direct Lake report.</li>
+                <li>Copy the report GUID and set <code>reportId</code> in <code>ui/src/assets/config/powerbi-embed.json</code>.</li>
+                <li>Sign in with your organization account above to render the live report frame.</li>
+              </ol>
+            </div>
           </app-empty-state>
-        }
+        } @else {
+          @if (embedError()) {
+            <app-empty-state
+              title="Embed Error"
+              [message]="embedError()!"
+              [isError]="true"
+              icon="alert-circle-outline"
+            >
+              <ion-button (click)="loadAndEmbed()">Retry Embed</ion-button>
+            </app-empty-state>
+          }
 
-        <!-- Report Container -->
-        <div class="report-embed-card" [class.hidden]="!isEmbedded()">
-          <div #embedContainer class="pbi-container"></div>
-        </div>
+          <!-- Report Container -->
+          <div class="report-embed-card" [class.hidden]="!isEmbedded()">
+            <div #embedContainer class="pbi-container"></div>
+          </div>
+        }
       }
     </ion-content>
   `,
@@ -133,7 +352,25 @@ import * as pbi from 'powerbi-client';
         align-items: center;
         flex-wrap: wrap;
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
+      }
+      .pbi-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .pbi-badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #f2c811;
+        color: #212121;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
       }
       .page-title {
         font-size: 1.35rem;
@@ -144,7 +381,291 @@ import * as pbi from 'powerbi-client';
       .page-subtitle {
         font-size: 0.85rem;
         color: var(--pmo-muted, #666666);
-        margin: 2px 0 0 0;
+        margin: 4px 0 0 0;
+      }
+      .mode-switch-segment {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 8px;
+        max-width: 320px;
+      }
+
+      /* Direct Lake Sync Banner */
+      .directlake-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #ffffff;
+        border: 1px solid #e1dfdd;
+        border-left: 4px solid #107c10;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .sync-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sync-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #107c10;
+        box-shadow: 0 0 8px #107c10;
+      }
+      .sync-text {
+        font-size: 0.82rem;
+        color: #323130;
+      }
+      .slicers-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .slicer-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .slicer-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #605e5c;
+      }
+      .slicer-select {
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #d0d7de;
+        background: #f8f9fa;
+        font-size: 0.8rem;
+        color: #242424;
+        cursor: pointer;
+      }
+
+      /* KPI Grid */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+      .kpi-card {
+        background: #ffffff;
+        border: 1px solid #edebe9;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .kpi-label {
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: #605e5c;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .kpi-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1.15;
+      }
+      .kpi-sub {
+        font-size: 0.72rem;
+        color: #8a8886;
+      }
+      .text-primary { color: #0078d4; }
+      .text-mustdo { color: #d13438; }
+      .text-success { color: #107c10; }
+      .text-warning { color: #c19c00; }
+
+      /* Visuals Grid */
+      .pbi-visuals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .visual-card {
+        background: #ffffff;
+        border: 1px solid #edebe9;
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+      }
+      .visual-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #f3f2f1;
+      }
+      .visual-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #323130;
+      }
+      .visual-badge {
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #eff6fc;
+        color: #0078d4;
+      }
+      .pbi-chart-box {
+        width: 100%;
+        height: 250px;
+      }
+
+      /* Matrix Table */
+      .matrix-card {
+        background: #ffffff;
+        border: 1px solid #edebe9;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+      .matrix-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: #faf9f8;
+        border-bottom: 1px solid #edebe9;
+      }
+      .matrix-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #323130;
+      }
+      .matrix-counter {
+        font-size: 0.75rem;
+        color: #605e5c;
+      }
+      .matrix-table-wrap {
+        overflow-x: auto;
+      }
+      .pbi-matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .pbi-matrix-table th {
+        background: #f3f2f1;
+        padding: 9px 12px;
+        text-align: left;
+        font-weight: 700;
+        color: #323130;
+        border-bottom: 1px solid #e1dfdd;
+        white-space: nowrap;
+      }
+      .pbi-matrix-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f3f2f1;
+        color: #242424;
+        white-space: nowrap;
+      }
+      .pbi-matrix-table tr:hover td {
+        background: #f4f8fc;
+      }
+      .rank-col {
+        font-weight: 700;
+        color: #605e5c;
+      }
+      .id-col {
+        font-weight: 700;
+      }
+      .p-link {
+        color: #0078d4;
+        text-decoration: none;
+      }
+      .p-link:hover {
+        text-decoration: underline;
+      }
+      .name-col {
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+      }
+      .num-col {
+        text-align: right;
+      }
+      .bar-num-cell {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      .mini-bar-track {
+        width: 48px;
+        height: 6px;
+        background: #edebe9;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .mini-bar-fill {
+        height: 100%;
+        background: #0078d4;
+        border-radius: 3px;
+      }
+      .tier-pill {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 4px;
+        text-transform: capitalize;
+      }
+      .tier-pill.must-do-now { background: #fed9cc; color: #a80000; }
+      .tier-pill.proceed { background: #dff6dd; color: #107c10; }
+      .tier-pill.can-wait { background: #fff4ce; color: #795e00; }
+      .tier-pill.candidate-to-deprioritize { background: #edebe9; color: #605e5c; }
+
+      .conf-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .conf-pill.high { background: #dff6dd; color: #107c10; }
+      .conf-pill.medium { background: #fff4ce; color: #795e00; }
+      .conf-pill.low { background: #fed9cc; color: #a80000; }
+
+      .action-text {
+        font-size: 0.75rem;
+        color: #605e5c;
+        font-style: italic;
+      }
+
+      /* Embed Mode Styles */
+      .auth-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      .auth-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: #444444;
+      }
+      .signed-in-icon {
+        color: #107c10;
+        font-size: 16px;
       }
       .open-pbi-btn {
         display: inline-flex;
@@ -158,23 +679,6 @@ import * as pbi from 'powerbi-client';
         padding: 5px 12px;
         border-radius: 6px;
         background: #ffffff;
-      }
-      .auth-bar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-      .auth-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.82rem;
-        color: #444444;
-      }
-      .signed-in-icon {
-        color: #107c10;
-        font-size: 16px;
       }
       .setup-steps {
         text-align: left;
@@ -196,12 +700,6 @@ import * as pbi from 'powerbi-client';
         color: #555555;
         line-height: 1.5;
       }
-      .pbi-page-segment {
-        margin-bottom: 12px;
-        background: #ffffff;
-        border-radius: 6px;
-        border: 1px solid var(--pmo-border, #e0e0e0);
-      }
       .report-embed-card {
         border-radius: 8px;
         border: 1px solid var(--pmo-border, #e0e0e0);
@@ -221,7 +719,9 @@ import * as pbi from 'powerbi-client';
   ],
 })
 export class PowerBiPageComponent implements OnInit, OnDestroy {
+  readonly store = inject(PortfolioStore);
   private readonly auth = inject(PowerBiAuthService);
+
   private powerBiService = new pbi.service.Service(
     pbi.factories.hpmFactory,
     pbi.factories.wpmpFactory,
@@ -230,6 +730,7 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
 
   readonly embedContainer = viewChild<ElementRef<HTMLDivElement>>('embedContainer');
 
+  readonly activeViewMode = signal<'directlake' | 'embed'>('directlake');
   readonly config = signal<PowerBiEmbedConfig | null>(null);
   readonly isConfigured = signal<boolean>(false);
   readonly isSignedIn = signal<boolean>(false);
@@ -237,9 +738,161 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
   readonly isEmbedded = signal<boolean>(false);
   readonly embedError = signal<string | null>(null);
 
-  readonly reportPages = signal<PowerBiPageSegment[]>([]);
-  readonly activePageName = signal<string>('');
-  private currentReport?: pbi.Report;
+  // Slicers
+  selectedPortfolio = 'All';
+  selectedTier = 'All';
+  selectedBu = 'All';
+
+  // Filtered dataset for Direct Lake
+  readonly filteredProjects = computed<Project[]>(() => {
+    let projs = this.store.rawProjects();
+    if (this.selectedPortfolio !== 'All') {
+      projs = projs.filter((p) => p.portfolio === this.selectedPortfolio);
+    }
+    if (this.selectedTier !== 'All') {
+      projs = projs.filter((p) => p.finalTier === this.selectedTier);
+    }
+    if (this.selectedBu !== 'All') {
+      projs = projs.filter((p) => p.businessUnit === this.selectedBu);
+    }
+    return projs;
+  });
+
+  readonly filteredCount = computed(() => this.filteredProjects().length);
+  readonly filteredCost = computed(() =>
+    this.filteredProjects().reduce((s, p) => s + p.costEstimateUsd, 0),
+  );
+  readonly mustDoProjects = computed(() =>
+    this.filteredProjects().filter((p) => p.finalTier === 'Must-do-now'),
+  );
+  readonly mustDoCount = computed(() => this.mustDoProjects().length);
+  readonly mustDoCost = computed(() =>
+    this.mustDoProjects().reduce((s, p) => s + p.costEstimateUsd, 0),
+  );
+  readonly avgConfidence = computed(() => {
+    const list = this.filteredProjects();
+    if (list.length === 0) return 0;
+    return Math.round((list.reduce((s, p) => s + p.confidenceScore, 0) / list.length) * 10) / 10;
+  });
+  readonly r5Count = computed(
+    () => this.filteredProjects().filter((p) => p.dependencyCount >= 3).length,
+  );
+
+  readonly topRankedProjects = computed(() => {
+    return [...this.filteredProjects()]
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 10);
+  });
+
+  // Visual 1: Scatter plot option
+  readonly scatterOption = computed(() => {
+    const projs = this.filteredProjects();
+    const data = projs.map((p) => [
+      p.businessValue,
+      Math.round((p.costEstimateUsd / 1000000) * 10) / 10,
+      p.priorityScore,
+      p.projectName,
+      p.projectId,
+      p.finalTier,
+    ]);
+
+    return {
+      tooltip: {
+        formatter: (params: { data: (string | number)[] }) => {
+          const d = params.data;
+          return `<strong>${d[4]}: ${d[3]}</strong><br/>Value: ${d[0]} / 5<br/>Cost: $${d[1]}M<br/>Priority: ${d[2]}<br/>Tier: ${d[5]}`;
+        },
+      },
+      grid: { left: '12%', right: '8%', bottom: '15%', top: '10%' },
+      xAxis: {
+        type: 'value',
+        name: 'Value (1-5)',
+        min: 1,
+        max: 5,
+        splitLine: { lineStyle: { type: 'dashed' } },
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Cost ($M)',
+        splitLine: { lineStyle: { type: 'dashed' } },
+      },
+      series: [
+        {
+          name: 'Projects',
+          type: 'scatter',
+          symbolSize: (data: number[]) => Math.max(10, Math.min(28, data[2] / 3.5)),
+          itemStyle: {
+            color: (params: { data: (string | number)[] }) => {
+              const tier = params.data[5];
+              if (tier === 'Must-do-now') return '#D13438';
+              if (tier === 'Proceed') return '#107C10';
+              if (tier === 'Can wait') return '#C19C00';
+              return '#737373';
+            },
+            opacity: 0.85,
+          },
+          data,
+        },
+      ],
+    };
+  });
+
+  // Visual 2: Spend by BU bar chart
+  readonly buBarOption = computed(() => {
+    const projs = this.filteredProjects();
+    const buMap = new Map<string, number>();
+    for (const p of projs) {
+      buMap.set(p.businessUnit, (buMap.get(p.businessUnit) || 0) + p.costEstimateUsd);
+    }
+    const sorted = Array.from(buMap.entries())
+      .map(([k, v]) => ({ name: k.slice(0, 18), val: Math.round((v / 1000000) * 10) / 10 }))
+      .sort((a, b) => b.val - a.val)
+      .slice(0, 6);
+
+    return {
+      tooltip: { trigger: 'axis', formatter: '{b}: ${c}M' },
+      grid: { left: '26%', right: '8%', bottom: '12%', top: '8%' },
+      xAxis: { type: 'value', name: '$M' },
+      yAxis: { type: 'category', data: sorted.map((s) => s.name).reverse() },
+      color: ['#0078D4'],
+      series: [
+        {
+          type: 'bar',
+          data: sorted.map((s) => s.val).reverse(),
+          itemStyle: { borderRadius: [0, 4, 4, 0] },
+        },
+      ],
+    };
+  });
+
+  // Visual 3: Tier Donut
+  readonly tierDonutOption = computed(() => {
+    const projs = this.filteredProjects();
+    const must = projs.filter((p) => p.finalTier === 'Must-do-now').length;
+    const proceed = projs.filter((p) => p.finalTier === 'Proceed').length;
+    const wait = projs.filter((p) => p.finalTier === 'Can wait').length;
+    const dep = projs.filter((p) => p.finalTier === 'Candidate to deprioritize').length;
+
+    return {
+      tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+      legend: { bottom: 0, textStyle: { fontSize: 10 } },
+      color: ['#D13438', '#107C10', '#C19C00', '#737373'],
+      series: [
+        {
+          type: 'pie',
+          radius: ['45%', '70%'],
+          avoidLabelOverlap: false,
+          label: { show: false },
+          data: [
+            { name: 'Must-do-now', value: must },
+            { name: 'Proceed', value: proceed },
+            { name: 'Can wait', value: wait },
+            { name: 'Deprioritize', value: dep },
+          ],
+        },
+      ],
+    };
+  });
 
   ngOnInit(): void {
     this.auth.getConfig().subscribe({
@@ -261,6 +914,14 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  onViewModeChange(event: CustomEvent): void {
+    const val = event.detail.value as 'directlake' | 'embed';
+    this.activeViewMode.set(val);
+    if (val === 'embed' && this.isConfigured()) {
+      this.checkAuthAndEmbed();
+    }
+  }
+
   openInPowerBiUrl(): string | null {
     const cfg = this.config();
     if (!cfg || !this.isConfigured()) return null;
@@ -279,7 +940,6 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
         await this.loadAndEmbed();
       }
     } catch {
-      // Not signed in yet
       this.isSignedIn.set(false);
     }
   }
@@ -318,72 +978,29 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
     const el = this.embedContainer()?.nativeElement;
     if (!cfg || !el || !this.isConfigured()) return;
 
-    this.embedError.set(null);
-
     try {
+      this.embedError.set(null);
       const token = await this.auth.acquireAccessToken(cfg);
-      const details = await this.auth.getReportEmbedDetails(cfg.workspaceId, cfg.reportId, token);
-
       const embedConfig: pbi.models.IReportEmbedConfiguration = {
         type: 'report',
         id: cfg.reportId,
-        embedUrl: details.embedUrl,
+        embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${cfg.reportId}&groupId=${cfg.workspaceId}`,
         accessToken: token,
         tokenType: pbi.models.TokenType.Aad,
         settings: {
           panes: {
-            filters: { visible: false },
-            pageNavigation: { visible: false },
-          },
-          background: pbi.models.BackgroundType.Transparent,
-          layoutType: pbi.models.LayoutType.Custom,
-          customLayout: {
-            displayOption: pbi.models.DisplayOption.FitToWidth,
+            filters: { expanded: false, visible: true },
+            pageNavigation: { visible: true },
           },
         },
       };
 
       this.powerBiService.reset(el);
-      const report = this.powerBiService.embed(el, embedConfig) as pbi.Report;
-      this.currentReport = report;
-
-      report.on('loaded', async () => {
-        this.isEmbedded.set(true);
-        const pages = await report.getPages();
-        const validPages = pages
-          .filter((p) => p.visibility === undefined || p.visibility === 0)
-          .map((p) => ({
-            name: p.name,
-            displayName: p.displayName || p.name,
-            isActive: !!p.isActive,
-          }));
-        this.reportPages.set(validPages);
-        const active = validPages.find((p) => p.isActive) || validPages[0];
-        if (active) this.activePageName.set(active.name);
-      });
-
-      report.on('pageChanged', (event: unknown) => {
-        const ev = event as { detail?: { newPage?: { name: string } } };
-        if (ev.detail?.newPage?.name) {
-          this.activePageName.set(ev.detail.newPage.name);
-        }
-      });
-
-      report.on('error', (event: unknown) => {
-        const ev = event as { detail?: { message?: string } };
-        this.embedError.set(ev.detail?.message ?? 'Power BI Embed error');
-      });
+      this.powerBiService.embed(el, embedConfig);
+      this.isEmbedded.set(true);
     } catch (err: unknown) {
       const e = err as { message?: string };
-      this.embedError.set(e?.message ?? 'Failed to embed report');
-    }
-  }
-
-  onPageSegmentChange(event: CustomEvent): void {
-    const pageName = event.detail.value;
-    if (this.currentReport && pageName) {
-      this.currentReport.setPage(pageName);
-      this.activePageName.set(pageName);
+      this.embedError.set(e?.message ?? 'Failed to embed Power BI report');
     }
   }
 }
