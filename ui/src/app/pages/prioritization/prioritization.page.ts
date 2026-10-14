@@ -60,7 +60,11 @@ import { ConfigService } from '../../services/config.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ion-content class="prioritization-content">
-      <div class="prioritization-layout" [class.filters-collapsed]="filtersCollapsed()">
+      <div
+        class="prioritization-layout"
+        [class.filters-collapsed]="filtersCollapsed()"
+        [class.detail-collapsed]="detailCollapsed()"
+      >
         <!-- LEFT FILTER PANEL -->
         <aside class="sidebar-filters">
           <button
@@ -200,9 +204,9 @@ import { ConfigService } from '../../services/config.service';
           } @else {
             <!-- VIEW: BOARD (Kanban style by groups or tiers) -->
             @if (store.activeView() === 'board') {
-              <div class="board-view-container">
+              <div class="board-view-container" [class.single-column-view]="store.groupedProjects().length === 1">
                 @for (grp of store.groupedProjects(); track grp.key) {
-                  <div class="board-column">
+                  <div class="board-column" [class.single-column]="store.groupedProjects().length === 1">
                     <div class="board-column-header">
                       <div class="col-title-wrap">
                         <span class="col-title">{{ grp.label }}</span>
@@ -370,8 +374,19 @@ import { ConfigService } from '../../services/config.service';
         </main>
 
         <!-- RIGHT DETAIL PANEL (Side panel on web) -->
-        <aside class="sidebar-detail">
-          <app-detail-panel></app-detail-panel>
+        <aside class="sidebar-detail" [class.collapsed]="detailCollapsed()">
+          <button
+            type="button"
+            class="desktop-detail-collapse"
+            [attr.aria-label]="detailCollapsed() ? 'Expand details' : 'Collapse details'"
+            [title]="detailCollapsed() ? 'Expand details' : 'Collapse details'"
+            (click)="detailCollapsed.update(collapsed => !collapsed)"
+          >
+            {{ detailCollapsed() ? '<' : '>' }}
+          </button>
+          @if (!detailCollapsed()) {
+            <app-detail-panel></app-detail-panel>
+          }
         </aside>
       </div>
 
@@ -412,13 +427,19 @@ import { ConfigService } from '../../services/config.service';
       }
       .prioritization-layout {
         display: grid;
-        grid-template-columns: 240px minmax(0, 1fr) 340px;
+        grid-template-columns: 240px minmax(0, 1fr) 350px;
         height: 100%;
         overflow: hidden;
         transition: grid-template-columns 0.18s ease;
       }
       .prioritization-layout.filters-collapsed {
-        grid-template-columns: 48px minmax(0, 1fr) 340px;
+        grid-template-columns: 48px minmax(0, 1fr) 350px;
+      }
+      .prioritization-layout.detail-collapsed {
+        grid-template-columns: 240px minmax(0, 1fr) 48px;
+      }
+      .prioritization-layout.filters-collapsed.detail-collapsed {
+        grid-template-columns: 48px minmax(0, 1fr) 48px;
       }
       .sidebar-filters {
         border-right: 1px solid var(--pmo-border, #e0e0e0);
@@ -442,6 +463,23 @@ import { ConfigService } from '../../services/config.service';
       }
       .filters-collapsed .desktop-filter-collapse {
         margin-right: auto;
+      }
+      .desktop-detail-collapse {
+        display: flex;
+        width: 30px;
+        height: 30px;
+        margin: 0 auto 6px 0;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--pmo-border, #d6d6d6);
+        border-radius: 5px;
+        background: #ffffff;
+        color: var(--pmo-primary, #0078d4);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .detail-collapsed .desktop-detail-collapse {
+        margin-left: auto;
       }
       .main-workspace {
         overflow-y: auto;
@@ -532,21 +570,31 @@ import { ConfigService } from '../../services/config.service';
         gap: 12px;
         overflow-x: auto;
         padding-bottom: 12px;
+        flex: 1;
+        width: 100%;
       }
       .board-column {
-        min-width: 280px;
-        max-width: 320px;
+        flex: 1 1 280px;
+        min-width: 270px;
         background: #f0f2f5;
         border-radius: 8px;
         display: flex;
         flex-direction: column;
         border: 1px solid #e1e4e8;
       }
+      .board-column.single-column {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: none;
+      }
       .board-column-header {
         padding: 10px 12px;
         background: #e8ebef;
         border-radius: 8px 8px 0 0;
         border-bottom: 1px solid #d5d9de;
+        position: sticky;
+        top: 0;
+        z-index: 2;
       }
       .col-title-wrap {
         display: flex;
@@ -577,20 +625,33 @@ import { ConfigService } from '../../services/config.service';
         overflow-y: auto;
         max-height: calc(100vh - 240px);
       }
+      .board-column.single-column .board-cards-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px;
+        padding: 10px;
+        align-content: start;
+      }
       .project-card {
         background: #ffffff;
-        padding: 10px;
+        padding: 10px 12px;
         border-radius: 6px;
         border: 1px solid #e0e0e0;
         cursor: pointer;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 116px;
       }
       .project-card:hover {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
       }
       .project-card.selected {
         border-color: var(--pmo-primary, #0078d4);
         background: #f4f9fd;
+        box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
       }
       .card-top {
         display: flex;
@@ -617,17 +678,25 @@ import { ConfigService } from '../../services/config.service';
         font-weight: 600;
         color: #1a1a1a;
         margin: 4px 0 2px 0;
-        line-height: 1.25;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
       .card-sub {
         font-size: 0.72rem;
         color: #666666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .card-bottom {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 8px;
+        margin-top: auto;
+        padding-top: 6px;
       }
       .tier-pill {
         font-size: 0.68rem;
@@ -929,6 +998,7 @@ export class PrioritizationPageComponent {
   readonly mobileFiltersOpen = signal<boolean>(false);
   readonly mobileDetailOpen = signal<boolean>(false);
   readonly filtersCollapsed = signal<boolean>(false);
+  readonly detailCollapsed = signal<boolean>(false);
 
   // Pagination state derived from ui.json config
   readonly pageSize = signal<number>(this.configService.config.table?.pageSize ?? 25);
@@ -971,6 +1041,7 @@ export class PrioritizationPageComponent {
 
   onSelectProject(projectId: string): void {
     this.store.selectProject(projectId);
+    this.detailCollapsed.set(false);
     if (typeof window !== 'undefined' && window.innerWidth < 1200) {
       this.mobileDetailOpen.set(true);
     }

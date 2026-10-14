@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import {
   IonApp,
   IonSplitPane,
@@ -131,10 +132,15 @@ addIcons({
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   private readonly configService = inject(ConfigService);
+  private readonly titleService = inject(Title);
   readonly store = inject(PortfolioStore);
   readonly navigationCollapsed = signal(false);
+
+  ngOnInit(): void {
+    this.titleService.setTitle('PMO Portfolio Prioritization');
+  }
 
   get brandConfig() {
     return this.configService.config.brand;

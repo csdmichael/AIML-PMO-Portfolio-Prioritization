@@ -192,7 +192,7 @@ export function groupProjects(
     return [
       {
         key: 'all',
-        label: `All Projects (${projects.length})`,
+        label: 'All Projects',
         count: projects.length,
         avgConfidence,
         totalCost,

@@ -88,11 +88,11 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
               </div>
               <div class="meta-item">
                 <span class="meta-label">Go-Live</span>
-                <span class="meta-val">{{ p.goLiveDate }} ({{ p.monthsToGoLive }} mo)</span>
+                <span class="meta-val">{{ p.goLiveDate }} ({{ p.monthsToGoLive.toFixed(1) }} mo)</span>
               </div>
               <div class="meta-item">
                 <span class="meta-label">Cost / Effort</span>
-                <span class="meta-val">\${{ (p.costEstimateUsd / 1000000).toFixed(2) }}M / {{ p.effortPersonWeeks }} pw</span>
+                <span class="meta-val">\${{ (p.costEstimateUsd / 1000000).toFixed(2) }}M / {{ p.effortPersonWeeks.toFixed(1) }} pw</span>
               </div>
             </div>
 

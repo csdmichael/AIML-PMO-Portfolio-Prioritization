@@ -91,6 +91,14 @@ describe('Portfolio Filter, Sort, Group, and Rollup logic', () => {
     expect(sorted.map((p) => p.projectId)).toEqual(['GIS-0002', 'GIS-0001', 'GIS-0003']);
   });
 
+  it('groups projects with none grouping into single All Projects group', () => {
+    const groups = groupProjects(list, 'none');
+    expect(groups.length).toBe(1);
+    expect(groups[0].key).toBe('all');
+    expect(groups[0].label).toBe('All Projects');
+    expect(groups[0].count).toBe(3);
+  });
+
   it('groups projects by business unit with correct counts and costs', () => {
     const groups = groupProjects(list, 'businessUnit');
     expect(groups.length).toBe(2);
