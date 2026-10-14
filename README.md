@@ -201,7 +201,8 @@ infra/scripts/               deploy.ps1: validate, plan, deploy infrastructure, 
 - **Foundry agent.** The AI prefill calls the `gpt-5.4-mini` deployment directly. No Foundry agent is created yet.
 - **Terraform state.** Local state for now. Configure a remote backend before sharing a Terraform deployment.
 - **One IaC flavor per environment.** Bicep and Terraform both create the APIM API with path `pmo`, so deploy only one of them to an environment.
-- **Network.** The UI and API App Services accept public traffic. Restricting the API to APIM is a hardening step. The VNet subnet listed in the deployment contract is not wired.
+- **Network.** The shared APIM and Key Vault disable public access. The UI App Service reaches both through VNet integration (`genie-obo-integration`) and private endpoints. The API App Service accepts public traffic. Restricting the API to APIM is a hardening step.
+- **Key Vault policy.** The environment policy `KeyVault_PublicNetwork_Modify` forces Key Vault to private access, so the deployment adds a private endpoint for the vault instead of relying on public access.
 - **Quick add.** Submit writes the project to OneLake and can start the pipeline. It has not been run end to end in this demo.
 
 ## 12. Azure consumption (ACR)
@@ -221,7 +222,7 @@ Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a
 | Ionic UI (web, tablet, mobile) | https://azuittlyg2gcvfsso.azurewebsites.net | Sign in with Entra. App Service `azuittlyg2gcvfsso`. |
 | API (direct) | https://azapittlyg2gcvfsso.azurewebsites.net | Health at `/v1/health`. Clients should use the APIM URL below. |
 | API Swagger UI | https://azapittlyg2gcvfsso.azurewebsites.net/docs | OpenAPI document at `/openapi.json`. Also committed as [docs/api/openapi.json](docs/api/openapi.json). |
-| API through APIM | https://caldova-apim-westus.azure-api.net/pmo | Needs the `Ocp-Apim-Subscription-Key` header. The UI host adds it from Key Vault. |
+| API through APIM | https://caldova-apim-westus.azure-api.net/pmo | Needs the `Ocp-Apim-Subscription-Key` header. The gateway is private (public access is disabled), so the UI host reaches it over VNet integration and adds the key from Key Vault. |
 | Fabric workspace | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b | `PMO-Portfolio-Prioritization`. The ML Notebooks folder holds notebooks 01 and 02. |
 | Lakehouse | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b/lakehouses/44a0e48d-ed47-4d30-8e1e-6db662ea9324 | `pmo_lakehouse`. OneLake is the only data store. |
 | Foundry project | https://portal.azure.com/#resource/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub/projects/azfpttlyg2gcvfsso/overview | Project created by IaC. The AI prefill calls the `gpt-5.4-mini` deployment directly. No Foundry agent exists yet. |
@@ -241,6 +242,8 @@ Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a
 | User-assigned managed identity shared by both apps | Created | Created |
 | UI and API App Services (Python 3.12, Linux) | Created, with CORS and Key Vault references | Created, with CORS and Key Vault references |
 | Diagnostic settings for both App Services | Created | Created |
+| Key Vault private endpoint in the APIM VNet `private-endpoints` subnet (West US, the APIM region), with the DNS zone group on the existing `privatelink.vaultcore.azure.net` zone | Created | Created (`azurerm_private_endpoint`) |
+| UI App Service VNet integration into the delegated `genie-obo-integration` subnet | Created (`networkConfig`) | Created (`azurerm_app_service_virtual_network_swift_connection`) |
 | APIM product, API (from `docs/api/openapi.json`), and subscription | Created | Created |
 | Foundry project | Created | Created (`azapi`) |
 | Naming | `az{resourcePrefix}{uniqueString token}` | azurecaf CAF names, no suffix |

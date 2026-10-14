@@ -26,6 +26,7 @@ var foundryProjectName = '${lead}${create.foundryProject.resourcePrefix}${token}
 var apimApiName = '${lead}${create.apimApi.resourcePrefix}${token}'
 var apimProductName = '${lead}${create.apimApi.productResourcePrefix}${token}'
 var apimSubscriptionName = '${lead}${create.apimApi.subscriptionResourcePrefix}${token}'
+var keyVaultPrivateEndpointName = '${lead}${create.keyVault.privateEndpoint.resourcePrefix}${token}'
 
 resource apim 'Microsoft.ApiManagement/service@2024-05-01' existing = {
   name: cfg.reuse.apim.name
@@ -290,6 +291,56 @@ resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-06-0
   properties: {
     displayName: create.foundryProject.displayName
     description: create.foundryProject.description
+  }
+}
+
+resource vaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
+  name: cfg.reuse.privateDnsZones.vault.name
+}
+
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+  name: keyVaultPrivateEndpointName
+  location: cfg.reuse.apim.location
+  tags: tags
+  properties: {
+    subnet: {
+      id: cfg.reuse.keyVaultPrivateEndpointSubnetId
+    }
+    privateLinkServiceConnections: [
+      {
+        name: keyVaultName
+        properties: {
+          privateLinkServiceId: keyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource keyVaultPrivateEndpointDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
+  parent: keyVaultPrivateEndpoint
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'vault'
+        properties: {
+          privateDnsZoneId: vaultDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource uiVnetIntegration 'Microsoft.Web/sites/networkConfig@2024-04-01' = {
+  parent: uiApp
+  name: 'virtualNetwork'
+  properties: {
+    subnetResourceId: cfg.reuse.vnetIntegrationSubnetId
+    swiftSupported: true
   }
 }
 
