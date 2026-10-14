@@ -2,4 +2,8 @@
 name = "pmo-data-generator"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "azure-identity",
+    "azure-storage-file-datalake",
+    "openpyxl",
+]

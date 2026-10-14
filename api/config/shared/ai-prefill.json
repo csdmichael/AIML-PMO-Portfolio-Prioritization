@@ -19,40 +19,133 @@
     "maxDocuments": 5,
     "maxDocumentBytes": 10485760,
     "maxDocumentTextChars": 12000,
-    "acceptedDocumentExtensions": [".pdf", ".docx", ".xlsx", ".csv", ".txt", ".md"],
+    "acceptedDocumentExtensions": [
+      ".pdf",
+      ".docx",
+      ".xlsx",
+      ".csv",
+      ".txt",
+      ".md"
+    ],
     "xlsxRowsPerSheet": 200
   },
-  "evidenceLevels": ["explicit", "inferred", "estimated", "notProvided"],
+  "evidenceLevels": [
+    "explicit",
+    "inferred",
+    "estimated",
+    "notProvided"
+  ],
   "evidenceToConfidence": {
-    "explicit": { "level": "High", "score": 0.9 },
-    "inferred": { "level": "Medium", "score": 0.6 },
-    "estimated": { "level": "Low", "score": 0.3 },
-    "notProvided": { "level": "None", "score": 0.0 }
+    "explicit": {
+      "level": "High",
+      "score": 0.9
+    },
+    "inferred": {
+      "level": "Medium",
+      "score": 0.6
+    },
+    "estimated": {
+      "level": "Low",
+      "score": 0.3
+    },
+    "notProvided": {
+      "level": "None",
+      "score": 0.0
+    }
   },
   "fields": [
-    { "key": "portfolioKey", "guidance": "Pick the portfolio key that best fits the project. Security, identity, SOC, and compliance work belongs to the main InfoSec portfolio. Use only the allowed portfolio keys." },
-    { "key": "programKey", "guidance": "Pick a program key that belongs to the chosen portfolio, using the allowed programs for that portfolio." },
-    { "key": "businessUnit", "guidance": "Pick the sponsoring business unit from the allowed list when the text names one or clearly implies it. Otherwise choose the closest match and mark it estimated." },
-    { "key": "site", "guidance": "Pick the site from the allowed list when the text mentions a location. Otherwise choose the closest match and mark it estimated." },
-    { "key": "sponsorName", "guidance": "Only when the text names an executive sponsor or accountable owner. Never invent a name." },
-    { "key": "sponsorEmail", "guidance": "Only when an email address appears in the text." },
-    { "key": "projectManager", "guidance": "Only when the text names a project manager or project lead." },
-    { "key": "projectStatus", "guidance": "Use Planning unless the text says the project is active or on hold." },
-    { "key": "goLiveDate", "guidance": "The target go-live date as YYYY-MM-DD. If only a month or quarter is stated, use its last day and mark it inferred. If nothing is stated, estimate from the scope and mark it estimated." },
-    { "key": "businessValue", "guidance": "Estimate the business value from 1 (low) to 5 (very high) using impact, user base, strategic alignment, and risk reduction. Explain the estimate in the rationale." },
-    { "key": "userBase", "guidance": "The number of people who will use the solution. Use the number stated in the text. If none is stated, estimate from the business unit and scope and mark it estimated. Use an integer." },
-    { "key": "estimatedAnnualBenefitUsd", "guidance": "Only when the text states a benefit, saving, or revenue amount in USD. Otherwise return notProvided with no value." },
-    { "key": "sponsorLevel", "guidance": "Executive, Director, Manager, or Individual, from seniority cues about the sponsor. Otherwise estimate from context and mark it estimated." },
-    { "key": "regulatorySecurity", "guidance": "True when the text mentions regulation, compliance, audit, privacy, or security requirements." },
-    { "key": "dtAlignment", "guidance": "True when the text mentions digital transformation, automation, modernization, AI, or data platform work." },
-    { "key": "protectedProgram", "guidance": "True only when the text says the program is protected, mandated, or executive-protected." },
-    { "key": "primarySkill", "guidance": "Pick the single skill from the allowed skills that matches most of the work." },
-    { "key": "skillDemandFte", "guidance": "Estimate full-time equivalents for the primary skill from team size and scope. Mark it estimated unless the text states it." },
-    { "key": "costEstimateUsd", "guidance": "Use a stated budget or cost in USD when present. Otherwise estimate from scope and effort and mark it estimated." },
-    { "key": "dependencies", "guidance": "Only project IDs in the form GIS-#### that the text names as prerequisites. Return an empty list when none are named." },
-    { "key": "riskRating", "guidance": "Low, Medium, High, or Critical from risk, dependency, and deadline language." },
-    { "key": "effortPersonWeeks", "guidance": "Estimate the total effort in person-weeks from the scope. Mark it estimated unless the text states it." },
-    { "key": "notes", "guidance": "A two-sentence plain-English summary of the project in your own words." }
+    {
+      "key": "portfolioKey",
+      "guidance": "Pick the portfolio key that best fits the project. Security, identity, SOC, and compliance work belongs to the main InfoSec portfolio. Use only the allowed portfolio keys."
+    },
+    {
+      "key": "programKey",
+      "guidance": "Pick a program key that belongs to the chosen portfolio, using the allowed programs for that portfolio."
+    },
+    {
+      "key": "businessUnit",
+      "guidance": "Pick the sponsoring business unit from the allowed list when the text names one or clearly implies it. Otherwise choose the closest match and mark it estimated."
+    },
+    {
+      "key": "site",
+      "guidance": "Pick the site from the allowed list when the text mentions a location. Otherwise choose the closest match and mark it estimated."
+    },
+    {
+      "key": "sponsorName",
+      "guidance": "Only when the text names an executive sponsor or accountable owner. Never invent a name."
+    },
+    {
+      "key": "sponsorEmail",
+      "guidance": "Only when an email address appears in the text."
+    },
+    {
+      "key": "projectManager",
+      "guidance": "Only when the text names a project manager or project lead."
+    },
+    {
+      "key": "projectStatus",
+      "guidance": "Use Planning unless the text says the project is active or on hold."
+    },
+    {
+      "key": "goLiveDate",
+      "guidance": "The target go-live date as YYYY-MM-DD. If only a month or quarter is stated, use its last day and mark it inferred. If nothing is stated, estimate from the scope and mark it estimated."
+    },
+    {
+      "key": "businessValue",
+      "guidance": "Estimate the business value from 1 (low) to 5 (very high) using impact, user base, strategic alignment, and risk reduction. Explain the estimate in the rationale."
+    },
+    {
+      "key": "userBase",
+      "guidance": "The number of people who will use the solution. Use the number stated in the text. If none is stated, estimate from the business unit and scope and mark it estimated. Use an integer."
+    },
+    {
+      "key": "estimatedAnnualBenefitUsd",
+      "guidance": "Only when the text states a benefit, saving, or revenue amount in USD. Otherwise return notProvided with no value."
+    },
+    {
+      "key": "sponsorLevel",
+      "guidance": "Executive, Director, Manager, or Individual, from seniority cues about the sponsor. Otherwise estimate from context and mark it estimated."
+    },
+    {
+      "key": "regulatorySecurity",
+      "guidance": "True when the text mentions regulation, compliance, audit, privacy, or security requirements."
+    },
+    {
+      "key": "dtAlignment",
+      "guidance": "True when the text mentions digital transformation, automation, modernization, AI, or data platform work."
+    },
+    {
+      "key": "protectedProgram",
+      "guidance": "True only when the text says the program is protected, mandated, or executive-protected."
+    },
+    {
+      "key": "primarySkill",
+      "guidance": "Pick the single skill from the allowed skills that matches most of the work."
+    },
+    {
+      "key": "skillDemandFte",
+      "guidance": "Estimate full-time equivalents for the primary skill from team size and scope. Mark it estimated unless the text states it."
+    },
+    {
+      "key": "costEstimateUsd",
+      "guidance": "Use a stated budget or cost in USD when present. Otherwise estimate from scope and effort and mark it estimated."
+    },
+    {
+      "key": "dependencies",
+      "guidance": "Only project IDs in the form GIS-#### that the text names as prerequisites. Return an empty list when none are named."
+    },
+    {
+      "key": "riskRating",
+      "guidance": "Low, Medium, High, or Critical from risk, dependency, and deadline language."
+    },
+    {
+      "key": "effortPersonWeeks",
+      "guidance": "Estimate the total effort in person-weeks from the scope. Mark it estimated unless the text states it."
+    },
+    {
+      "key": "notes",
+      "guidance": "A two-sentence plain-English summary of the project in your own words."
+    }
   ],
   "prompt": {
     "system": [
@@ -60,7 +153,8 @@
       "Use only the text you are given. Never invent names, emails, project IDs, or numbers that the text does not support.",
       "For every field, return: the value (in the exact allowed format), the evidence level, a short quote copied from the text when one exists, and a one-sentence rationale.",
       "Evidence levels: explicit means the text states the value. inferred means it follows clearly from the text. estimated means you had to judge from context. notProvided means you have no value; return null for the value.",
-      "Use the allowed option lists exactly as written. Dates use YYYY-MM-DD. Booleans are true or false. Numbers have no units."
+      "Use the allowed option lists exactly as written. Dates use YYYY-MM-DD. Booleans are true or false. Numbers have no units.",
+      "Value formats: booleans are JSON true or false; integers and numbers are JSON numbers with no units or separators (1,200 users is 1200 and 180K USD is 180000); dates are YYYY-MM-DD strings; dependencies are a list of objects with projectId such as GIS-0001 and a relationshipType from the allowed list. Use null when the text gives no value and no estimate is reasonable. A required field must get your best estimate when the text does not state it: set evidence to estimated and explain the basis in the rationale."
     ],
     "userTemplate": [
       "Project name: {projectName}",

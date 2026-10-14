@@ -1,0 +1,82 @@
+name: Fabric
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "fabric/**"
+      - "config/fabric-items.json"
+      - "config/ml-model.json"
+      - ".github/workflows/fabric.yml"
+  pull_request:
+    paths:
+      - "fabric/**"
+      - "config/fabric-items.json"
+      - "config/ml-model.json"
+      - ".github/workflows/fabric.yml"
+  workflow_dispatch:
+    inputs:
+      runPipeline:
+        description: Run the PMO Full Pipeline after deploying the Fabric items
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read CI settings
+        id: ci
+        run: node scripts/ci/read-config.mjs --file config/ci.json --key pythonVersion=python.version
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.ci.outputs.pythonVersion }}
+
+      - name: Check the notebooks build from their source parts
+        run: python fabric/scripts/build_notebooks.py --all --check
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: demo
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read CI and Azure settings
+        id: ci
+        run: |
+          node scripts/ci/read-config.mjs --file config/ci.json --key pythonVersion=python.version
+          node scripts/ci/read-config.mjs --file infra/config/pmo-deployment.json --key tenantId=tenantId --key subscriptionId=subscriptionId
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ steps.ci.outputs.tenantId }}
+          subscription-id: ${{ steps.ci.outputs.subscriptionId }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.ci.outputs.pythonVersion }}
+
+      - name: Build and deploy the notebooks, folders, and pipeline
+        run: |
+          python fabric/scripts/build_notebooks.py --all
+          python fabric/scripts/deploy_fabric_items.py --scope all
+
+      - name: Run the PMO Full Pipeline
+        if: github.event_name == 'workflow_dispatch' && inputs.runPipeline
+        run: python fabric/scripts/deploy_fabric_items.py --run pipeline

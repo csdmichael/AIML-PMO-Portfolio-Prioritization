@@ -117,11 +117,22 @@ class OneLakeClient:
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise LakeError(f"{lake_path} is not valid JSON") from exc
 
+    def _ensure_parent(self, lake_path: str) -> None:
+        parts = self._adls_path(lake_path).split("/")
+        for depth in range(3, len(parts)):
+            try:
+                self._file_system.create_directory("/".join(parts[:depth]))
+            except ResourceExistsError:
+                pass
+
     def write_bytes(self, lake_path: str, data: bytes, *, etag: str | None = None) -> str:
         client = self._file(lake_path)
         try:
             if etag is None:
-                response = client.upload_data(data, overwrite=False)
+                if self.properties(lake_path) is not None:
+                    raise LakeConflict(f"{lake_path} already exists")
+                self._ensure_parent(lake_path)
+                response = client.upload_data(data, overwrite=True)
             else:
                 response = client.upload_data(
                     data,

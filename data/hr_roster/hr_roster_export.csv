@@ -1,0 +1,321 @@
+EmployeeNumber,DisplayName,WorkEmail,JobTitle,JobLevel,SkillFamily,OrgUnit,Location,ManagerNumber,HireDate,EmploymentType
+10001,Dmitri Nakamura,dmitri.nakamura@example.com,"Vice President, Fab Operations",VP,Application Development,Information Security,Fremont,10004,04/16/2025,Full-time
+10002,Yara Iyer,yara.iyer@example.com,"Vice President, Digital Transformation",VP,Cloud and Infrastructure,Semiconductor Process Equipment,Hsinchu,10010,12/12/2020,Full-time
+10003,Jordan Moreno,jordan.moreno@example.com,"Vice President, Information Security",VP,Application Development,Digital Transformation,Penang,10006,05/28/2021,Full-time
+10004,Priya Aziz,priya.aziz@example.com,"Vice President, Corporate IT",VP,Unified Communications,Customer Services,Tualatin,10001,11/01/2016,Full-time
+10005,Marcus Bauer,marcus.bauer@example.com,"Vice President, Global Supply Chain",VP,Unified Communications,Human Resources,Penang,10002,04/27/2016,Full-time
+10006,Noah Chen,noah.chen@example.com,"Vice President, Engineering",VP,Unified Communications,Fab Operations,Singapore,10004,03/27/2015,Contractor
+10007,Priya Reyes,priya.reyes@example.com,"Vice President, Finance",VP,Cloud and Infrastructure,Manufacturing Engineering,Hsinchu,10002,11/16/2020,Full-time
+10008,Nadia Novak,nadia.novak@example.com,"Vice President, Human Resources",VP,Unified Communications,Fab Operations,Fremont,10006,11/07/2021,Full-time
+10009,Rahul Aziz,rahul.aziz@example.com,"Vice President, Manufacturing Engineering",VP,Application Development,Human Resources,Fremont,10010,11/27/2022,Full-time
+10010,Elena Ferreira,elena.ferreira@example.com,"Vice President, Customer Services",VP,Network Engineering,Finance and Controls,Global Remote,10004,04/02/2015,Full-time
+10011,Ethan Novak,ethan.novak@example.com,"Director, Network Engineering",M3,Cloud and Infrastructure,Customer Services,Tualatin,10001,01/29/2025,Full-time
+10012,Jordan Ferreira,jordan.ferreira@example.com,"Senior Director, Data and AI",M3,Unified Communications,Fab Operations,Singapore,10003,01/21/2016,Contractor
+10013,Priya Kowalski,priya.kowalski@example.com,"Director, Cloud Platforms",M3,Network Engineering,Finance and Controls,Global Remote,10008,01/30/2019,Full-time
+10014,Carlos Tanaka,carlos.tanaka@example.com,"Director, Application Development",M3,Unified Communications,Semiconductor Process Equipment,Fremont,10003,03/31/2022,Full-time
+10015,Hannah Tanaka,hannah.tanaka@example.com,"Director, Cybersecurity",M3,Application Development,Manufacturing Engineering,Tualatin,10007,12/22/2022,Full-time
+10016,Yara Haddad,yara.haddad@example.com,"Director, Integration",M3,Unified Communications,Manufacturing Engineering,Penang,10003,10/28/2022,Full-time
+10017,Ingrid Iyer,ingrid.iyer@example.com,"Director, Unified Communications",M3,Application Development,Information Security,Fremont,10008,11/05/2013,Full-time
+10018,Samuel Lindqvist,samuel.lindqvist@example.com,"Senior Director, Enterprise Systems",M3,Network Engineering,Human Resources,Tualatin,10008,10/21/2022,Full-time
+10019,Avery Bauer,avery.bauer@example.com,"Director, IT Operations",M3,Application Development,Manufacturing Engineering,Singapore,10001,05/26/2017,Full-time
+10020,Sofia Schmidt,sofia.schmidt@example.com,"Director, PMO",M3,Application Development,Information Security,Fremont,10001,11/30/2024,Full-time
+10021,Daniel Patel,daniel.patel@example.com,"Director, Security Operations",M3,Application Development,Fab Operations,Fremont,10004,04/06/2017,Full-time
+10022,Isabel Moreno,isabel.moreno@example.com,"Director, Identity",M3,Unified Communications,Digital Transformation,Penang,10008,12/15/2012,Full-time
+10023,Lucas Schmidt,lucas.schmidt@example.com,"Director, Data Platforms",M3,Network Engineering,Digital Transformation,Hsinchu,10002,10/17/2018,Full-time
+10024,Leila Iyer,leila.iyer@example.com,"Director, Business Systems",M3,Network Engineering,Digital Transformation,Hsinchu,10010,04/04/2019,Full-time
+10025,Hannah Patel,hannah.patel@example.com,Senior Program Manager,M2,Application Development,Global Supply Chain,Hsinchu,10010,06/02/2024,Full-time
+10026,Lucas Novak,lucas.novak@example.com,Program Manager,M1,Data Engineering,Information Security,Global Remote,10002,06/22/2017,Full-time
+10027,Mateo Schmidt,mateo.schmidt@example.com,Senior Program Manager,M2,Data Engineering,Manufacturing Engineering,Penang,,09/08/2016,Full-time
+10028,Mateo Brandt,mateo.brandt@example.com,Senior Program Manager,M1,Cybersecurity,Human Resources,Tualatin,10009,01/31/2012,Full-time
+10029,Owen Brandt,owen.brandt@example.com,Program Manager,M1,Unified Communications,Manufacturing Engineering,Fremont,10003,10/26/2012,Full-time
+10030,Tariq Patel,tariq.patel@example.com,Program Manager,M2,Application Development,Digital Transformation,Fremont,10003,02/19/2017,Full-time
+10031,Carlos Aziz,carlos.aziz@example.com,Program Manager,M1,Unified Communications,Corporate IT,Penang,10010,08/14/2021,Full-time
+10032,Leila Patel,leila.patel@example.com,Program Manager,M2,Network Engineering,Digital Transformation,Hsinchu,10001,08/31/2018,Full-time
+10033,Leila Nakamura,leila.nakamura@example.com,Program Manager,M2,Integration (iPaaS),Customer Services,Penang,10006,09/22/2016,Full-time
+10034,Elena Bauer,elena.bauer@example.com,Senior Program Manager,M1,Cybersecurity,Human Resources,Hsinchu,10010,08/04/2017,Full-time
+10035,Carlos Moreno,carlos.moreno@example.com,Program Manager,M1,Network Engineering,Semiconductor Process Equipment,Global Remote,10002,10/12/2024,Full-time
+10036,Tariq Aziz,tariq.aziz@example.com,Program Manager,M1,Cloud and Infrastructure,Fab Operations,Hsinchu,10006,03/13/2022,Full-time
+10037,Yara Chen,yara.chen@example.com,Senior Program Manager,M2,Network Engineering,Fab Operations,Global Remote,10002,12/11/2012,Full-time
+10038,Sofia Kim,sofia.kim@example.com,Program Manager,M1,Cloud and Infrastructure,Fab Operations,Fremont,,12/11/2012,Full-time
+10039,Ethan Schmidt,ethan.schmidt@example.com,Program Manager,M2,Unified Communications,Customer Services,Global Remote,10010,08/25/2018,Contractor
+10040,Yara Gallagher,yara.gallagher@example.com,Senior Program Manager,M2,Network Engineering,Fab Operations,Hsinchu,10002,05/17/2016,Full-time
+10041,Chloe Lindqvist,chloe.lindqvist@example.com,Senior Program Manager,M2,Cybersecurity,Manufacturing Engineering,Hsinchu,10008,12/14/2020,Full-time
+10042,Daniel Moreno,daniel.moreno@example.com,Senior Program Manager,M2,Data Engineering,Manufacturing Engineering,Penang,10001,12/27/2024,Full-time
+10043,Ingrid Sullivan,ingrid.sullivan@example.com,Senior Program Manager,M2,Application Development,Information Security,Singapore,10004,03/30/2019,Full-time
+10044,Isabel Brandt,isabel.brandt@example.com,Program Manager,M2,Network Engineering,Digital Transformation,Fremont,10005,08/26/2015,Full-time
+10045,Jordan Aziz,jordan.aziz@example.com,Program Manager,M2,Cloud and Infrastructure,Fab Operations,Global Remote,10003,06/17/2013,Full-time
+10046,Mateo Iyer,mateo.iyer@example.com,Senior Program Manager,M1,Cybersecurity,Human Resources,Fremont,10005,12/20/2016,Full-time
+10047,Kenji Kim,kenji.kim@example.com,Program Manager,M1,Cloud and Infrastructure,Finance and Controls,Hsinchu,,09/24/2019,Full-time
+10048,Noah Aziz,noah.aziz@example.com,Program Manager,M1,Unified Communications,Finance and Controls,Hsinchu,10007,10/16/2025,Full-time
+10049,Marcus Aziz,marcus.aziz@example.com,Program Manager,M1,Cloud and Infrastructure,Human Resources,Tualatin,10008,07/20/2012,Full-time
+10050,Mateo Aziz,mateo.aziz@example.com,Senior Program Manager,M2,Cloud and Infrastructure,Fab Operations,Global Remote,10009,02/23/2024,Full-time
+10051,Grace Lindqvist,grace.lindqvist@example.com,Program Manager,M1,Application Development,Human Resources,Hsinchu,10008,01/27/2021,Full-time
+10052,Mateo Moreno,mateo.moreno@example.com,Program Manager,M1,Project Management,Information Security,Hsinchu,10006,03/08/2013,Full-time
+10053,Ingrid Brandt,ingrid.brandt@example.com,Program Manager,M2,Application Development,Global Supply Chain,Tualatin,10002,03/12/2012,Full-time
+10054,Yara Walsh,yara.walsh@example.com,Program Manager,M1,Data Engineering,Finance and Controls,Hsinchu,10007,12/05/2018,Full-time
+10055,Chloe Iyer,chloe.iyer@example.com,Program Manager,M1,Application Development,Semiconductor Process Equipment,Global Remote,10007,10/11/2015,Full-time
+10056,Jordan Okafor,jordan.okafor@example.com,Senior Program Manager,M1,Cloud and Infrastructure,Corporate IT,Tualatin,10002,02/12/2023,Contractor
+10057,Priya Okafor,priya.okafor@example.com,Senior Program Manager,M2,Application Development,Digital Transformation,Global Remote,10007,12/07/2017,Full-time
+10058,Avery Romero,avery.romero@example.com,Senior Program Manager,M2,Unified Communications,Fab Operations,Penang,10002,03/12/2022,Full-time
+10059,Owen Aziz,owen.aziz@example.com,Program Manager,M2,Application Development,Corporate IT,Singapore,10004,02/28/2012,Full-time
+10060,Mateo Okafor,mateo.okafor@example.com,Senior Program Manager,M1,Network Engineering,Fab Operations,Singapore,10006,12/24/2012,Full-time
+10061,Isabel Okafor,isabel.okafor@example.com,Program Manager,M2,Application Development,Semiconductor Process Equipment,Singapore,10009,07/02/2024,Full-time
+10062,Elena Novak,elena.novak@example.com,Program Manager,M1,Unified Communications,Digital Transformation,Tualatin,10004,12/10/2022,Full-time
+10063,Lucas Chen,lucas.chen@example.com,Senior Program Manager,M2,Cloud and Infrastructure,Human Resources,Global Remote,10004,01/02/2015,Full-time
+10064,Samuel Haddad,samuel.haddad@example.com,Program Manager,M1,Unified Communications,Manufacturing Engineering,Hsinchu,10009,02/22/2025,Full-time
+10065,Samuel Novak,samuel.novak@example.com,Data Engineer,IC5,Network Engineering,Corporate IT,Fremont,,02/03/2022,Full-time
+10066,Noah Reyes,noah.reyes@example.com,Senior Software Engineer,IC5,Cloud and Infrastructure,Global Supply Chain,Fremont,10003,08/02/2015,Full-time
+10067,Ravi Duarte,ravi.duarte@example.com,Integration Developer,IC3,Application Development,Customer Services,Singapore,10005,03/13/2024,Full-time
+10068,Lucas Moreno,lucas.moreno@example.com,Systems Engineer,IC5,Network Engineering,Finance and Controls,Singapore,10007,12/18/2025,Full-time
+10069,Marcus Ferreira,marcus.ferreira@example.com,Data Engineer,IC1,Network Engineering,Customer Services,Tualatin,10005,02/08/2016,Full-time
+10070,Grace Sullivan,grace.sullivan@example.com,UC Engineer,IC5,Network Engineering,Semiconductor Process Equipment,Fremont,10008,04/23/2019,Full-time
+10071,Elena Romero,elena.romero@example.com,Solutions Architect,IC4,Unified Communications,Semiconductor Process Equipment,Hsinchu,10009,09/21/2014,Full-time
+10072,Ethan Tanaka,ethan.tanaka@example.com,Systems Engineer,IC6,Data Engineering,Finance and Controls,Global Remote,10001,12/22/2019,Contractor
+10073,Owen Moreno,owen.moreno@example.com,Solutions Architect,IC6,Unified Communications,Human Resources,Hsinchu,10006,04/23/2018,Full-time
+10074,Elena Nakamura,elena.nakamura@example.com,Security Analyst,IC1,Integration (iPaaS),Corporate IT,Tualatin,10001,06/06/2013,Full-time
+10075,Amara Duarte,amara.duarte@example.com,Cloud Engineer,IC1,Application Development,Global Supply Chain,Singapore,10002,08/19/2022,Full-time
+10076,Leila Kim,leila.kim@example.com,Security Analyst,IC2,Cloud and Infrastructure,Information Security,Fremont,10001,11/07/2016,Full-time
+10077,Mei Aziz,mei.aziz@example.com,Security Analyst,IC5,Unified Communications,Fab Operations,Singapore,10002,05/15/2019,Full-time
+10078,Chloe Ferreira,chloe.ferreira@example.com,Network Engineer,IC4,Unified Communications,Human Resources,Global Remote,10001,08/08/2021,Full-time
+10079,Tariq Gallagher,tariq.gallagher@example.com,Network Engineer,IC2,Project Management,Information Security,Hsinchu,10010,04/16/2014,Full-time
+10080,Leila Bauer,leila.bauer@example.com,Security Analyst,IC1,Integration (iPaaS),Information Security,Penang,10010,09/08/2020,Full-time
+10081,Chloe Moreno,chloe.moreno@example.com,Solutions Architect,IC4,Cybersecurity,Manufacturing Engineering,Fremont,10006,02/17/2025,Full-time
+10082,Daniel Ferreira,daniel.ferreira@example.com,Data Engineer,IC4,Cybersecurity,Customer Services,Hsinchu,10010,06/02/2021,Full-time
+10083,Samuel Patel,samuel.patel@example.com,Systems Engineer,IC6,Unified Communications,Global Supply Chain,Hsinchu,10001,02/13/2013,Full-time
+10084,Elena Mahmoud,elena.mahmoud@example.com,Security Analyst,IC1,Data Engineering,Fab Operations,Hsinchu,10007,06/30/2021,Contractor
+10085,Olivia Patel,olivia.patel@example.com,Systems Engineer,IC6,Application Development,Global Supply Chain,Singapore,10002,04/25/2021,Contractor
+10086,Noah Romero,noah.romero@example.com,Security Analyst,IC1,Application Development,Customer Services,Hsinchu,10004,03/06/2014,Full-time
+10087,Grace Haddad,grace.haddad@example.com,Integration Developer,IC3,Unified Communications,Semiconductor Process Equipment,Hsinchu,10004,04/28/2014,Full-time
+10088,Hannah Chen,hannah.chen@example.com,Cloud Engineer,IC1,Cloud and Infrastructure,Information Security,Tualatin,10007,03/02/2013,Full-time
+10089,Olivia Reyes,olivia.reyes@example.com,Cloud Engineer,IC1,Application Development,Manufacturing Engineering,Tualatin,10002,06/14/2013,Full-time
+10090,Marcus Reyes,marcus.reyes@example.com,Security Analyst,IC4,Cloud and Infrastructure,Digital Transformation,Singapore,10004,05/19/2015,Full-time
+10091,Ravi Lindqvist,ravi.lindqvist@example.com,Security Analyst,IC6,Application Development,Semiconductor Process Equipment,Global Remote,10007,06/28/2025,Full-time
+10092,Isabel Novak,isabel.novak@example.com,Cloud Engineer,IC4,Application Development,Digital Transformation,Global Remote,10009,10/07/2017,Full-time
+10093,Daniel Haddad,daniel.haddad@example.com,Network Engineer,IC1,Unified Communications,Global Supply Chain,Singapore,10002,09/07/2014,Full-time
+10094,Ingrid Reyes,ingrid.reyes@example.com,Senior Software Engineer,IC2,Unified Communications,Corporate IT,Singapore,10010,08/30/2012,Full-time
+10095,Mei Okafor,mei.okafor@example.com,Cloud Engineer,IC1,Network Engineering,Semiconductor Process Equipment,Singapore,10009,09/07/2020,Full-time
+10096,Yara Reyes,yara.reyes@example.com,Network Engineer,IC3,Unified Communications,Finance and Controls,Penang,10003,12/17/2025,Full-time
+10097,Dmitri Reyes,dmitri.reyes@example.com,Senior Software Engineer,IC2,Network Engineering,Digital Transformation,Penang,10006,07/04/2018,Full-time
+10098,Jordan Bauer,jordan.bauer@example.com,Security Analyst,IC1,Application Development,Human Resources,Penang,10007,06/28/2015,Full-time
+10099,Ravi Kowalski,ravi.kowalski@example.com,Solutions Architect,IC5,Data Engineering,Corporate IT,Fremont,10004,07/31/2023,Full-time
+10100,Lucas Mahmoud,lucas.mahmoud@example.com,Network Engineer,IC2,Network Engineering,Information Security,Penang,10002,02/23/2021,Full-time
+10101,Carlos Brandt,carlos.brandt@example.com,UC Engineer,IC4,Application Development,Customer Services,Global Remote,10008,10/15/2019,Full-time
+10102,Mateo Haddad,mateo.haddad@example.com,Integration Developer,IC6,Network Engineering,Corporate IT,Fremont,10009,11/03/2018,Full-time
+10103,Tariq Schmidt,tariq.schmidt@example.com,Cloud Engineer,IC2,Unified Communications,Semiconductor Process Equipment,Penang,10007,05/30/2019,Full-time
+10104,Noah Lindqvist,noah.lindqvist@example.com,Solutions Architect,IC5,Cybersecurity,Customer Services,Global Remote,10004,12/01/2021,Full-time
+10105,Daniel Kim,daniel.kim@example.com,Integration Developer,IC5,Project Management,Semiconductor Process Equipment,Global Remote,10002,10/02/2013,Full-time
+10106,Amara Iyer,amara.iyer@example.com,Systems Engineer,IC1,Application Development,Customer Services,Global Remote,10008,05/23/2022,Full-time
+10107,Isabel Sullivan,isabel.sullivan@example.com,UC Engineer,IC3,Application Development,Corporate IT,Hsinchu,10010,11/18/2019,Full-time
+10108,Priya Sullivan,priya.sullivan@example.com,Security Analyst,IC5,Unified Communications,Human Resources,Hsinchu,10003,03/23/2019,Full-time
+10109,Priya Brandt,priya.brandt@example.com,Cloud Engineer,IC4,Application Development,Finance and Controls,Singapore,10005,10/12/2024,Full-time
+10110,Marcus Kim,marcus.kim@example.com,Security Analyst,IC3,Cybersecurity,Manufacturing Engineering,Global Remote,10002,11/09/2025,Contractor
+10111,Carlos Ferreira,carlos.ferreira@example.com,Solutions Architect,IC4,Application Development,Digital Transformation,Global Remote,10004,01/04/2018,Full-time
+10112,Yara Schmidt,yara.schmidt@example.com,Senior Software Engineer,IC5,Network Engineering,Fab Operations,Fremont,10008,06/24/2019,Full-time
+10113,Amara Brandt,amara.brandt@example.com,Systems Engineer,IC4,Application Development,Human Resources,Hsinchu,10009,11/04/2014,Full-time
+10114,Samuel Aziz,samuel.aziz@example.com,Security Analyst,IC4,Cybersecurity,Manufacturing Engineering,Fremont,10010,01/10/2012,Full-time
+10115,Daniel Tanaka,daniel.tanaka@example.com,Senior Software Engineer,IC6,Network Engineering,Semiconductor Process Equipment,Singapore,10005,07/04/2021,Contractor
+10116,Olivia Ferreira,olivia.ferreira@example.com,Network Engineer,IC5,Network Engineering,Corporate IT,Global Remote,10001,04/18/2024,Full-time
+10117,Ravi Aziz,ravi.aziz@example.com,Systems Engineer,IC4,Network Engineering,Digital Transformation,Fremont,10005,06/02/2013,Full-time
+10118,Jordan Brandt,jordan.brandt@example.com,Solutions Architect,IC2,Network Engineering,Information Security,Fremont,10009,02/11/2013,Full-time
+10119,Kenji Reyes,kenji.reyes@example.com,Solutions Architect,IC1,Application Development,Finance and Controls,Singapore,10005,09/26/2012,Full-time
+10120,Ingrid Aziz,ingrid.aziz@example.com,Integration Developer,IC2,Application Development,Semiconductor Process Equipment,Fremont,10001,01/25/2012,Full-time
+10121,Kenji Novak,kenji.novak@example.com,Cloud Engineer,IC5,Application Development,Finance and Controls,Tualatin,10004,09/28/2025,Full-time
+10122,Ethan Patel,ethan.patel@example.com,Security Analyst,IC3,Cybersecurity,Global Supply Chain,Global Remote,10009,03/03/2013,Full-time
+10123,Ethan Chen,ethan.chen@example.com,UC Engineer,IC2,Network Engineering,Manufacturing Engineering,Fremont,10005,08/27/2017,Full-time
+10124,Carlos Schmidt,carlos.schmidt@example.com,Solutions Architect,IC6,Unified Communications,Global Supply Chain,Tualatin,10001,10/12/2021,Contractor
+10125,Carlos Gallagher,carlos.gallagher@example.com,Data Engineer,IC6,Application Development,Information Security,Tualatin,10005,05/11/2022,Full-time
+10126,Dmitri Kim,dmitri.kim@example.com,Cloud Engineer,IC4,Unified Communications,Corporate IT,Global Remote,10009,04/03/2025,Full-time
+10127,Tariq Mahmoud,tariq.mahmoud@example.com,Security Analyst,IC4,Application Development,Digital Transformation,Fremont,10003,07/29/2017,Full-time
+10128,Avery Walsh,avery.walsh@example.com,Systems Engineer,IC2,Network Engineering,Global Supply Chain,Tualatin,10003,07/31/2025,Full-time
+10129,Elena Tanaka,elena.tanaka@example.com,UC Engineer,IC4,Integration (iPaaS),Finance and Controls,Singapore,10007,05/25/2014,Full-time
+10130,Mateo Bauer,mateo.bauer@example.com,Network Engineer,IC4,Application Development,Information Security,Singapore,10002,08/15/2016,Full-time
+10131,Avery Sullivan,avery.sullivan@example.com,Senior Software Engineer,IC3,Network Engineering,Digital Transformation,Global Remote,10008,11/04/2016,Full-time
+10132,Ethan Aziz,ethan.aziz@example.com,Cloud Engineer,IC6,Data Engineering,Manufacturing Engineering,Fremont,10001,08/13/2021,Full-time
+10133,Marcus Okafor,marcus.okafor@example.com,Data Engineer,IC6,Unified Communications,Human Resources,Global Remote,10006,01/31/2021,Full-time
+10134,Dmitri Tanaka,dmitri.tanaka@example.com,Data Engineer,IC3,Unified Communications,Human Resources,Global Remote,10006,01/23/2022,Full-time
+10135,Avery Reyes,avery.reyes@example.com,Senior Software Engineer,IC2,Cloud and Infrastructure,Customer Services,Hsinchu,10010,07/26/2019,Full-time
+10136,Ingrid Walsh,ingrid.walsh@example.com,Security Analyst,IC2,Application Development,Manufacturing Engineering,Tualatin,10009,03/02/2018,Full-time
+10137,Mateo Kowalski,mateo.kowalski@example.com,Senior Software Engineer,IC3,Data Engineering,Manufacturing Engineering,Fremont,10003,06/18/2025,Full-time
+10138,Chloe Romero,chloe.romero@example.com,Cloud Engineer,IC6,Network Engineering,Global Supply Chain,Hsinchu,10009,01/25/2012,Full-time
+10139,Avery Brandt,avery.brandt@example.com,UC Engineer,IC4,Integration (iPaaS),Information Security,Global Remote,10001,04/09/2014,Full-time
+10140,Amara Haddad,amara.haddad@example.com,Security Analyst,IC2,Project Management,Corporate IT,Tualatin,10004,04/07/2020,Full-time
+10141,Elena Iyer,elena.iyer@example.com,Senior Software Engineer,IC1,Cloud and Infrastructure,Corporate IT,Global Remote,10001,03/16/2025,Full-time
+10142,Dmitri Iyer,dmitri.iyer@example.com,Integration Developer,IC6,Application Development,Customer Services,Global Remote,10003,08/17/2020,Full-time
+10143,Owen Tanaka,owen.tanaka@example.com,Solutions Architect,IC1,Integration (iPaaS),Information Security,Fremont,10010,01/22/2020,Full-time
+10144,Mei Sullivan,mei.sullivan@example.com,Network Engineer,IC1,Unified Communications,Customer Services,Singapore,10010,05/10/2012,Contractor
+10145,Daniel Schmidt,daniel.schmidt@example.com,Integration Developer,IC1,Data Engineering,Customer Services,Global Remote,10005,11/03/2017,Contractor
+10146,Isabel Nakamura,isabel.nakamura@example.com,Integration Developer,IC5,Network Engineering,Finance and Controls,Tualatin,10010,10/07/2020,Full-time
+10147,Grace Kim,grace.kim@example.com,Cloud Engineer,IC3,Application Development,Manufacturing Engineering,Singapore,10009,08/09/2012,Contractor
+10148,Olivia Lindqvist,olivia.lindqvist@example.com,Integration Developer,IC3,Application Development,Digital Transformation,Singapore,10002,09/09/2013,Full-time
+10149,Daniel Kowalski,daniel.kowalski@example.com,Data Engineer,IC4,Application Development,Information Security,Fremont,10001,12/20/2023,Full-time
+10150,Priya Duarte,priya.duarte@example.com,Integration Developer,IC5,Unified Communications,Semiconductor Process Equipment,Global Remote,10010,11/15/2014,Full-time
+10151,Ethan Moreno,ethan.moreno@example.com,Senior Software Engineer,IC6,Unified Communications,Manufacturing Engineering,Fremont,,07/15/2024,Full-time
+10152,Leila Gallagher,leila.gallagher@example.com,Solutions Architect,IC6,Cybersecurity,Corporate IT,Global Remote,10006,04/18/2013,Full-time
+10153,Nadia Mahmoud,nadia.mahmoud@example.com,Senior Software Engineer,IC1,Network Engineering,Customer Services,Global Remote,10009,08/20/2018,Full-time
+10154,Amara Schmidt,amara.schmidt@example.com,Network Engineer,IC2,Integration (iPaaS),Information Security,Penang,10001,11/19/2022,Full-time
+10155,Avery Chen,avery.chen@example.com,Solutions Architect,IC3,Unified Communications,Corporate IT,Penang,10004,01/17/2021,Full-time
+10156,Owen Romero,owen.romero@example.com,Solutions Architect,IC5,Unified Communications,Global Supply Chain,Tualatin,10006,06/10/2024,Full-time
+10157,Nadia Brandt,nadia.brandt@example.com,Network Engineer,IC2,Cloud and Infrastructure,Fab Operations,Global Remote,10006,03/17/2014,Contractor
+10158,Hannah Lindqvist,hannah.lindqvist@example.com,Security Analyst,IC3,Data Engineering,Digital Transformation,Fremont,10006,03/15/2013,Contractor
+10159,Olivia Novak,olivia.novak@example.com,UC Engineer,IC5,Cloud and Infrastructure,Digital Transformation,Tualatin,10003,04/21/2022,Full-time
+10160,Mei Mahmoud,mei.mahmoud@example.com,UC Engineer,IC5,Network Engineering,Finance and Controls,Fremont,10001,09/22/2021,Contractor
+10161,Elena Schmidt,elena.schmidt@example.com,Data Engineer,IC1,Unified Communications,Finance and Controls,Penang,10003,07/25/2024,Full-time
+10162,Yara Kowalski,yara.kowalski@example.com,UC Engineer,IC6,Integration (iPaaS),Corporate IT,Global Remote,10001,11/18/2025,Full-time
+10163,Ravi Haddad,ravi.haddad@example.com,Solutions Architect,IC6,Application Development,Customer Services,Penang,10002,08/26/2016,Full-time
+10164,Owen Ferreira,owen.ferreira@example.com,Data Engineer,IC6,Cybersecurity,Manufacturing Engineering,Penang,10007,04/24/2021,Full-time
+10165,Amara Romero,amara.romero@example.com,Senior Software Engineer,IC6,Network Engineering,Digital Transformation,Fremont,10002,11/08/2014,Full-time
+10166,Yara Novak,yara.novak@example.com,Network Engineer,IC1,Cybersecurity,Manufacturing Engineering,Penang,10004,03/22/2025,Full-time
+10167,Noah Schmidt,noah.schmidt@example.com,UC Engineer,IC3,Unified Communications,Global Supply Chain,Hsinchu,10005,09/24/2017,Contractor
+10168,Chloe Novak,chloe.novak@example.com,Security Analyst,IC3,Unified Communications,Global Supply Chain,Tualatin,10005,09/26/2014,Full-time
+10169,Hannah Iyer,hannah.iyer@example.com,Systems Engineer,IC6,Unified Communications,Human Resources,Singapore,10009,03/07/2018,Full-time
+10170,Amara Moreno,amara.moreno@example.com,Network Engineer,IC2,Network Engineering,Information Security,Tualatin,10006,06/05/2019,Full-time
+10171,Owen Kim,owen.kim@example.com,Network Engineer,IC1,Data Engineering,Global Supply Chain,Penang,10007,03/17/2025,Full-time
+10172,Leila Duarte,leila.duarte@example.com,Solutions Architect,IC5,Application Development,Finance and Controls,Hsinchu,10002,11/14/2019,Full-time
+10173,Amara Tanaka,amara.tanaka@example.com,UC Engineer,IC1,Unified Communications,Semiconductor Process Equipment,Singapore,10007,04/14/2014,Full-time
+10174,Rahul Patel,rahul.patel@example.com,Cloud Engineer,IC2,Network Engineering,Global Supply Chain,Penang,10008,07/19/2012,Full-time
+10175,Daniel Brandt,daniel.brandt@example.com,Systems Engineer,IC5,Network Engineering,Finance and Controls,Singapore,10002,10/26/2023,Full-time
+10176,Samuel Iyer,samuel.iyer@example.com,Security Analyst,IC1,Data Engineering,Customer Services,Global Remote,10005,12/10/2015,Full-time
+10177,Samuel Romero,samuel.romero@example.com,Systems Engineer,IC6,Application Development,Customer Services,Singapore,10007,04/28/2020,Full-time
+10178,Mei Nakamura,mei.nakamura@example.com,Solutions Architect,IC6,Application Development,Manufacturing Engineering,Hsinchu,10008,05/21/2016,Full-time
+10179,Hannah Haddad,hannah.haddad@example.com,Security Analyst,IC3,Unified Communications,Manufacturing Engineering,Penang,10008,08/13/2012,Full-time
+10180,Samuel Tanaka,samuel.tanaka@example.com,Data Engineer,IC3,Data Engineering,Digital Transformation,Tualatin,10002,09/17/2020,Full-time
+10181,Carlos Mahmoud,carlos.mahmoud@example.com,Integration Developer,IC4,Application Development,Corporate IT,Tualatin,10001,04/04/2014,Full-time
+10182,Marcus Gallagher,marcus.gallagher@example.com,Data Engineer,IC1,Network Engineering,Corporate IT,Fremont,10003,09/27/2015,Full-time
+10183,Tariq Bauer,tariq.bauer@example.com,Solutions Architect,IC1,Data Engineering,Semiconductor Process Equipment,Global Remote,10001,05/01/2022,Full-time
+10184,Tariq Tanaka,tariq.tanaka@example.com,Cloud Engineer,IC5,Cybersecurity,Semiconductor Process Equipment,Hsinchu,10004,11/10/2013,Full-time
+10185,Carlos Patel,carlos.patel@example.com,Systems Engineer,IC1,Application Development,Manufacturing Engineering,Global Remote,10010,11/07/2019,Full-time
+10186,Elena Reyes,elena.reyes@example.com,Data Engineer,IC2,Network Engineering,Finance and Controls,Global Remote,10007,10/11/2022,Full-time
+10187,Samuel Nakamura,samuel.nakamura@example.com,Systems Engineer,IC6,Unified Communications,Customer Services,Singapore,10002,08/25/2023,Full-time
+10188,Marcus Moreno,marcus.moreno@example.com,Senior Software Engineer,IC4,Network Engineering,Human Resources,Penang,10009,03/29/2019,Full-time
+10189,Sofia Mahmoud,sofia.mahmoud@example.com,Systems Engineer,IC3,Cybersecurity,Corporate IT,Global Remote,10006,11/27/2015,Full-time
+10190,Carlos Romero,carlos.romero@example.com,Security Analyst,IC2,Application Development,Manufacturing Engineering,Fremont,10008,12/25/2018,Full-time
+10191,Isabel Duarte,isabel.duarte@example.com,UC Engineer,IC6,Application Development,Fab Operations,Penang,10010,10/06/2017,Full-time
+10192,Avery Lindqvist,avery.lindqvist@example.com,Senior Software Engineer,IC5,Network Engineering,Information Security,Fremont,10005,04/07/2014,Full-time
+10193,Isabel Schmidt,isabel.schmidt@example.com,Security Analyst,IC6,Unified Communications,Corporate IT,Hsinchu,10009,04/22/2017,Full-time
+10194,Ingrid Gallagher,ingrid.gallagher@example.com,Security Analyst,IC2,Application Development,Digital Transformation,Singapore,10001,09/10/2016,Full-time
+10195,Elena Moreno,elena.moreno@example.com,Systems Engineer,IC6,Cloud and Infrastructure,Digital Transformation,Global Remote,10004,09/08/2014,Full-time
+10196,Leila Brandt,leila.brandt@example.com,Integration Developer,IC3,Data Engineering,Corporate IT,Tualatin,10007,07/07/2014,Full-time
+10197,Hannah Kim,hannah.kim@example.com,Solutions Architect,IC3,Application Development,Global Supply Chain,Hsinchu,10003,01/10/2023,Full-time
+10198,Hannah Ferreira,hannah.ferreira@example.com,Solutions Architect,IC6,Data Engineering,Manufacturing Engineering,Singapore,10008,06/02/2018,Full-time
+10199,Mateo Romero,mateo.romero@example.com,Senior Software Engineer,IC2,Application Development,Semiconductor Process Equipment,Global Remote,10001,09/24/2014,Full-time
+10200,Priya Chen,priya.chen@example.com,Data Engineer,IC5,Unified Communications,Customer Services,Tualatin,10009,01/29/2012,Full-time
+10201,Samuel Okafor,samuel.okafor@example.com,Security Analyst,IC3,Cloud and Infrastructure,Manufacturing Engineering,Tualatin,10001,07/14/2013,Full-time
+10202,Nadia Nakamura,nadia.nakamura@example.com,Solutions Architect,IC3,Application Development,Human Resources,Global Remote,10008,01/19/2014,Full-time
+10203,Dmitri Romero,dmitri.romero@example.com,Systems Engineer,IC1,Cloud and Infrastructure,Manufacturing Engineering,Hsinchu,10001,12/16/2021,Full-time
+10204,Samuel Kim,samuel.kim@example.com,Data Engineer,IC3,Network Engineering,Information Security,Fremont,10010,12/15/2024,Full-time
+10205,Mei Chen,mei.chen@example.com,Network Engineer,IC3,Cloud and Infrastructure,Fab Operations,Hsinchu,10002,06/29/2018,Full-time
+10206,Amara Aziz,amara.aziz@example.com,Solutions Architect,IC6,Cloud and Infrastructure,Fab Operations,Tualatin,10007,01/18/2021,Full-time
+10207,Leila Novak,leila.novak@example.com,Cloud Engineer,IC1,Unified Communications,Corporate IT,Global Remote,10010,09/24/2021,Contractor
+10208,Owen Novak,owen.novak@example.com,Integration Developer,IC4,Unified Communications,Finance and Controls,Fremont,10009,01/12/2018,Full-time
+10209,Leila Mahmoud,leila.mahmoud@example.com,Data Engineer,IC3,Cloud and Infrastructure,Global Supply Chain,Tualatin,10003,12/12/2020,Full-time
+10210,Leila Ferreira,leila.ferreira@example.com,Integration Developer,IC2,Cybersecurity,Semiconductor Process Equipment,Hsinchu,10010,12/24/2025,Full-time
+10211,Marcus Iyer,marcus.iyer@example.com,Solutions Architect,IC4,Cloud and Infrastructure,Global Supply Chain,Global Remote,10005,08/15/2022,Full-time
+10212,Sofia Aziz,sofia.aziz@example.com,Security Analyst,IC5,Network Engineering,Human Resources,Hsinchu,10008,10/04/2015,Full-time
+10213,Leila Chen,leila.chen@example.com,UC Engineer,IC3,Application Development,Customer Services,Hsinchu,10005,03/12/2020,Full-time
+10214,Lucas Sullivan,lucas.sullivan@example.com,Cloud Engineer,IC3,Unified Communications,Digital Transformation,Global Remote,10008,08/11/2021,Full-time
+10215,Ethan Iyer,ethan.iyer@example.com,Systems Engineer,IC2,Unified Communications,Finance and Controls,Tualatin,10002,06/02/2017,Full-time
+10216,Rahul Kim,rahul.kim@example.com,Cloud Engineer,IC1,Unified Communications,Global Supply Chain,Global Remote,10008,10/10/2023,Full-time
+10217,Tariq Walsh,tariq.walsh@example.com,Network Engineer,IC6,Cloud and Infrastructure,Digital Transformation,Penang,10007,08/05/2025,Full-time
+10218,Ethan Bauer,ethan.bauer@example.com,Senior Software Engineer,IC3,Application Development,Semiconductor Process Equipment,Hsinchu,10005,04/18/2025,Full-time
+10219,Jordan Mahmoud,jordan.mahmoud@example.com,Solutions Architect,IC2,Unified Communications,Manufacturing Engineering,Penang,10006,02/15/2019,Full-time
+10220,Ethan Sullivan,ethan.sullivan@example.com,Data Engineer,IC4,Application Development,Information Security,Singapore,10008,02/23/2022,Full-time
+10221,Ingrid Romero,ingrid.romero@example.com,Systems Engineer,IC1,Application Development,Global Supply Chain,Fremont,10003,04/16/2020,Full-time
+10222,Lucas Romero,lucas.romero@example.com,Systems Engineer,IC5,Integration (iPaaS),Corporate IT,Singapore,10010,12/20/2022,Full-time
+10223,Owen Iyer,owen.iyer@example.com,Data Engineer,IC4,Application Development,Human Resources,Singapore,10009,10/28/2025,Full-time
+10224,Samuel Gallagher,samuel.gallagher@example.com,Data Engineer,IC2,Application Development,Global Supply Chain,Global Remote,10001,03/05/2021,Full-time
+10225,Carlos Okafor,carlos.okafor@example.com,Security Analyst,IC3,Network Engineering,Semiconductor Process Equipment,Hsinchu,10002,02/11/2020,Contractor
+10226,Marcus Mahmoud,marcus.mahmoud@example.com,UC Engineer,IC6,Unified Communications,Customer Services,Penang,10005,09/03/2016,Full-time
+10227,Ravi Chen,ravi.chen@example.com,Cloud Engineer,IC1,Network Engineering,Fab Operations,Singapore,10003,06/17/2021,Full-time
+10228,Isabel Reyes,isabel.reyes@example.com,Cloud Engineer,IC5,Application Development,Human Resources,Singapore,10001,01/09/2025,Full-time
+10229,Chloe Schmidt,chloe.schmidt@example.com,Network Engineer,IC6,Network Engineering,Fab Operations,Singapore,10009,01/29/2023,Full-time
+10230,Kenji Romero,kenji.romero@example.com,Security Analyst,IC3,Cybersecurity,Information Security,Tualatin,10004,09/05/2020,Full-time
+10231,Nadia Okafor,nadia.okafor@example.com,Solutions Architect,IC6,Network Engineering,Finance and Controls,Singapore,10006,04/27/2013,Full-time
+10232,Tariq Nakamura,tariq.nakamura@example.com,Cloud Engineer,IC4,Unified Communications,Information Security,Hsinchu,10001,04/19/2019,Full-time
+10233,Sofia Ferreira,sofia.ferreira@example.com,Senior Software Engineer,IC1,Unified Communications,Digital Transformation,Tualatin,10010,02/09/2019,Full-time
+10234,Elena Walsh,elena.walsh@example.com,Solutions Architect,IC5,Cybersecurity,Semiconductor Process Equipment,Singapore,10009,01/26/2023,Contractor
+10235,Rahul Okafor,rahul.okafor@example.com,Cloud Engineer,IC5,Unified Communications,Global Supply Chain,Penang,10008,02/23/2019,Full-time
+10236,Mei Bauer,mei.bauer@example.com,Systems Engineer,IC5,Application Development,Information Security,Singapore,10003,10/13/2020,Full-time
+10237,Ravi Mahmoud,ravi.mahmoud@example.com,Integration Developer,IC4,Unified Communications,Customer Services,Singapore,10001,08/24/2014,Full-time
+10238,Samuel Duarte,samuel.duarte@example.com,Integration Developer,IC1,Unified Communications,Semiconductor Process Equipment,Global Remote,10010,09/09/2020,Full-time
+10239,Daniel Novak,daniel.novak@example.com,Cloud Engineer,IC1,Cybersecurity,Manufacturing Engineering,Hsinchu,10003,12/17/2018,Full-time
+10240,Yara Ferreira,yara.ferreira@example.com,Security Analyst,IC4,Unified Communications,Finance and Controls,Fremont,10001,11/01/2023,Full-time
+10241,Olivia Moreno,olivia.moreno@example.com,Cloud Engineer,IC4,Unified Communications,Fab Operations,Hsinchu,10010,11/11/2012,Full-time
+10242,Isabel Mahmoud,isabel.mahmoud@example.com,Data Engineer,IC1,Unified Communications,Semiconductor Process Equipment,Singapore,10008,06/30/2023,Full-time
+10243,Noah Novak,noah.novak@example.com,Network Engineer,IC1,Network Engineering,Global Supply Chain,Penang,10006,06/25/2020,Full-time
+10244,Grace Iyer,grace.iyer@example.com,Solutions Architect,IC2,Application Development,Corporate IT,Fremont,10009,01/01/2024,Full-time
+10245,Mateo Duarte,mateo.duarte@example.com,Solutions Architect,IC5,Unified Communications,Digital Transformation,Fremont,10010,10/29/2017,Full-time
+10246,Dmitri Lindqvist,dmitri.lindqvist@example.com,Security Analyst,IC4,Cloud and Infrastructure,Human Resources,Penang,10003,09/09/2017,Full-time
+10247,Lucas Reyes,lucas.reyes@example.com,UC Engineer,IC3,Cloud and Infrastructure,Fab Operations,Hsinchu,10002,05/06/2021,Full-time
+10248,Lucas Lindqvist,lucas.lindqvist@example.com,Cloud Engineer,IC6,Application Development,Global Supply Chain,Fremont,10005,03/20/2023,Full-time
+10249,Yara Patel,yara.patel@example.com,UC Engineer,IC2,Network Engineering,Digital Transformation,Global Remote,10008,03/08/2025,Full-time
+10250,Mei Romero,mei.romero@example.com,Systems Engineer,IC3,Cybersecurity,Global Supply Chain,Tualatin,10001,10/16/2025,Full-time
+10251,Ingrid Nakamura,ingrid.nakamura@example.com,Senior Software Engineer,IC2,Application Development,Customer Services,Penang,10003,07/15/2016,Full-time
+10252,Leila Schmidt,leila.schmidt@example.com,Integration Developer,IC6,Unified Communications,Semiconductor Process Equipment,Penang,10007,05/11/2023,Full-time
+10253,Carlos Reyes,carlos.reyes@example.com,Cloud Engineer,IC6,Network Engineering,Corporate IT,Penang,10009,03/19/2025,Full-time
+10254,Daniel Walsh,daniel.walsh@example.com,Cloud Engineer,IC2,Network Engineering,Global Supply Chain,Fremont,10001,01/11/2023,Full-time
+10255,Rahul Chen,rahul.chen@example.com,Systems Engineer,IC2,Network Engineering,Semiconductor Process Equipment,Singapore,10005,01/14/2024,Full-time
+10256,Chloe Okafor,chloe.okafor@example.com,Data Engineer,IC5,Application Development,Manufacturing Engineering,Singapore,10004,01/09/2020,Full-time
+10257,Isabel Haddad,isabel.haddad@example.com,Solutions Architect,IC6,Unified Communications,Information Security,Global Remote,10009,10/14/2023,Contractor
+10258,Ravi Moreno,ravi.moreno@example.com,Integration Developer,IC6,Unified Communications,Digital Transformation,Penang,10006,02/01/2013,Full-time
+10259,Amara Sullivan,amara.sullivan@example.com,Security Analyst,IC2,Application Development,Information Security,Singapore,10001,02/28/2019,Contractor
+10260,Priya Romero,priya.romero@example.com,Network Engineer,IC5,Integration (iPaaS),Fab Operations,Singapore,10005,01/25/2016,Full-time
+10261,Tariq Lindqvist,tariq.lindqvist@example.com,Cloud Engineer,IC5,Cloud and Infrastructure,Fab Operations,Fremont,10002,09/08/2019,Full-time
+10262,Daniel Duarte,daniel.duarte@example.com,Integration Developer,IC2,Unified Communications,Fab Operations,Singapore,10001,02/10/2012,Full-time
+10263,Chloe Nakamura,chloe.nakamura@example.com,Systems Engineer,IC4,Cybersecurity,Manufacturing Engineering,Penang,10009,03/06/2025,Full-time
+10264,Daniel Okafor,daniel.okafor@example.com,Network Engineer,IC2,Application Development,Fab Operations,Penang,10002,03/19/2016,Full-time
+10265,Lucas Brandt,lucas.brandt@example.com,Security Analyst,IC6,Application Development,Manufacturing Engineering,Global Remote,10008,10/25/2020,Full-time
+10266,Yara Moreno,yara.moreno@example.com,Network Engineer,IC6,Cloud and Infrastructure,Corporate IT,Global Remote,10003,11/28/2023,Full-time
+10267,Marcus Sullivan,marcus.sullivan@example.com,Integration Developer,IC1,Network Engineering,Fab Operations,Hsinchu,10002,01/04/2019,Full-time
+10268,Samuel Walsh,samuel.walsh@example.com,Solutions Architect,IC5,Unified Communications,Digital Transformation,Tualatin,10010,08/09/2016,Full-time
+10269,Mei Lindqvist,mei.lindqvist@example.com,Integration Developer,IC5,Application Development,Global Supply Chain,Global Remote,10003,06/21/2014,Full-time
+10270,Avery Patel,avery.patel@example.com,Security Analyst,IC3,Application Development,Corporate IT,Hsinchu,10002,12/24/2018,Full-time
+10271,Chloe Bauer,chloe.bauer@example.com,Integration Developer,IC6,Integration (iPaaS),Human Resources,Penang,10008,06/21/2024,Full-time
+10272,Jordan Tanaka,jordan.tanaka@example.com,Data Engineer,IC2,Network Engineering,Corporate IT,Penang,10003,04/18/2019,Full-time
+10273,Chloe Haddad,chloe.haddad@example.com,Data Engineer,IC1,Unified Communications,Customer Services,Penang,10009,05/15/2019,Full-time
+10274,Rahul Brandt,rahul.brandt@example.com,Solutions Architect,IC5,Cloud and Infrastructure,Finance and Controls,Global Remote,10002,05/17/2012,Full-time
+10275,Olivia Romero,olivia.romero@example.com,Systems Engineer,IC2,Network Engineering,Finance and Controls,Hsinchu,10003,08/18/2020,Full-time
+10276,Priya Gallagher,priya.gallagher@example.com,Systems Engineer,IC2,Unified Communications,Digital Transformation,Global Remote,10005,06/03/2022,Full-time
+10277,Avery Kowalski,avery.kowalski@example.com,UC Engineer,IC2,Application Development,Manufacturing Engineering,Tualatin,10001,05/18/2020,Full-time
+10278,Samuel Brandt,samuel.brandt@example.com,Systems Engineer,IC6,Data Engineering,Global Supply Chain,Singapore,10009,04/12/2014,Full-time
+10279,Isabel Chen,isabel.chen@example.com,Integration Developer,IC1,Unified Communications,Human Resources,Tualatin,10010,10/02/2020,Full-time
+10280,Sofia Sullivan,sofia.sullivan@example.com,UC Engineer,IC1,Unified Communications,Finance and Controls,Hsinchu,10003,06/17/2013,Full-time
+10281,Mei Kim,mei.kim@example.com,Cloud Engineer,IC1,Integration (iPaaS),Human Resources,Penang,10005,08/27/2014,Full-time
+10282,Grace Gallagher,grace.gallagher@example.com,Solutions Architect,IC1,Application Development,Semiconductor Process Equipment,Singapore,10006,02/07/2015,Full-time
+10283,Olivia Schmidt,olivia.schmidt@example.com,Network Engineer,IC3,Unified Communications,Global Supply Chain,Fremont,10004,08/29/2025,Full-time
+10284,Samuel Schmidt,samuel.schmidt@example.com,Solutions Architect,IC4,Cloud and Infrastructure,Semiconductor Process Equipment,Hsinchu,,10/08/2013,Full-time
+10285,Kenji Schmidt,kenji.schmidt@example.com,Network Engineer,IC4,Unified Communications,Fab Operations,Hsinchu,,03/29/2018,Full-time
+10286,Kenji Iyer,kenji.iyer@example.com,Network Engineer,IC3,Integration (iPaaS),Customer Services,Global Remote,10008,01/14/2021,Full-time
+10287,Nadia Gallagher,nadia.gallagher@example.com,Solutions Architect,IC2,Application Development,Information Security,Singapore,10006,11/12/2017,Full-time
+10288,Mateo Tanaka,mateo.tanaka@example.com,Security Analyst,IC2,Network Engineering,Semiconductor Process Equipment,Global Remote,10007,02/17/2014,Full-time
+10289,Elena Duarte,elena.duarte@example.com,UC Engineer,IC1,Data Engineering,Finance and Controls,Singapore,10003,07/24/2013,Full-time
+10290,Lucas Kowalski,lucas.kowalski@example.com,Integration Developer,IC6,Data Engineering,Human Resources,Fremont,10006,07/01/2024,Full-time
+10291,Hannah Kowalski,hannah.kowalski@example.com,Senior Software Engineer,IC2,Network Engineering,Customer Services,Global Remote,10006,12/26/2021,Full-time
+10292,Elena Kowalski,elena.kowalski@example.com,Network Engineer,IC3,Application Development,Manufacturing Engineering,Fremont,10002,05/19/2016,Full-time
+10293,Mei Novak,mei.novak@example.com,Network Engineer,IC4,Cloud and Infrastructure,Fab Operations,Global Remote,10002,12/04/2023,Full-time
+10294,Leila Lindqvist,leila.lindqvist@example.com,Security Analyst,IC4,Cloud and Infrastructure,Information Security,Penang,10009,08/05/2024,Full-time
+10295,Olivia Nakamura,olivia.nakamura@example.com,Data Engineer,IC1,Network Engineering,Finance and Controls,Global Remote,10007,02/10/2021,Full-time
+10296,Kenji Mahmoud,kenji.mahmoud@example.com,Integration Developer,IC1,Application Development,Customer Services,Fremont,10008,04/10/2013,Full-time
+10297,Chloe Tanaka,chloe.tanaka@example.com,Data Engineer,IC6,Application Development,Digital Transformation,Singapore,10005,02/03/2023,Full-time
+10298,Sofia Bauer,sofia.bauer@example.com,Integration Developer,IC2,Network Engineering,Corporate IT,Global Remote,,05/31/2012,Full-time
+10299,Avery Ferreira,avery.ferreira@example.com,UC Engineer,IC1,Cloud and Infrastructure,Corporate IT,Singapore,10003,05/13/2016,Full-time
+10300,Rahul Iyer,rahul.iyer@example.com,Integration Developer,IC6,Network Engineering,Digital Transformation,Penang,10009,02/21/2024,Full-time
+10301,Noah Duarte,noah.duarte@example.com,Cloud Engineer,IC2,Application Development,Corporate IT,Penang,10004,05/04/2012,Full-time
+10302,Elena Kim,elena.kim@example.com,Solutions Architect,IC1,Unified Communications,Human Resources,Penang,10001,04/23/2014,Full-time
+10303,Jordan Romero,jordan.romero@example.com,Systems Engineer,IC1,Data Engineering,Manufacturing Engineering,Tualatin,10007,09/09/2020,Full-time
+10304,Samuel Ferreira,samuel.ferreira@example.com,Solutions Architect,IC1,Network Engineering,Information Security,Singapore,10004,11/12/2022,Full-time
+10305,Nadia Sullivan,nadia.sullivan@example.com,Cloud Engineer,IC1,Cloud and Infrastructure,Digital Transformation,Penang,10003,10/05/2019,Full-time
+10306,Sofia Okafor,sofia.okafor@example.com,Cloud Engineer,IC4,Unified Communications,Corporate IT,Singapore,,06/07/2017,Full-time
+10307,Ingrid Kowalski,ingrid.kowalski@example.com,Integration Developer,IC6,Cloud and Infrastructure,Global Supply Chain,Singapore,10003,01/10/2012,Full-time
+10308,Noah Moreno,noah.moreno@example.com,Systems Engineer,IC1,Integration (iPaaS),Digital Transformation,Hsinchu,10005,08/12/2023,Full-time
+10309,Owen Chen,owen.chen@example.com,Systems Engineer,IC1,Unified Communications,Human Resources,Tualatin,10004,10/02/2018,Full-time
+10310,Daniel Chen,daniel.chen@example.com,Network Engineer,IC5,Application Development,Global Supply Chain,Fremont,10005,06/26/2015,Full-time
+10311,Noah Iyer,noah.iyer@example.com,Data Engineer,IC6,Data Engineering,Manufacturing Engineering,Penang,10005,09/24/2017,Full-time
+10312,Dmitri Okafor,dmitri.okafor@example.com,Security Analyst,IC1,Application Development,Fab Operations,Hsinchu,10004,01/04/2023,Full-time
+10313,Ethan Ferreira,ethan.ferreira@example.com,Security Analyst,IC2,Network Engineering,Digital Transformation,Penang,10009,10/17/2023,Full-time
+10314,Sofia Moreno,sofia.moreno@example.com,Senior Software Engineer,IC2,Application Development,Corporate IT,Fremont,10006,04/29/2017,Full-time
+10315,Noah Haddad,noah.haddad@example.com,Cloud Engineer,IC5,Network Engineering,Finance and Controls,Fremont,10010,08/26/2023,Full-time
+10316,Ravi Reyes,ravi.reyes@example.com,Senior Software Engineer,IC4,Unified Communications,Human Resources,Tualatin,10003,06/01/2014,Full-time
+10317,Priya Novak,priya.novak@example.com,Security Analyst,IC6,Unified Communications,Digital Transformation,Singapore,10004,02/10/2023,Full-time
+10318,Isabel Patel,isabel.patel@example.com,Security Analyst,IC5,Network Engineering,Fab Operations,Tualatin,10009,06/23/2020,Full-time
+10319,Ravi Sullivan,ravi.sullivan@example.com,UC Engineer,IC1,Cloud and Infrastructure,Semiconductor Process Equipment,Global Remote,10003,10/27/2016,Full-time
+10320,Lucas Gallagher,lucas.gallagher@example.com,Data Engineer,IC2,Cloud and Infrastructure,Fab Operations,Hsinchu,10009,04/09/2016,Full-time

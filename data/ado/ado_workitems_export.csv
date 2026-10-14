@@ -1,0 +1,282 @@
+ID,Work Item Type,Title,State,Area Path,Iteration Path,Story Points,Priority,Tags,Custom.ProjectCode,Created Date,Target Date
+20001,Epic,Edge Network Segmentation Refresh - Epic 0,New,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 4,,4,,GIS-0001,2026-05-06T13:58:00Z,2028-11-05T00:00:00Z
+20002,User Story,Edge Network Segmentation Refresh - User Story 1,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 6,2,4,,GIS-0001,2026-02-13T09:02:00Z,2028-11-05T00:00:00Z
+20003,Bug,Edge Network Segmentation Refresh - Bug 2,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 5,8,1,,GIS-0001,2026-03-16T08:35:00Z,
+20004,User Story,Edge Network Segmentation Refresh - User Story 3,New,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 5,,1,,GIS-0001,2026-05-03T16:58:00Z,2028-11-05T00:00:00Z
+20005,User Story,Edge Network Segmentation Refresh - User Story 4,New,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,2,4,,GIS-0001,2026-05-23T09:11:00Z,
+20006,Feature,Edge Network Segmentation Refresh - Feature 5,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 5,2,3,,GIS-0001,2026-04-16T17:03:00Z,
+20007,Epic,Resilient Datacenter Consolidation Rollout - Epic 0,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 4,,3,network,GIS-0002,2026-05-19T14:50:00Z,2028-08-26T00:00:00Z
+20008,Task,Resilient Datacenter Consolidation Rollout - Task 1,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 2,8,3,network,GIS-0002,2026-06-19T17:11:00Z,2028-08-26T00:00:00Z
+20009,Task,Resilient Datacenter Consolidation Rollout - Task 2,Closed,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 2,8,2,network,GIS-0002,2026-06-29T10:28:00Z,2028-08-26T00:00:00Z
+20010,User Story,Resilient Datacenter Consolidation Rollout - User Story 3,New,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 6,5,3,network,GIS-0002,2026-05-02T12:26:00Z,
+20011,Bug,Resilient Datacenter Consolidation Rollout - Bug 4,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 6,2,1,network,GIS-0002,2026-09-19T17:08:00Z,2028-08-26T00:00:00Z
+20012,Feature,Resilient Datacenter Consolidation Rollout - Feature 5,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 6,8,2,network,GIS-0002,2026-03-03T14:57:00Z,2028-08-26T00:00:00Z
+20013,Task,Resilient Datacenter Consolidation Rollout - Task 6,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 2,3,1,network,GIS-0002,2026-07-05T17:02:00Z,2028-08-26T00:00:00Z
+20014,Feature,Resilient Datacenter Consolidation Rollout - Feature 7,New,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 6,3,3,network,gis0002,2026-08-18T16:16:00Z,2028-08-26T00:00:00Z
+20015,Epic,Automated Endpoint Hardening Upgrade - Epic 0,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,,3,regulatory,GIS-0007,2026-04-06T08:08:00Z,2027-11-18T00:00:00Z
+20016,Feature,Automated Endpoint Hardening Upgrade - Feature 1,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 6,13,1,regulatory,GIS-0007,2026-05-18T10:28:00Z,2027-11-18T00:00:00Z
+20017,Task,Automated Endpoint Hardening Upgrade - Task 2,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,3,4,regulatory,GIS-0007,2026-05-28T09:34:00Z,
+20018,Bug,Automated Endpoint Hardening Upgrade - Bug 3,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 1,2,3,regulatory,GIS-0007,2026-05-03T16:17:00Z,2027-11-18T00:00:00Z
+20019,Task,Automated Endpoint Hardening Upgrade - Task 4,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 2,5,2,regulatory,GIS-0007,2026-05-12T09:59:00Z,
+20020,Task,Automated Endpoint Hardening Upgrade - Task 5,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 5,1,2,regulatory,GIS-0007,2026-05-10T10:16:00Z,2027-11-18T00:00:00Z
+20021,Task,Automated Endpoint Hardening Upgrade - Task 6,New,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 5,5,1,regulatory,GIS-0007,2026-03-27T12:46:00Z,2027-11-18T00:00:00Z
+20022,Epic,Next-Gen Key Vault Migration Program - Epic 0,Closed,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 6,,4,,GIS-0008,2026-08-21T11:26:00Z,2028-09-24T00:00:00Z
+20023,User Story,Next-Gen Key Vault Migration Program - User Story 1,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,1,1,,GIS-0008,2026-09-03T12:13:00Z,2028-09-24T00:00:00Z
+20024,Task,Next-Gen Key Vault Migration Program - Task 2,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 5,5,1,,GIS-0008,2026-09-20T09:42:00Z,2028-09-24T00:00:00Z
+20025,Bug,Next-Gen Key Vault Migration Program - Bug 3,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 6,13,1,,GIS-0008,2026-07-20T08:05:00Z,2028-09-24T00:00:00Z
+20026,User Story,Next-Gen Key Vault Migration Program - User Story 4,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,3,3,,GIS-0008,2026-07-12T17:20:00Z,2028-09-24T00:00:00Z
+20027,Feature,Next-Gen Key Vault Migration Program - Feature 5,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 2,13,2,,GIS-0008,2026-09-27T11:54:00Z,2028-09-24T00:00:00Z
+20028,Epic,Resilient Key Vault Migration Rollout - Epic 0,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 5,,1,dt-initiative;regulatory,GIS-0012,2026-07-31T10:48:00Z,
+20029,Task,Resilient Key Vault Migration Rollout - Task 1,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 3,1,3,dt-initiative;regulatory,GIS-0012,2026-04-08T12:27:00Z,2027-10-25T00:00:00Z
+20030,User Story,Resilient Key Vault Migration Rollout - User Story 2,New,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 4,1,1,dt-initiative;regulatory,GIS-0012,2026-03-02T08:33:00Z,
+20031,Bug,Resilient Key Vault Migration Rollout - Bug 3,Closed,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 1,3,3,dt-initiative;regulatory,GIS-0012,2026-07-13T09:11:00Z,2027-10-25T00:00:00Z
+20032,User Story,Resilient Key Vault Migration Rollout - User Story 4,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 2,13,4,dt-initiative;regulatory,GIS-0012,2026-04-24T11:01:00Z,
+20033,User Story,Resilient Key Vault Migration Rollout - User Story 5,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 2,1,4,dt-initiative;regulatory,GIS-0012,2026-04-22T11:38:00Z,2027-10-25T00:00:00Z
+20034,Task,Resilient Key Vault Migration Rollout - Task 6,Closed,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 5,8,3,dt-initiative;regulatory,GIS-0012,2026-08-21T15:57:00Z,2027-10-25T00:00:00Z
+20035,Task,Resilient Key Vault Migration Rollout - Task 7,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 4,13,4,dt-initiative;regulatory,GIS-0012,2026-05-18T16:20:00Z,2027-10-25T00:00:00Z
+20036,Epic,Resilient Key Vault Migration Program - Epic 0,Closed,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 4,,3,,gis0013,2026-09-03T15:08:00Z,2027-01-26T00:00:00Z
+20037,Task,Resilient Key Vault Migration Program - Task 1,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,2,4,,GIS-0013,2026-04-05T08:09:00Z,
+20038,User Story,Resilient Key Vault Migration Program - User Story 2,Resolved,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 5,13,1,,GIS-0013,2026-09-02T09:11:00Z,2027-01-26T00:00:00Z
+20039,Task,Resilient Key Vault Migration Program - Task 3,Closed,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 5,3,1,,GIS-0013,2026-03-12T17:01:00Z,2027-01-26T00:00:00Z
+20040,Task,Resilient Key Vault Migration Program - Task 4,Closed,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 2,,4,,GIS-0013,2026-03-25T15:37:00Z,2027-01-26T00:00:00Z
+20041,User Story,Resilient Key Vault Migration Program - User Story 5,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 4,1,3,,GIS-0013,2026-09-15T10:25:00Z,2027-01-26T00:00:00Z
+20042,Epic,Enterprise Wi-Fi 7 Refresh Upgrade - Epic 0,Active,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 2,,1,,GIS-0015,2026-04-09T17:03:00Z,2028-09-09T00:00:00Z
+20043,Task,Enterprise Wi-Fi 7 Refresh Upgrade - Task 1,Closed,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 5,2,4,,GIS-0015,2026-06-03T08:11:00Z,2028-09-09T00:00:00Z
+20044,Bug,Enterprise Wi-Fi 7 Refresh Upgrade - Bug 2,Active,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 2,5,1,,GIS-0015,2026-09-04T16:08:00Z,2028-09-09T00:00:00Z
+20045,User Story,Enterprise Wi-Fi 7 Refresh Upgrade - User Story 3,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,2,3,,GIS-0015,2026-08-09T14:56:00Z,
+20046,Feature,Enterprise Wi-Fi 7 Refresh Upgrade - Feature 4,Active,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,,3,,gis0015,2026-07-22T15:31:00Z,2028-09-09T00:00:00Z
+20047,Epic,Secure Service Desk Automation Phase 2 - Epic 0,New,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 3,,2,regulatory,GIS-0017,2026-03-15T13:00:00Z,
+20048,Feature,Secure Service Desk Automation Phase 2 - Feature 1,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 3,13,4,regulatory,GIS-0017,2026-06-18T13:34:00Z,
+20049,Bug,Secure Service Desk Automation Phase 2 - Bug 2,Closed,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 4,5,1,regulatory,GIS-0017,2026-06-02T15:20:00Z,2027-05-25T00:00:00Z
+20050,Bug,Secure Service Desk Automation Phase 2 - Bug 3,New,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 6,1,3,regulatory,GIS-0017,2026-03-14T16:49:00Z,2027-05-25T00:00:00Z
+20051,Task,Secure Service Desk Automation Phase 2 - Task 4,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 1,5,2,regulatory,GIS-0017,2026-07-25T11:43:00Z,2027-05-25T00:00:00Z
+20052,User Story,Secure Service Desk Automation Phase 2 - User Story 5,Resolved,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 5,1,1,regulatory,GIS-0017,2026-08-07T17:03:00Z,2027-05-25T00:00:00Z
+20053,User Story,Secure Service Desk Automation Phase 2 - User Story 6,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 3,2,3,regulatory,GIS-0017,2026-05-29T10:03:00Z,2027-05-25T00:00:00Z
+20054,Task,Secure Service Desk Automation Phase 2 - Task 7,Closed,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 5,2,4,regulatory,GIS-0017,2026-09-16T14:59:00Z,2027-05-25T00:00:00Z
+20055,Epic,Cloud-First Backup Resilience Rollout - Epic 0,Closed,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 1,,3,dt-initiative,GIS-0024,2026-02-06T15:54:00Z,2027-08-22T00:00:00Z
+20056,Bug,Cloud-First Backup Resilience Rollout - Bug 1,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 5,,1,dt-initiative,GIS-0024,2026-09-03T08:19:00Z,2027-08-22T00:00:00Z
+20057,Bug,Cloud-First Backup Resilience Rollout - Bug 2,Active,GIS\INFOSEC\CES,GIS\PI-26Q4\Sprint 6,2,1,dt-initiative,GIS-0024,2026-04-24T15:02:00Z,2027-08-22T00:00:00Z
+20058,Epic,Zero-Trust Service Desk Automation Program - Epic 0,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,,1,dt-initiative,GIS-0029,2026-06-06T08:35:00Z,2028-10-19T00:00:00Z
+20059,User Story,Zero-Trust Service Desk Automation Program - User Story 1,Resolved,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,3,4,dt-initiative,GIS-0029,2026-07-14T14:32:00Z,2028-10-19T00:00:00Z
+20060,User Story,Zero-Trust Service Desk Automation Program - User Story 2,Closed,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 3,3,3,dt-initiative,GIS-0029,2026-02-01T14:21:00Z,2028-10-19T00:00:00Z
+20061,Bug,Zero-Trust Service Desk Automation Program - Bug 3,Active,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,3,1,dt-initiative,GIS-0029,2026-02-15T11:03:00Z,2028-10-19T00:00:00Z
+20062,User Story,Zero-Trust Service Desk Automation Program - User Story 4,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 3,2,1,dt-initiative,GIS-0029,2026-04-09T09:37:00Z,2028-10-19T00:00:00Z
+20063,User Story,Zero-Trust Service Desk Automation Program - User Story 5,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 4,1,2,dt-initiative,GIS-0029,2026-05-06T09:59:00Z,2028-10-19T00:00:00Z
+20064,Feature,Zero-Trust Service Desk Automation Program - Feature 6,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 4,3,2,dt-initiative,GIS-0029,2026-02-22T15:23:00Z,2028-10-19T00:00:00Z
+20065,Bug,Zero-Trust Service Desk Automation Program - Bug 7,Resolved,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,2,2,dt-initiative,GIS-0029,2026-02-03T15:14:00Z,2028-10-19T00:00:00Z
+20066,Epic,Intelligent Network Segmentation Migration - Epic 0,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 2,,1,network,GIS-0036,2026-03-15T11:18:00Z,2027-05-13T00:00:00Z
+20067,Bug,Intelligent Network Segmentation Migration - Bug 1,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 4,,3,network,GIS-0036,2026-05-26T12:51:00Z,2027-05-13T00:00:00Z
+20068,Feature,Intelligent Network Segmentation Migration - Feature 2,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,13,2,network,GIS-0036,2026-07-01T10:39:00Z,2027-05-13T00:00:00Z
+20069,User Story,Intelligent Network Segmentation Migration - User Story 3,Active,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 1,1,3,network,GIS-0036,2026-09-03T14:39:00Z,2027-05-13T00:00:00Z
+20070,User Story,Intelligent Network Segmentation Migration - User Story 4,Closed,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 2,5,1,network,GIS-0036,2026-04-10T14:33:00Z,2027-05-13T00:00:00Z
+20071,Task,Intelligent Network Segmentation Migration - Task 5,Resolved,GIS\INFOSEC\GRC,GIS\PI-26Q4\Sprint 3,1,4,network,GIS-0036,2026-07-31T16:39:00Z,
+20072,Epic,Resilient Identity Federation Migration - Epic 0,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 6,,4,,gis0038,2026-02-27T13:11:00Z,2027-05-03T00:00:00Z
+20073,Task,Resilient Identity Federation Migration - Task 1,Resolved,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 3,5,3,,GIS-0038,2026-02-17T10:14:00Z,2027-05-03T00:00:00Z
+20074,User Story,Resilient Identity Federation Migration - User Story 2,Closed,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 4,13,2,,GIS-0038,2026-07-13T12:45:00Z,
+20075,Feature,Resilient Identity Federation Migration - Feature 3,Active,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 3,8,1,,GIS-0038,2026-02-15T16:34:00Z,2027-05-03T00:00:00Z
+20076,Task,Resilient Identity Federation Migration - Task 4,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 3,2,3,,GIS-0038,2026-03-06T12:33:00Z,
+20077,Bug,Resilient Identity Federation Migration - Bug 5,Resolved,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,8,3,,GIS-0038,2026-04-18T13:24:00Z,2027-05-03T00:00:00Z
+20078,Task,Resilient Identity Federation Migration - Task 6,Resolved,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 6,3,2,,GIS-0038,2026-06-08T10:30:00Z,
+20079,Bug,Resilient Identity Federation Migration - Bug 7,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,2,4,,GIS-0038,2026-03-01T13:04:00Z,2027-05-03T00:00:00Z
+20080,Task,Resilient Identity Federation Migration - Task 8,New,GIS\INFOSEC\ZTI,GIS\PI-26Q4\Sprint 1,8,4,,GIS-0038,2026-08-13T17:32:00Z,2027-05-03T00:00:00Z
+20081,Epic,Cloud-First Datacenter Consolidation Upgrade - Epic 0,New,GIS\INFOSEC\SOC,GIS\PI-26Q4\Sprint 2,,1,dt-initiative;network,GIS-0039,2026-05-12T14:54:00Z,2029-02-12T00:00:00Z
+20082,User Story,Cloud-First Datacenter Consolidation Upgrade - User Story 1,Active,GIS\INFOSEC\SOC,GIS\PI-26Q4\Sprint 5,,2,dt-initiative;network,GIS-0039,2026-05-11T08:30:00Z,2029-02-12T00:00:00Z
+20083,Feature,Cloud-First Datacenter Consolidation Upgrade - Feature 2,Resolved,GIS\INFOSEC\SOC,GIS\PI-26Q4\Sprint 3,2,2,dt-initiative;network,GIS-0039,2026-08-25T11:10:00Z,2029-02-12T00:00:00Z
+20084,Feature,Cloud-First Datacenter Consolidation Upgrade - Feature 3,New,GIS\INFOSEC\SOC,GIS\PI-26Q4\Sprint 4,8,1,dt-initiative;network,GIS-0039,2026-02-09T14:23:00Z,2029-02-12T00:00:00Z
+20085,User Story,Cloud-First Datacenter Consolidation Upgrade - User Story 4,New,GIS\INFOSEC\SOC,GIS\PI-26Q4\Sprint 5,13,2,dt-initiative;network,GIS-0039,2026-04-25T15:10:00Z,2029-02-12T00:00:00Z
+20086,Epic,Automated API Gateway Rollout - Epic 0,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,,4,dt-initiative,GIS-0041,2026-09-17T16:09:00Z,2027-06-11T00:00:00Z
+20087,Task,Automated API Gateway Rollout - Task 1,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,8,4,dt-initiative,GIS-0041,2026-05-30T10:19:00Z,2027-06-11T00:00:00Z
+20088,User Story,Automated API Gateway Rollout - User Story 2,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 6,,2,dt-initiative,GIS-0041,2026-07-20T08:13:00Z,2027-06-11T00:00:00Z
+20089,Task,Automated API Gateway Rollout - Task 3,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,1,3,dt-initiative,GIS-0041,2026-08-28T13:08:00Z,2027-06-11T00:00:00Z
+20090,Bug,Automated API Gateway Rollout - Bug 4,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,5,4,dt-initiative,GIS-0041,2026-05-09T10:33:00Z,2027-06-11T00:00:00Z
+20091,Bug,Automated API Gateway Rollout - Bug 5,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,1,3,dt-initiative,GIS-0041,2026-08-21T08:39:00Z,2027-06-11T00:00:00Z
+20092,Task,Automated API Gateway Rollout - Task 6,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 6,1,4,dt-initiative,GIS-0041,2026-08-22T16:52:00Z,2027-06-11T00:00:00Z
+20093,Bug,Automated API Gateway Rollout - Bug 7,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,5,3,dt-initiative,GIS-0041,2026-04-21T15:07:00Z,2027-06-11T00:00:00Z
+20094,Epic,Identity-Led Datacenter Consolidation Migration - Epic 0,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 4,,1,,GIS-0042,2026-06-28T09:23:00Z,2027-08-22T00:00:00Z
+20095,User Story,Identity-Led Datacenter Consolidation Migration - User Story 1,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 2,13,2,,gis0042,2026-03-02T17:05:00Z,2027-08-22T00:00:00Z
+20096,Task,Identity-Led Datacenter Consolidation Migration - Task 2,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 2,5,1,,GIS-0042,2026-04-29T08:00:00Z,2027-08-22T00:00:00Z
+20097,User Story,Identity-Led Datacenter Consolidation Migration - User Story 3,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,5,1,,GIS-0042,2026-09-27T11:56:00Z,2027-08-22T00:00:00Z
+20098,Bug,Identity-Led Datacenter Consolidation Migration - Bug 4,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 6,8,2,,GIS-0042,2026-09-15T16:14:00Z,2027-08-22T00:00:00Z
+20099,Epic,Cloud-First Network Segmentation Refresh - Epic 0,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 3,,3,regulatory;network,GIS-0043,2026-03-19T12:50:00Z,2029-10-30T00:00:00Z
+20100,User Story,Cloud-First Network Segmentation Refresh - User Story 1,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 2,3,2,regulatory;network,gis0043,2026-06-07T17:50:00Z,2029-10-30T00:00:00Z
+20101,Feature,Cloud-First Network Segmentation Refresh - Feature 2,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,5,1,regulatory;network,GIS-0043,2026-09-03T16:19:00Z,2029-10-30T00:00:00Z
+20102,Task,Cloud-First Network Segmentation Refresh - Task 3,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 4,3,1,regulatory;network,GIS-0043,2026-05-07T10:58:00Z,2029-10-30T00:00:00Z
+20103,User Story,Cloud-First Network Segmentation Refresh - User Story 4,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,2,1,regulatory;network,GIS-0043,2026-03-15T12:21:00Z,2029-10-30T00:00:00Z
+20104,Bug,Cloud-First Network Segmentation Refresh - Bug 5,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 6,3,4,regulatory;network,GIS-0043,2026-08-12T13:07:00Z,2029-10-30T00:00:00Z
+20105,Feature,Cloud-First Network Segmentation Refresh - Feature 6,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 3,1,1,regulatory;network,GIS-0043,2026-09-02T12:27:00Z,2029-10-30T00:00:00Z
+20106,Epic,Unified SIEM Modernization Migration - Epic 0,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 6,,3,,GIS-0046,2026-07-03T08:55:00Z,2027-08-02T00:00:00Z
+20107,User Story,Unified SIEM Modernization Migration - User Story 1,New,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,5,2,,GIS-0046,2026-07-02T08:32:00Z,2027-08-02T00:00:00Z
+20108,Feature,Unified SIEM Modernization Migration - Feature 2,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 5,13,3,,GIS-0046,2026-09-24T10:23:00Z,2027-08-02T00:00:00Z
+20109,Feature,Unified SIEM Modernization Migration - Feature 3,New,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,3,2,,GIS-0046,2026-04-04T14:47:00Z,2027-08-02T00:00:00Z
+20110,Feature,Unified SIEM Modernization Migration - Feature 4,New,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,2,2,,GIS-0046,2026-02-22T15:21:00Z,2027-08-02T00:00:00Z
+20111,Feature,Unified SIEM Modernization Migration - Feature 5,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,5,1,,GIS-0046,2026-02-07T17:09:00Z,2027-08-02T00:00:00Z
+20112,Bug,Unified SIEM Modernization Migration - Bug 6,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 6,13,1,,GIS-0046,2026-02-18T10:54:00Z,2027-08-02T00:00:00Z
+20113,User Story,Unified SIEM Modernization Migration - User Story 7,Active,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 3,1,3,,GIS-0046,2026-07-31T09:33:00Z,2027-08-02T00:00:00Z
+20114,Task,Unified SIEM Modernization Migration - Task 8,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 3,,3,,GIS-0046,2026-03-03T17:50:00Z,
+20115,Epic,Cloud-First Identity Federation Rollout - Epic 0,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,,1,regulatory;network,GIS-0047,2026-08-22T15:08:00Z,2028-08-17T00:00:00Z
+20116,Task,Cloud-First Identity Federation Rollout - Task 1,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,8,3,regulatory;network,GIS-0047,2026-06-13T09:57:00Z,2028-08-17T00:00:00Z
+20117,Bug,Cloud-First Identity Federation Rollout - Bug 2,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 3,1,1,regulatory;network,GIS-0047,2026-05-25T08:15:00Z,2028-08-17T00:00:00Z
+20118,Task,Cloud-First Identity Federation Rollout - Task 3,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 4,2,4,regulatory;network,GIS-0047,2026-07-24T17:11:00Z,2028-08-17T00:00:00Z
+20119,Epic,Cloud-First Service Desk Automation Upgrade - Epic 0,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 1,,1,,GIS-0048,2026-07-13T09:32:00Z,
+20120,Bug,Cloud-First Service Desk Automation Upgrade - Bug 1,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 1,2,2,,GIS-0048,2026-03-09T15:41:00Z,2027-11-26T00:00:00Z
+20121,Feature,Cloud-First Service Desk Automation Upgrade - Feature 2,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 2,2,2,,GIS-0048,2026-03-10T17:50:00Z,2027-11-26T00:00:00Z
+20122,User Story,Cloud-First Service Desk Automation Upgrade - User Story 3,Active,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 3,13,3,,GIS-0048,2026-06-21T15:29:00Z,2027-11-26T00:00:00Z
+20123,Task,Cloud-First Service Desk Automation Upgrade - Task 4,New,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 2,1,3,,GIS-0048,2026-08-07T12:19:00Z,2027-11-26T00:00:00Z
+20124,Task,Cloud-First Service Desk Automation Upgrade - Task 5,New,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 3,8,2,,GIS-0048,2026-03-27T16:48:00Z,2027-11-26T00:00:00Z
+20125,User Story,Cloud-First Service Desk Automation Upgrade - User Story 6,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 1,5,3,,GIS-0048,2026-06-16T13:10:00Z,2027-11-26T00:00:00Z
+20126,Bug,Cloud-First Service Desk Automation Upgrade - Bug 7,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 5,1,2,,GIS-0048,2026-02-08T13:29:00Z,2027-11-26T00:00:00Z
+20127,Epic,Enterprise Network Segmentation Migration - Epic 0,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,,4,,GIS-0052,2026-06-03T16:19:00Z,2027-12-11T00:00:00Z
+20128,Task,Enterprise Network Segmentation Migration - Task 1,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 2,1,3,,GIS-0052,2026-05-16T15:32:00Z,2027-12-11T00:00:00Z
+20129,User Story,Enterprise Network Segmentation Migration - User Story 2,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,1,4,,GIS-0052,2026-02-02T16:13:00Z,2027-12-11T00:00:00Z
+20130,User Story,Enterprise Network Segmentation Migration - User Story 3,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 4,5,2,,GIS-0052,2026-07-16T12:17:00Z,
+20131,User Story,Enterprise Network Segmentation Migration - User Story 4,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,3,4,,GIS-0052,2026-04-18T08:01:00Z,
+20132,Feature,Enterprise Network Segmentation Migration - Feature 5,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 2,5,1,,GIS-0052,2026-06-19T15:11:00Z,2027-12-11T00:00:00Z
+20133,User Story,Enterprise Network Segmentation Migration - User Story 6,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,13,4,,GIS-0052,2026-08-25T11:04:00Z,2027-12-11T00:00:00Z
+20134,Epic,Enterprise Endpoint Hardening Phase 2 - Epic 0,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 5,,3,regulatory,GIS-0053,2026-04-16T16:26:00Z,2029-09-10T00:00:00Z
+20135,User Story,Enterprise Endpoint Hardening Phase 2 - User Story 1,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,,2,regulatory,GIS-0053,2026-07-12T08:58:00Z,
+20136,Task,Enterprise Endpoint Hardening Phase 2 - Task 2,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 6,1,1,regulatory,GIS-0053,2026-08-04T15:59:00Z,2029-09-10T00:00:00Z
+20137,Task,Enterprise Endpoint Hardening Phase 2 - Task 3,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 6,13,1,regulatory,GIS-0053,2026-08-18T14:38:00Z,2029-09-10T00:00:00Z
+20138,Bug,Enterprise Endpoint Hardening Phase 2 - Bug 4,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,,2,regulatory,GIS-0053,2026-07-27T15:45:00Z,2029-09-10T00:00:00Z
+20139,Epic,Next-Gen Network Segmentation Program - Epic 0,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,,2,dt-initiative;network,GIS-0055,2026-07-31T14:01:00Z,2027-02-27T00:00:00Z
+20140,Bug,Next-Gen Network Segmentation Program - Bug 1,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,,2,dt-initiative;network,GIS-0055,2026-08-11T14:43:00Z,2027-02-27T00:00:00Z
+20141,Bug,Next-Gen Network Segmentation Program - Bug 2,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,8,1,dt-initiative;network,GIS-0055,2026-04-12T10:19:00Z,
+20142,Feature,Next-Gen Network Segmentation Program - Feature 3,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 2,8,4,dt-initiative;network,GIS-0055,2026-03-21T17:20:00Z,2027-02-27T00:00:00Z
+20143,Feature,Next-Gen Network Segmentation Program - Feature 4,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 3,3,2,dt-initiative;network,GIS-0055,2026-07-13T09:09:00Z,2027-02-27T00:00:00Z
+20144,Task,Next-Gen Network Segmentation Program - Task 5,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 4,2,3,dt-initiative;network,GIS-0055,2026-06-02T15:51:00Z,2027-02-27T00:00:00Z
+20145,Epic,Enterprise Key Vault Migration Phase 2 - Epic 0,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 4,,2,,GIS-0057,2026-07-18T14:12:00Z,2027-02-10T00:00:00Z
+20146,Task,Enterprise Key Vault Migration Phase 2 - Task 1,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 3,1,4,,GIS-0057,2026-06-27T17:34:00Z,2027-02-10T00:00:00Z
+20147,User Story,Enterprise Key Vault Migration Phase 2 - User Story 2,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,5,3,,GIS-0057,2026-04-08T09:48:00Z,2027-02-10T00:00:00Z
+20148,Bug,Enterprise Key Vault Migration Phase 2 - Bug 3,New,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 1,3,4,,GIS-0057,2026-07-30T10:58:00Z,2027-02-10T00:00:00Z
+20149,Task,Enterprise Key Vault Migration Phase 2 - Task 4,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,,3,,GIS-0057,2026-06-14T11:03:00Z,2027-02-10T00:00:00Z
+20150,Epic,Identity-Led Backup Resilience Upgrade - Epic 0,Active,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 1,,4,dt-initiative,GIS-0059,2026-06-12T08:15:00Z,2027-07-28T00:00:00Z
+20151,Bug,Identity-Led Backup Resilience Upgrade - Bug 1,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 4,8,2,dt-initiative,GIS-0059,2026-06-23T16:33:00Z,2027-07-28T00:00:00Z
+20152,Feature,Identity-Led Backup Resilience Upgrade - Feature 2,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 6,13,4,dt-initiative,GIS-0059,2026-09-11T12:38:00Z,2027-07-28T00:00:00Z
+20153,Task,Identity-Led Backup Resilience Upgrade - Task 3,Resolved,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 5,1,1,dt-initiative,GIS-0059,2026-04-23T11:20:00Z,2027-07-28T00:00:00Z
+20154,Task,Identity-Led Backup Resilience Upgrade - Task 4,Closed,GIS\SWDEV\INTG,GIS\PI-26Q4\Sprint 5,8,2,dt-initiative,GIS-0059,2026-09-27T10:45:00Z,2027-07-28T00:00:00Z
+20155,Epic,Cloud-First Key Vault Migration Rollout - Epic 0,Resolved,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 6,,4,,GIS-0060,2026-05-29T16:50:00Z,2027-11-15T00:00:00Z
+20156,Bug,Cloud-First Key Vault Migration Rollout - Bug 1,Active,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,5,4,,GIS-0060,2026-08-04T16:57:00Z,2027-11-15T00:00:00Z
+20157,Feature,Cloud-First Key Vault Migration Rollout - Feature 2,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 5,8,1,,GIS-0060,2026-04-10T08:25:00Z,2027-11-15T00:00:00Z
+20158,Bug,Cloud-First Key Vault Migration Rollout - Bug 3,Closed,GIS\SWDEV\APP,GIS\PI-26Q4\Sprint 6,13,4,,GIS-0060,2026-07-05T09:11:00Z,2027-11-15T00:00:00Z
+20159,Epic,Zero-Trust Backup Resilience Phase 2 - Epic 0,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 6,,1,network,GIS-0063,2026-03-07T14:39:00Z,2028-04-29T00:00:00Z
+20160,User Story,Zero-Trust Backup Resilience Phase 2 - User Story 1,Closed,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 4,5,1,network,GIS-0063,2026-04-12T12:17:00Z,2028-04-29T00:00:00Z
+20161,Feature,Zero-Trust Backup Resilience Phase 2 - Feature 2,Resolved,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,2,4,network,GIS-0063,2026-06-27T15:23:00Z,2028-04-29T00:00:00Z
+20162,Task,Zero-Trust Backup Resilience Phase 2 - Task 3,Resolved,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 1,1,1,network,GIS-0063,2026-09-04T15:20:00Z,2028-04-29T00:00:00Z
+20163,Bug,Zero-Trust Backup Resilience Phase 2 - Bug 4,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,5,3,network,GIS-0063,2026-04-08T14:23:00Z,2028-04-29T00:00:00Z
+20164,Task,Zero-Trust Backup Resilience Phase 2 - Task 5,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 3,13,4,network,GIS-0063,2026-08-25T09:08:00Z,2028-04-29T00:00:00Z
+20165,Bug,Zero-Trust Backup Resilience Phase 2 - Bug 6,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,2,3,network,GIS-0063,2026-02-11T11:10:00Z,2028-04-29T00:00:00Z
+20166,User Story,Zero-Trust Backup Resilience Phase 2 - User Story 7,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 5,5,1,network,GIS-0063,2026-04-26T13:28:00Z,2028-04-29T00:00:00Z
+20167,Epic,Edge Collaboration Platform Upgrade - Epic 0,Closed,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 1,,4,data,GIS-0064,2026-06-28T08:24:00Z,2028-03-02T00:00:00Z
+20168,Bug,Edge Collaboration Platform Upgrade - Bug 1,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 3,13,1,data,GIS-0064,2026-06-17T12:59:00Z,2028-03-02T00:00:00Z
+20169,Task,Edge Collaboration Platform Upgrade - Task 2,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,5,2,data,GIS-0064,2026-03-30T16:02:00Z,2028-03-02T00:00:00Z
+20170,Feature,Edge Collaboration Platform Upgrade - Feature 3,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 1,8,4,data,GIS-0064,2026-02-18T10:59:00Z,
+20171,User Story,Edge Collaboration Platform Upgrade - User Story 4,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 1,13,4,data,GIS-0064,2026-05-30T17:01:00Z,2028-03-02T00:00:00Z
+20172,User Story,Edge Collaboration Platform Upgrade - User Story 5,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,13,4,data,GIS-0064,2026-09-05T13:30:00Z,2028-03-02T00:00:00Z
+20173,User Story,Edge Collaboration Platform Upgrade - User Story 6,Closed,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 5,2,3,data,GIS-0064,2026-07-07T13:40:00Z,2028-03-02T00:00:00Z
+20174,User Story,Edge Collaboration Platform Upgrade - User Story 7,Closed,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 4,13,3,data,GIS-0064,2026-07-14T14:57:00Z,2028-03-02T00:00:00Z
+20175,Epic,Enterprise Identity Federation Phase 2 - Epic 0,Resolved,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 6,,1,dt-initiative,GIS-0065,2026-07-28T10:17:00Z,
+20176,Bug,Enterprise Identity Federation Phase 2 - Bug 1,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,5,3,dt-initiative,GIS-0065,2026-06-29T11:38:00Z,2028-05-31T00:00:00Z
+20177,Task,Enterprise Identity Federation Phase 2 - Task 2,Resolved,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 5,8,1,dt-initiative,GIS-0065,2026-02-03T14:48:00Z,2028-05-31T00:00:00Z
+20178,Feature,Enterprise Identity Federation Phase 2 - Feature 3,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 1,2,4,dt-initiative,GIS-0065,2026-02-11T13:06:00Z,2028-05-31T00:00:00Z
+20179,Bug,Enterprise Identity Federation Phase 2 - Bug 4,Resolved,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 5,,4,dt-initiative,GIS-0065,2026-06-29T12:36:00Z,
+20180,Bug,Enterprise Identity Federation Phase 2 - Bug 5,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 4,1,3,dt-initiative,GIS-0065,2026-09-04T10:05:00Z,2028-05-31T00:00:00Z
+20181,Bug,Enterprise Identity Federation Phase 2 - Bug 6,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,1,2,dt-initiative,GIS-0065,2026-05-19T12:04:00Z,2028-05-31T00:00:00Z
+20182,Task,Enterprise Identity Federation Phase 2 - Task 7,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,13,3,dt-initiative,GIS-0065,2026-08-15T10:37:00Z,2028-05-31T00:00:00Z
+20183,User Story,Enterprise Identity Federation Phase 2 - User Story 8,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 3,2,4,dt-initiative,GIS-0065,2026-09-14T15:38:00Z,
+20184,Epic,Secure API Gateway Upgrade - Epic 0,Closed,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,,1,,GIS-0067,2026-09-01T08:00:00Z,2028-06-08T00:00:00Z
+20185,Bug,Secure API Gateway Upgrade - Bug 1,Resolved,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 5,5,4,,GIS-0067,2026-04-06T13:04:00Z,2028-06-08T00:00:00Z
+20186,Task,Secure API Gateway Upgrade - Task 2,Closed,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 4,13,2,,GIS-0067,2026-08-15T11:02:00Z,2028-06-08T00:00:00Z
+20187,Task,Secure API Gateway Upgrade - Task 3,New,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 5,2,4,,GIS-0067,2026-07-15T15:16:00Z,2028-06-08T00:00:00Z
+20188,Bug,Secure API Gateway Upgrade - Bug 4,Closed,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 2,1,4,,GIS-0067,2026-09-17T15:55:00Z,2028-06-08T00:00:00Z
+20189,Epic,Edge Identity Federation Migration - Epic 0,Closed,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 1,,4,dt-initiative;network,GIS-0069,2026-08-07T13:44:00Z,2028-07-07T00:00:00Z
+20190,User Story,Edge Identity Federation Migration - User Story 1,Resolved,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 2,5,4,dt-initiative;network,GIS-0069,2026-08-30T16:46:00Z,2028-07-07T00:00:00Z
+20191,Bug,Edge Identity Federation Migration - Bug 2,Active,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,13,2,dt-initiative;network,GIS-0069,2026-03-31T11:40:00Z,
+20192,Task,Edge Identity Federation Migration - Task 3,Closed,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,13,1,dt-initiative;network,GIS-0069,2026-02-10T08:13:00Z,2028-07-07T00:00:00Z
+20193,User Story,Edge Identity Federation Migration - User Story 4,New,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 1,1,2,dt-initiative;network,GIS-0069,2026-04-14T16:16:00Z,2028-07-07T00:00:00Z
+20194,Task,Edge Identity Federation Migration - Task 5,New,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,13,2,dt-initiative;network,GIS-0069,2026-05-08T15:22:00Z,2028-07-07T00:00:00Z
+20195,Feature,Edge Identity Federation Migration - Feature 6,Resolved,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,,4,dt-initiative;network,GIS-0069,2026-05-02T09:53:00Z,2028-07-07T00:00:00Z
+20196,Task,Edge Identity Federation Migration - Task 7,Active,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,2,3,dt-initiative;network,GIS-0069,2026-08-29T08:04:00Z,2028-07-07T00:00:00Z
+20197,Task,Edge Identity Federation Migration - Task 8,Closed,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 5,13,2,dt-initiative;network,GIS-0069,2026-02-21T15:26:00Z,2028-07-07T00:00:00Z
+20198,Epic,Resilient Endpoint Hardening Rollout - Epic 0,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 5,,4,,GIS-0070,2026-04-08T14:37:00Z,
+20199,User Story,Resilient Endpoint Hardening Rollout - User Story 1,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 3,1,2,,GIS-0070,2026-02-15T16:26:00Z,2028-02-06T00:00:00Z
+20200,Feature,Resilient Endpoint Hardening Rollout - Feature 2,Closed,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 5,5,1,,GIS-0070,2026-06-14T16:30:00Z,2028-02-06T00:00:00Z
+20201,User Story,Resilient Endpoint Hardening Rollout - User Story 3,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,2,1,,GIS-0070,2026-08-29T17:10:00Z,2028-02-06T00:00:00Z
+20202,User Story,Resilient Endpoint Hardening Rollout - User Story 4,Closed,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 1,8,3,,gis0070,2026-03-22T16:18:00Z,2028-02-06T00:00:00Z
+20203,Task,Resilient Endpoint Hardening Rollout - Task 5,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 2,,4,,GIS-0070,2026-08-27T09:28:00Z,2028-02-06T00:00:00Z
+20204,Bug,Resilient Endpoint Hardening Rollout - Bug 6,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 4,8,3,,GIS-0070,2026-08-07T14:04:00Z,2028-02-06T00:00:00Z
+20205,User Story,Resilient Endpoint Hardening Rollout - User Story 7,Active,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 6,1,4,,GIS-0070,2026-07-06T08:56:00Z,
+20206,Task,Resilient Endpoint Hardening Rollout - Task 8,New,GIS\INFRA\NET,GIS\PI-26Q4\Sprint 3,8,3,,GIS-0070,2026-07-06T13:41:00Z,2028-02-06T00:00:00Z
+20207,Epic,Resilient Data Catalog Program - Epic 0,New,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,,2,dt-initiative;regulatory;data,GIS-0072,2026-02-22T13:24:00Z,
+20208,Feature,Resilient Data Catalog Program - Feature 1,New,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 3,8,1,dt-initiative;regulatory;data,GIS-0072,2026-02-27T08:09:00Z,2027-01-13T00:00:00Z
+20209,Bug,Resilient Data Catalog Program - Bug 2,Active,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 6,2,2,dt-initiative;regulatory;data,GIS-0072,2026-07-20T11:22:00Z,2027-01-13T00:00:00Z
+20210,User Story,Resilient Data Catalog Program - User Story 3,Active,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 1,13,1,dt-initiative;regulatory;data,GIS-0072,2026-07-20T17:24:00Z,2027-01-13T00:00:00Z
+20211,Task,Resilient Data Catalog Program - Task 4,Active,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 5,13,4,dt-initiative;regulatory;data,GIS-0072,2026-09-28T13:41:00Z,
+20212,Feature,Resilient Data Catalog Program - Feature 5,New,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 3,,4,dt-initiative;regulatory;data,GIS-0072,2026-09-20T09:01:00Z,2027-01-13T00:00:00Z
+20213,Bug,Resilient Data Catalog Program - Bug 6,Active,GIS\INFRA\DC,GIS\PI-26Q4\Sprint 3,3,1,dt-initiative;regulatory;data,GIS-0072,2026-05-13T09:31:00Z,
+20214,Epic,Hybrid Data Catalog Migration - Epic 0,Resolved,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,,4,dt-initiative,GIS-0076,2026-06-17T14:19:00Z,2028-08-03T00:00:00Z
+20215,Feature,Hybrid Data Catalog Migration - Feature 1,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 5,2,1,dt-initiative,GIS-0076,2026-06-29T09:10:00Z,2028-08-03T00:00:00Z
+20216,Bug,Hybrid Data Catalog Migration - Bug 2,New,GIS\AI\AIP,GIS\PI-26Q4\Sprint 5,13,4,dt-initiative,GIS-0076,2026-05-22T15:07:00Z,2028-08-03T00:00:00Z
+20217,Bug,Hybrid Data Catalog Migration - Bug 3,New,GIS\AI\AIP,GIS\PI-26Q4\Sprint 4,1,2,dt-initiative,GIS-0076,2026-04-20T17:20:00Z,
+20218,User Story,Hybrid Data Catalog Migration - User Story 4,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 5,8,3,dt-initiative,GIS-0076,2026-04-09T08:26:00Z,2028-08-03T00:00:00Z
+20219,User Story,Hybrid Data Catalog Migration - User Story 5,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,1,2,dt-initiative,GIS-0076,2026-06-17T08:19:00Z,2028-08-03T00:00:00Z
+20220,Bug,Hybrid Data Catalog Migration - Bug 6,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 2,2,1,dt-initiative,GIS-0076,2026-07-15T10:17:00Z,2028-08-03T00:00:00Z
+20221,Task,Hybrid Data Catalog Migration - Task 7,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 4,13,2,dt-initiative,GIS-0076,2026-05-21T16:28:00Z,
+20222,Epic,Edge Wi-Fi 7 Refresh Rollout - Epic 0,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 6,,3,,GIS-0077,2026-06-15T08:15:00Z,2028-09-30T00:00:00Z
+20223,Feature,Edge Wi-Fi 7 Refresh Rollout - Feature 1,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 1,13,4,,GIS-0077,2026-04-15T08:22:00Z,
+20224,Task,Edge Wi-Fi 7 Refresh Rollout - Task 2,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 1,2,1,,GIS-0077,2026-08-21T17:27:00Z,
+20225,Task,Edge Wi-Fi 7 Refresh Rollout - Task 3,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 6,,4,,GIS-0077,2026-05-20T16:59:00Z,2028-09-30T00:00:00Z
+20226,Bug,Edge Wi-Fi 7 Refresh Rollout - Bug 4,Resolved,GIS\AI\AIP,GIS\PI-26Q4\Sprint 1,,1,,GIS-0077,2026-07-10T15:29:00Z,2028-09-30T00:00:00Z
+20227,User Story,Edge Wi-Fi 7 Refresh Rollout - User Story 5,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,8,4,,GIS-0077,2026-03-02T14:04:00Z,2028-09-30T00:00:00Z
+20228,User Story,Edge Wi-Fi 7 Refresh Rollout - User Story 6,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 2,1,2,,GIS-0077,2026-06-13T10:02:00Z,2028-09-30T00:00:00Z
+20229,Feature,Edge Wi-Fi 7 Refresh Rollout - Feature 7,New,GIS\AI\AIP,GIS\PI-26Q4\Sprint 5,5,2,,GIS-0077,2026-06-08T17:13:00Z,2028-09-30T00:00:00Z
+20230,User Story,Edge Wi-Fi 7 Refresh Rollout - User Story 8,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 5,,1,,GIS-0077,2026-07-10T13:09:00Z,
+20231,Epic,Resilient Patch Orchestration Phase 2 - Epic 0,Resolved,GIS\AI\AIP,GIS\PI-26Q4\Sprint 4,,4,network,GIS-0078,2026-06-24T14:07:00Z,
+20232,User Story,Resilient Patch Orchestration Phase 2 - User Story 1,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,1,1,network,GIS-0078,2026-08-25T12:46:00Z,2029-12-30T00:00:00Z
+20233,Task,Resilient Patch Orchestration Phase 2 - Task 2,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 4,3,1,network,GIS-0078,2026-02-19T10:00:00Z,2029-12-30T00:00:00Z
+20234,Task,Resilient Patch Orchestration Phase 2 - Task 3,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,8,3,network,gis0078,2026-03-09T16:23:00Z,2029-12-30T00:00:00Z
+20235,Task,Resilient Patch Orchestration Phase 2 - Task 4,New,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,2,3,network,GIS-0078,2026-08-04T14:20:00Z,
+20236,Task,Resilient Patch Orchestration Phase 2 - Task 5,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 4,8,1,network,GIS-0078,2026-09-28T11:13:00Z,2029-12-30T00:00:00Z
+20237,Epic,Unified Model Registry Upgrade - Epic 0,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 6,,3,,GIS-0080,2026-08-02T12:51:00Z,2027-04-21T00:00:00Z
+20238,Bug,Unified Model Registry Upgrade - Bug 1,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 1,,3,,GIS-0080,2026-06-18T09:20:00Z,2027-04-21T00:00:00Z
+20239,Bug,Unified Model Registry Upgrade - Bug 2,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 6,,4,,GIS-0080,2026-08-19T16:33:00Z,2027-04-21T00:00:00Z
+20240,Feature,Unified Model Registry Upgrade - Feature 3,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 2,1,4,,GIS-0080,2026-05-03T09:59:00Z,2027-04-21T00:00:00Z
+20241,Epic,Edge Key Vault Migration Rollout - Epic 0,New,GIS\AI\AIP,GIS\PI-26Q4\Sprint 1,,1,data,GIS-0085,2026-08-22T12:47:00Z,2027-12-07T00:00:00Z
+20242,User Story,Edge Key Vault Migration Rollout - User Story 1,Closed,GIS\AI\AIP,GIS\PI-26Q4\Sprint 3,13,2,data,GIS-0085,2026-06-20T10:24:00Z,
+20243,Bug,Edge Key Vault Migration Rollout - Bug 2,New,GIS\AI\AIP,GIS\PI-26Q4\Sprint 6,13,2,data,GIS-0085,2026-09-20T13:33:00Z,2027-12-07T00:00:00Z
+20244,Feature,Edge Key Vault Migration Rollout - Feature 3,Resolved,GIS\AI\AIP,GIS\PI-26Q4\Sprint 5,5,3,data,GIS-0085,2026-07-02T08:09:00Z,2027-12-07T00:00:00Z
+20245,Bug,Edge Key Vault Migration Rollout - Bug 4,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 6,3,3,data,GIS-0085,2026-08-21T10:21:00Z,2027-12-07T00:00:00Z
+20246,Feature,Edge Key Vault Migration Rollout - Feature 5,Active,GIS\AI\AIP,GIS\PI-26Q4\Sprint 2,13,3,data,GIS-0085,2026-04-27T15:34:00Z,2027-12-07T00:00:00Z
+20247,Epic,Resilient Data Catalog Refresh - Epic 0,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,,1,network,GIS-0089,2026-05-10T14:50:00Z,
+20248,Bug,Resilient Data Catalog Refresh - Bug 1,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 4,8,1,network,GIS-0089,2026-03-19T10:28:00Z,2027-02-21T00:00:00Z
+20249,User Story,Resilient Data Catalog Refresh - User Story 2,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 3,2,1,network,GIS-0089,2026-08-10T14:04:00Z,2027-02-21T00:00:00Z
+20250,Bug,Resilient Data Catalog Refresh - Bug 3,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 3,8,2,network,GIS-0089,2026-02-13T16:00:00Z,2027-02-21T00:00:00Z
+20251,Bug,Resilient Data Catalog Refresh - Bug 4,Active,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 4,13,2,network,GIS-0089,2026-09-11T15:24:00Z,2027-02-21T00:00:00Z
+20252,User Story,Resilient Data Catalog Refresh - User Story 5,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 2,13,2,network,GIS-0089,2026-04-19T08:36:00Z,2027-02-21T00:00:00Z
+20253,Bug,Resilient Data Catalog Refresh - Bug 6,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,5,4,network,GIS-0089,2026-08-07T13:30:00Z,2027-02-21T00:00:00Z
+20254,User Story,Resilient Data Catalog Refresh - User Story 7,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 1,8,2,network,GIS-0089,2026-09-12T13:29:00Z,2027-02-21T00:00:00Z
+20255,Bug,Resilient Data Catalog Refresh - Bug 8,Active,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 5,1,3,network,GIS-0089,2026-08-16T08:33:00Z,2027-02-21T00:00:00Z
+20256,Epic,Hybrid Key Vault Migration Upgrade - Epic 0,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,,3,,GIS-0091,2026-07-12T16:59:00Z,2028-01-11T00:00:00Z
+20257,Bug,Hybrid Key Vault Migration Upgrade - Bug 1,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 1,1,4,,GIS-0091,2026-05-10T17:48:00Z,2028-01-11T00:00:00Z
+20258,Feature,Hybrid Key Vault Migration Upgrade - Feature 2,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 2,8,2,,GIS-0091,2026-09-06T08:39:00Z,2028-01-11T00:00:00Z
+20259,Bug,Hybrid Key Vault Migration Upgrade - Bug 3,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 5,2,4,,GIS-0091,2026-06-27T10:43:00Z,2028-01-11T00:00:00Z
+20260,Task,Hybrid Key Vault Migration Upgrade - Task 4,Active,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 3,1,1,,GIS-0091,2026-09-18T15:19:00Z,2028-01-11T00:00:00Z
+20261,Bug,Hybrid Key Vault Migration Upgrade - Bug 5,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,8,4,,GIS-0091,2026-09-05T14:36:00Z,
+20262,Feature,Hybrid Key Vault Migration Upgrade - Feature 6,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,3,1,,GIS-0091,2026-09-07T10:26:00Z,2028-01-11T00:00:00Z
+20263,Epic,Automated Data Catalog Refresh - Epic 0,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 2,,2,regulatory;data,GIS-0094,2026-04-25T12:58:00Z,2027-09-20T00:00:00Z
+20264,Feature,Automated Data Catalog Refresh - Feature 1,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 4,5,1,regulatory;data,GIS-0094,2026-03-24T17:38:00Z,2027-09-20T00:00:00Z
+20265,Task,Automated Data Catalog Refresh - Task 2,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 2,13,3,regulatory;data,GIS-0094,2026-02-22T13:18:00Z,
+20266,Epic,Zero-Trust Identity Federation Refresh - Epic 0,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 2,,3,dt-initiative,GIS-0096,2026-07-04T11:17:00Z,2030-01-01T00:00:00Z
+20267,Feature,Zero-Trust Identity Federation Refresh - Feature 1,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 2,8,2,dt-initiative,GIS-0096,2026-02-04T12:26:00Z,2030-01-01T00:00:00Z
+20268,Bug,Zero-Trust Identity Federation Refresh - Bug 2,Active,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,3,4,dt-initiative,GIS-0096,2026-02-21T17:35:00Z,2030-01-01T00:00:00Z
+20269,Bug,Zero-Trust Identity Federation Refresh - Bug 3,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 3,2,3,dt-initiative,GIS-0096,2026-06-17T13:43:00Z,2030-01-01T00:00:00Z
+20270,Task,Zero-Trust Identity Federation Refresh - Task 4,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 5,3,1,dt-initiative,GIS-0096,2026-03-07T14:56:00Z,2030-01-01T00:00:00Z
+20271,Bug,Zero-Trust Identity Federation Refresh - Bug 5,Active,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 4,13,1,dt-initiative,GIS-0096,2026-08-23T11:53:00Z,2030-01-01T00:00:00Z
+20272,Epic,Next-Gen Network Segmentation Migration - Epic 0,Active,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 1,,3,network,GIS-0099,2026-03-11T12:48:00Z,2028-08-29T00:00:00Z
+20273,Feature,Next-Gen Network Segmentation Migration - Feature 1,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 4,2,1,network,GIS-0099,2026-08-13T12:42:00Z,2028-08-29T00:00:00Z
+20274,User Story,Next-Gen Network Segmentation Migration - User Story 2,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 3,13,4,network,GIS-0099,2026-04-05T08:41:00Z,2028-08-29T00:00:00Z
+20275,Bug,Next-Gen Network Segmentation Migration - Bug 3,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 3,2,2,network,GIS-0099,2026-05-14T08:11:00Z,2028-08-29T00:00:00Z
+20276,Epic,Enterprise Network Segmentation Phase 2 - Epic 0,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 4,,1,network,GIS-0100,2026-07-31T11:43:00Z,2028-09-03T00:00:00Z
+20277,Task,Enterprise Network Segmentation Phase 2 - Task 1,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 5,1,1,network,GIS-0100,2026-07-20T16:04:00Z,
+20278,User Story,Enterprise Network Segmentation Phase 2 - User Story 2,New,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 1,5,4,network,GIS-0100,2026-09-30T13:45:00Z,
+20279,Bug,Enterprise Network Segmentation Phase 2 - Bug 3,Resolved,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 1,3,1,network,GIS-0100,2026-07-09T12:22:00Z,2028-09-03T00:00:00Z
+20280,User Story,Enterprise Network Segmentation Phase 2 - User Story 4,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,13,1,network,GIS-0100,2026-07-25T11:05:00Z,2028-09-03T00:00:00Z
+20281,Bug,Enterprise Network Segmentation Phase 2 - Bug 5,Closed,GIS\DATA\DPL,GIS\PI-26Q4\Sprint 6,3,4,network,GIS-0100,2026-08-28T17:40:00Z,2028-09-03T00:00:00Z

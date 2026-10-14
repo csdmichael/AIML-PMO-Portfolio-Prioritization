@@ -1,0 +1,45 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "01_PMO_Feature_Engineering_Training",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "ab0205d5-3a59-485e-9b26-e8c3866aa30a",
+          "workspaceId": "39c02d65-d2cb-4355-9e77-cbf442d7fc8b"
+        }
+      },
+      {
+        "name": "02_PMO_Inference_Predictions",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "01_PMO_Feature_Engineering_Training",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "82677d67-a23a-45f3-808c-0fb9e1a70f32",
+          "workspaceId": "39c02d65-d2cb-4355-9e77-cbf442d7fc8b"
+        }
+      }
+    ]
+  }
+}

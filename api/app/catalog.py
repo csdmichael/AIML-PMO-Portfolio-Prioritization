@@ -56,6 +56,13 @@ class CatalogOptions:
             return self._static(source[len(_STATIC_OPTION_SOURCE) :])
         raise ValueError(f"unknown option source '{source}'")
 
+    def all_values(self, source: str) -> list[str] | None:
+        if source == _DYNAMIC_PORTFOLIOS:
+            return [str(item["key"]) for item in self._all_portfolios() if item.get("key")]
+        if source == _DYNAMIC_PROGRAMS:
+            return self.all_programs()
+        return None
+
     def all_programs(self) -> list[str]:
         keys: list[str] = []
         for portfolio in self._all_portfolios():

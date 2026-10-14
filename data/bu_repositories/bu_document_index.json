@@ -1,0 +1,4423 @@
+[
+  {
+    "documentId": "DOC-000001",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0001_sow_1.docx",
+    "projectRef": "GIS-0001",
+    "docType": "SOW",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-07-21T12:19:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000002",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0001_compliance-evidence_2.docx",
+    "projectRef": "GIS-0001",
+    "docType": "Compliance",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-07-30T08:53:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000003",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0001_sow_3.docx",
+    "projectRef": "GIS-0001",
+    "docType": "SOW",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-03-17T12:03:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000004",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0001_dependency-register_4.docx",
+    "projectRef": "GIS-0001",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-05-03T17:14:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0051",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000005",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0001_dependency-register_5.docx",
+    "projectRef": "GIS-0001",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-09-06T10:45:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0051",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000006",
+    "library": "Project Charters",
+    "fileName": "GIS-0001_charter_6.docx",
+    "projectRef": "GIS-0001",
+    "docType": "Charter",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-05-02T09:26:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000007",
+    "library": "Project Charters",
+    "fileName": "GIS-0002_charter_1.docx",
+    "projectRef": "GIS-0002",
+    "docType": "Charter",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-13T08:30:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000008",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0002_dependency-register_2.docx",
+    "projectRef": "GIS-0002",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-19T13:17:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0067",
+        "linkType": "SecurityGate"
+      },
+      {
+        "dependsOnProject": "GIS-0096",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0051",
+        "linkType": "SharedResource"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000009",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0002_sow_3.docx",
+    "projectRef": "GIS-0002",
+    "docType": "SOW",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-15T15:04:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000010",
+    "library": "Project Charters",
+    "fileName": "GIS-0002_charter_4.docx",
+    "projectRef": "GIS-0002",
+    "docType": "Charter",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-09-03T10:19:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000011",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0002_compliance-evidence_5.docx",
+    "projectRef": "GIS-0002",
+    "docType": "Compliance",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-03-19T11:27:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000012",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0002_sow_6.docx",
+    "projectRef": "GIS-0002",
+    "docType": "SOW",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-04-28T13:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000013",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0003_sow_1.docx",
+    "projectRef": "GIS-0003",
+    "docType": "SOW",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-09-22T17:08:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000014",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0003_dependency-register_2.docx",
+    "projectRef": "gis-0003 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-22T13:12:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000015",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0003_dependency-register_3.docx",
+    "projectRef": "GIS-0003",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-06-24T12:55:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000016",
+    "library": "Risk Registers",
+    "fileName": "GIS-0003_risk-register_4.docx",
+    "projectRef": "GIS-0003",
+    "docType": "RiskRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-09-05T08:10:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0003-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0003-02",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0003-03",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000017",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0003_dependency-register_5.docx",
+    "projectRef": "GIS-0003",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-10-01T16:40:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000018",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0003_dependency-register_6.docx",
+    "projectRef": "GIS-0003",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-06-11T17:19:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000019",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0004_dependency-register_1.docx",
+    "projectRef": "GIS-0004",
+    "docType": "DependencyRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-08-16T09:59:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0068",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000020",
+    "library": "Risk Registers",
+    "fileName": "GIS-0004_risk-register_2.docx",
+    "projectRef": "GIS-0004",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-05-10T13:52:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0004-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0004-02",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000021",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0004_sow_3.docx",
+    "projectRef": "GIS-0004",
+    "docType": "SOW",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-09-16T15:49:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000022",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0005_dependency-register_1.docx",
+    "projectRef": "GIS-0005",
+    "docType": "DependencyRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-08-19T13:36:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000023",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0005_dependency-register_2.docx",
+    "projectRef": "GIS-0005",
+    "docType": "DependencyRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-04-09T15:56:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000024",
+    "library": "Risk Registers",
+    "fileName": "GIS-0005_risk-register_3.docx",
+    "projectRef": "GIS-0005",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-06-27T11:31:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0005-01",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000025",
+    "library": "Project Charters",
+    "fileName": "GIS-0010_charter_1.docx",
+    "projectRef": "GIS-0010",
+    "docType": "Charter",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-06-24T13:01:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000026",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0010_sow_2.docx",
+    "projectRef": "GIS-0010",
+    "docType": "SOW",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-07-04T16:47:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000027",
+    "library": "Project Charters",
+    "fileName": "GIS-0010_charter_3.docx",
+    "projectRef": "GIS-0010",
+    "docType": "Charter",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-04-30T08:02:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000028",
+    "library": "Project Charters",
+    "fileName": "GIS-0010_charter_4.docx",
+    "projectRef": "gis-0010 ",
+    "docType": "Charter",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-07-19T13:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000029",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0010_compliance-evidence_5.docx",
+    "projectRef": "GIS-0010",
+    "docType": "Compliance",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-04-05T10:10:00Z",
+    "complianceTags": [
+      "SOC2"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000030",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0011_sow_1.docx",
+    "projectRef": "GIS-0011",
+    "docType": "SOW",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-09-26T09:37:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000031",
+    "library": "Risk Registers",
+    "fileName": "GIS-0011_risk-register_2.docx",
+    "projectRef": "gis-0011 ",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-04-12T11:47:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0011-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0011-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0011-03",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000032",
+    "library": "Risk Registers",
+    "fileName": "GIS-0011_risk-register_3.docx",
+    "projectRef": "GIS-0011",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-08-17T10:42:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0011-01",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0011-02",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0011-03",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000033",
+    "library": "Risk Registers",
+    "fileName": "GIS-0011_risk-register_4.docx",
+    "projectRef": "GIS-0011",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-10-07T15:58:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0011-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0011-02",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0011-03",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000034",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0011_dependency-register_5.docx",
+    "projectRef": "GIS-0011",
+    "docType": "DependencyRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-06-03T08:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000035",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0011_compliance-evidence_6.docx",
+    "projectRef": "gis-0011 ",
+    "docType": "Compliance",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-03-21T14:42:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000036",
+    "library": "Risk Registers",
+    "fileName": "GIS-0011_risk-register_7.docx",
+    "projectRef": "GIS-0011",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-07-09T08:34:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0011-01",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000037",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0011_dependency-register_8.docx",
+    "projectRef": "GIS-0011",
+    "docType": "DependencyRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-04-30T11:00:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000038",
+    "library": "Project Charters",
+    "fileName": "GIS-0012_charter_1.docx",
+    "projectRef": "GIS-0012",
+    "docType": "Charter",
+    "ownerEmail": "chloe.lindqvist@example.com",
+    "lastModifiedUtc": "2026-10-04T15:17:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000039",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0012_sow_2.docx",
+    "projectRef": "gis-0012 ",
+    "docType": "SOW",
+    "ownerEmail": "chloe.lindqvist@example.com",
+    "lastModifiedUtc": "2026-10-02T09:56:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000040",
+    "library": "Risk Registers",
+    "fileName": "GIS-0012_risk-register_3.docx",
+    "projectRef": "GIS-0012",
+    "docType": "RiskRegister",
+    "ownerEmail": "chloe.lindqvist@example.com",
+    "lastModifiedUtc": "2026-03-28T12:53:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0012-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0012-02",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000041",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0012_compliance-evidence_4.docx",
+    "projectRef": "GIS-0012",
+    "docType": "Compliance",
+    "ownerEmail": "chloe.lindqvist@example.com",
+    "lastModifiedUtc": "2026-03-25T10:19:00Z",
+    "complianceTags": [
+      "ITAR"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000042",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0013_compliance-evidence_1.docx",
+    "projectRef": "GIS-0013",
+    "docType": "Compliance",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-06-11T14:11:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000043",
+    "library": "Risk Registers",
+    "fileName": "GIS-0013_risk-register_2.docx",
+    "projectRef": "GIS-0013",
+    "docType": "RiskRegister",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-05-21T10:17:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0013-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0013-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0013-03",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000044",
+    "library": "Risk Registers",
+    "fileName": "GIS-0013_risk-register_3.docx",
+    "projectRef": "GIS-0013",
+    "docType": "RiskRegister",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-03-25T08:31:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0013-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0013-02",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000045",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0013_compliance-evidence_4.docx",
+    "projectRef": "GIS-0013",
+    "docType": "Compliance",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-06-07T11:20:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000046",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0013_sow_5.docx",
+    "projectRef": "GIS-0013",
+    "docType": "SOW",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-04-06T14:24:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000047",
+    "library": "Project Charters",
+    "fileName": "GIS-0013_charter_6.docx",
+    "projectRef": "GIS-0013",
+    "docType": "Charter",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-06-02T13:25:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000048",
+    "library": "Risk Registers",
+    "fileName": "GIS-0015_risk-register_1.docx",
+    "projectRef": "GIS-0015",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-04-04T17:54:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0015-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0015-02",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0015-03",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000049",
+    "library": "Risk Registers",
+    "fileName": "GIS-0015_risk-register_2.docx",
+    "projectRef": "GIS-0015",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-08-25T14:07:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0015-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0015-02",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000050",
+    "library": "Risk Registers",
+    "fileName": "GIS-0015_risk-register_3.docx",
+    "projectRef": "gis-0015 ",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-04-15T16:26:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0015-01",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000051",
+    "library": "Risk Registers",
+    "fileName": "GIS-0015_risk-register_4.docx",
+    "projectRef": "GIS-0015",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-06-29T08:37:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0015-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0015-02",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000052",
+    "library": "Risk Registers",
+    "fileName": "GIS-0015_risk-register_5.docx",
+    "projectRef": "GIS-0015",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-07-21T14:32:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0015-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0015-02",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000053",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0015_dependency-register_6.docx",
+    "projectRef": "GIS-0015",
+    "docType": "DependencyRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-06-26T08:18:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0085",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000054",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0015_sow_7.docx",
+    "projectRef": "GIS-0015",
+    "docType": "SOW",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-07-24T08:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000055",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0019_compliance-evidence_1.docx",
+    "projectRef": "GIS-0019",
+    "docType": "Compliance",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-09-25T11:53:00Z",
+    "complianceTags": [
+      "GDPR",
+      "ITAR"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000056",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0019_sow_2.docx",
+    "projectRef": "GIS-0019",
+    "docType": "SOW",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-03-26T17:29:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000057",
+    "library": "Project Charters",
+    "fileName": "GIS-0019_charter_3.docx",
+    "projectRef": "GIS-0019",
+    "docType": "Charter",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-10-08T17:40:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000058",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0023_compliance-evidence_1.docx",
+    "projectRef": "GIS-0023",
+    "docType": "Compliance",
+    "ownerEmail": "grace.lindqvist@example.com",
+    "lastModifiedUtc": "2026-05-17T17:28:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000059",
+    "library": "Risk Registers",
+    "fileName": "GIS-0023_risk-register_2.docx",
+    "projectRef": "GIS-0023",
+    "docType": "RiskRegister",
+    "ownerEmail": "grace.lindqvist@example.com",
+    "lastModifiedUtc": "2026-03-18T17:05:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0023-01",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000060",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0023_dependency-register_3.docx",
+    "projectRef": "GIS-0023",
+    "docType": "DependencyRegister",
+    "ownerEmail": "grace.lindqvist@example.com",
+    "lastModifiedUtc": "2026-10-09T13:51:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0082",
+        "linkType": "SharedResource"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000061",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0023_dependency-register_4.docx",
+    "projectRef": "GIS-0023",
+    "docType": "DependencyRegister",
+    "ownerEmail": "grace.lindqvist@example.com",
+    "lastModifiedUtc": "2026-04-28T09:25:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0082",
+        "linkType": "SharedResource"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000062",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0024_compliance-evidence_1.docx",
+    "projectRef": "GIS-0024",
+    "docType": "Compliance",
+    "ownerEmail": "tariq.aziz@example.com",
+    "lastModifiedUtc": "2026-08-17T11:01:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000063",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0024_sow_2.docx",
+    "projectRef": "GIS-0024",
+    "docType": "SOW",
+    "ownerEmail": "tariq.aziz@example.com",
+    "lastModifiedUtc": "2026-07-21T17:26:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000064",
+    "library": "Project Charters",
+    "fileName": "GIS-0025_charter_1.docx",
+    "projectRef": "GIS-0025",
+    "docType": "Charter",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-09-28T17:35:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000065",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0025_sow_2.docx",
+    "projectRef": "GIS-0025",
+    "docType": "SOW",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-08-02T10:22:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000066",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0025_compliance-evidence_3.docx",
+    "projectRef": "GIS-0025",
+    "docType": "Compliance",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-05-07T16:07:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000067",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0025_dependency-register_4.docx",
+    "projectRef": "GIS-0025",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-06-12T16:59:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0041",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000068",
+    "library": "Risk Registers",
+    "fileName": "GIS-0025_risk-register_5.docx",
+    "projectRef": "GIS-0025",
+    "docType": "RiskRegister",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-05-10T17:34:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0025-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0025-02",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000069",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0025_compliance-evidence_6.docx",
+    "projectRef": "GIS-0025",
+    "docType": "Compliance",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-10-06T16:05:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000070",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0025_dependency-register_7.docx",
+    "projectRef": "GIS-0025",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-06-29T15:42:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0041",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000071",
+    "library": "Project Charters",
+    "fileName": "GIS-0025_charter_8.docx",
+    "projectRef": "GIS-0025",
+    "docType": "Charter",
+    "ownerEmail": "mateo.schmidt@example.com",
+    "lastModifiedUtc": "2026-03-18T09:51:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000072",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0027_sow_1.docx",
+    "projectRef": "GIS-0027",
+    "docType": "SOW",
+    "ownerEmail": "yara.walsh@example.com",
+    "lastModifiedUtc": "2026-04-07T12:53:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000073",
+    "library": "Risk Registers",
+    "fileName": "GIS-0027_risk-register_2.docx",
+    "projectRef": "GIS-0027",
+    "docType": "RiskRegister",
+    "ownerEmail": "yara.walsh@example.com",
+    "lastModifiedUtc": "2026-04-13T17:48:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0027-01",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000074",
+    "library": "Project Charters",
+    "fileName": "GIS-0027_charter_3.docx",
+    "projectRef": "GIS-0027",
+    "docType": "Charter",
+    "ownerEmail": "yara.walsh@example.com",
+    "lastModifiedUtc": "2026-05-09T16:11:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000075",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0027_dependency-register_4.docx",
+    "projectRef": "GIS-0027",
+    "docType": "DependencyRegister",
+    "ownerEmail": "yara.walsh@example.com",
+    "lastModifiedUtc": "2026-03-07T12:42:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0085",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0074",
+        "linkType": "FinishToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0046",
+        "linkType": "SharedResource"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000076",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0029_compliance-evidence_1.docx",
+    "projectRef": "GIS-0029",
+    "docType": "Compliance",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-09-06T08:48:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000077",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0029_dependency-register_2.docx",
+    "projectRef": "GIS-0029",
+    "docType": "DependencyRegister",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-03-10T16:33:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000078",
+    "library": "Risk Registers",
+    "fileName": "GIS-0029_risk-register_3.docx",
+    "projectRef": "GIS-0029",
+    "docType": "RiskRegister",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-04-14T10:35:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0029-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0029-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0029-03",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000079",
+    "library": "Project Charters",
+    "fileName": "GIS-0029_charter_4.docx",
+    "projectRef": "gis-0029 ",
+    "docType": "Charter",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-05-06T09:18:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000080",
+    "library": "Project Charters",
+    "fileName": "GIS-0029_charter_5.docx",
+    "projectRef": "GIS-0029",
+    "docType": "Charter",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-06-16T17:02:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000081",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0029_sow_6.docx",
+    "projectRef": "GIS-0029",
+    "docType": "SOW",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-08-20T14:30:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000082",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0029_dependency-register_7.docx",
+    "projectRef": "gis-0029 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-04-25T16:35:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000083",
+    "library": "Project Charters",
+    "fileName": "GIS-0029_charter_8.docx",
+    "projectRef": "GIS-0029",
+    "docType": "Charter",
+    "ownerEmail": "leila.patel@example.com",
+    "lastModifiedUtc": "2026-03-31T14:00:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000084",
+    "library": "Risk Registers",
+    "fileName": "GIS-0031_risk-register_1.docx",
+    "projectRef": "GIS-0031",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.okafor@example.com",
+    "lastModifiedUtc": "2026-07-19T08:21:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0031-01",
+        "severity": "Critical",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0031-02",
+        "severity": "Critical",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0031-03",
+        "severity": "Critical",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000085",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0031_sow_2.docx",
+    "projectRef": "GIS-0031",
+    "docType": "SOW",
+    "ownerEmail": "isabel.okafor@example.com",
+    "lastModifiedUtc": "2026-03-26T14:00:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000086",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0031_sow_3.docx",
+    "projectRef": "GIS-0031",
+    "docType": "SOW",
+    "ownerEmail": "isabel.okafor@example.com",
+    "lastModifiedUtc": "2026-04-13T11:53:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000087",
+    "library": "Risk Registers",
+    "fileName": "GIS-0031_risk-register_4.docx",
+    "projectRef": "GIS-0031",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.okafor@example.com",
+    "lastModifiedUtc": "2026-07-13T11:39:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0031-01",
+        "severity": "High",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0031-02",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000088",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0033_sow_1.docx",
+    "projectRef": "GIS-0033",
+    "docType": "SOW",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-06-14T09:19:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000089",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0033_sow_2.docx",
+    "projectRef": "GIS-0033",
+    "docType": "SOW",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-06-18T08:32:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000090",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0033_compliance-evidence_3.docx",
+    "projectRef": "GIS-0033",
+    "docType": "Compliance",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-05-20T09:17:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000091",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0033_compliance-evidence_4.docx",
+    "projectRef": "GIS-0033",
+    "docType": "Compliance",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-03-16T09:27:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000092",
+    "library": "Project Charters",
+    "fileName": "GIS-0033_charter_5.docx",
+    "projectRef": "GIS-0033",
+    "docType": "Charter",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-09-27T11:54:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000093",
+    "library": "Project Charters",
+    "fileName": "GIS-0033_charter_6.docx",
+    "projectRef": "GIS-0033",
+    "docType": "Charter",
+    "ownerEmail": "jordan.okafor@example.com",
+    "lastModifiedUtc": "2026-04-26T17:08:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000094",
+    "library": "Risk Registers",
+    "fileName": "GIS-0034_risk-register_1.docx",
+    "projectRef": "gis-0034 ",
+    "docType": "RiskRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-03-21T16:06:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0034-01",
+        "severity": "Critical",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0034-02",
+        "severity": "Critical",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0034-03",
+        "severity": "Critical",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000095",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0034_dependency-register_2.docx",
+    "projectRef": "GIS-0034",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-04-25T14:57:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0098",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0063",
+        "linkType": "FinishToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0090",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000096",
+    "library": "Risk Registers",
+    "fileName": "GIS-0034_risk-register_3.docx",
+    "projectRef": "GIS-0034",
+    "docType": "RiskRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-09-29T11:56:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0034-01",
+        "severity": "Critical",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0034-02",
+        "severity": "Critical",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0034-03",
+        "severity": "Critical",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000097",
+    "library": "Risk Registers",
+    "fileName": "GIS-0034_risk-register_4.docx",
+    "projectRef": "GIS-0034",
+    "docType": "RiskRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-08-26T15:44:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0034-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0034-02",
+        "severity": "High",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0034-03",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000098",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0034_dependency-register_5.docx",
+    "projectRef": "GIS-0034",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-03-31T12:23:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0098",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0063",
+        "linkType": "FinishToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0090",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000099",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0034_compliance-evidence_6.docx",
+    "projectRef": "GIS-0034",
+    "docType": "Compliance",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-07-07T08:43:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000100",
+    "library": "Risk Registers",
+    "fileName": "GIS-0034_risk-register_7.docx",
+    "projectRef": "GIS-0034",
+    "docType": "RiskRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-07-17T17:36:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0034-01",
+        "severity": "Critical",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000101",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0034_dependency-register_8.docx",
+    "projectRef": "GIS-0034",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-08-17T13:12:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0098",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0063",
+        "linkType": "FinishToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0090",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000102",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0040_sow_1.docx",
+    "projectRef": "GIS-0040",
+    "docType": "SOW",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-07-06T15:19:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000103",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0040_dependency-register_2.docx",
+    "projectRef": "GIS-0040",
+    "docType": "DependencyRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-06-30T09:57:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0069",
+        "linkType": "SecurityGate"
+      },
+      {
+        "dependsOnProject": "GIS-0100",
+        "linkType": "SecurityGate"
+      },
+      {
+        "dependsOnProject": "GIS-0060",
+        "linkType": "SharedResource"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000104",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0040_compliance-evidence_3.docx",
+    "projectRef": "GIS-0040",
+    "docType": "Compliance",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-08-13T10:17:00Z",
+    "complianceTags": [
+      "SOC2"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000105",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0040_sow_4.docx",
+    "projectRef": "GIS-0040",
+    "docType": "SOW",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-09-08T15:58:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000106",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0040_compliance-evidence_5.docx",
+    "projectRef": "GIS-0040",
+    "docType": "Compliance",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-05-30T09:42:00Z",
+    "complianceTags": [
+      "GDPR"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000107",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0040_sow_6.docx",
+    "projectRef": "GIS-0040",
+    "docType": "SOW",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-06-18T14:40:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000108",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0046_sow_1.docx",
+    "projectRef": "GIS-0046",
+    "docType": "SOW",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-05-04T11:37:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000109",
+    "library": "Risk Registers",
+    "fileName": "GIS-0046_risk-register_2.docx",
+    "projectRef": "GIS-0046",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-04-18T16:02:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0046-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0046-02",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0046-03",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000110",
+    "library": "Risk Registers",
+    "fileName": "GIS-0046_risk-register_3.docx",
+    "projectRef": "GIS-0046",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-05-10T10:16:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0046-01",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0046-02",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0046-03",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000111",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0046_compliance-evidence_4.docx",
+    "projectRef": "GIS-0046",
+    "docType": "Compliance",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-03-28T16:42:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000112",
+    "library": "Risk Registers",
+    "fileName": "GIS-0046_risk-register_5.docx",
+    "projectRef": "GIS-0046",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-05-16T08:24:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0046-01",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0046-02",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000113",
+    "library": "Risk Registers",
+    "fileName": "GIS-0046_risk-register_6.docx",
+    "projectRef": "gis-0046 ",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-07-23T12:57:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0046-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0046-02",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0046-03",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000114",
+    "library": "Risk Registers",
+    "fileName": "GIS-0046_risk-register_7.docx",
+    "projectRef": "GIS-0046",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-07-29T13:24:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0046-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0046-02",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0046-03",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000115",
+    "library": "Project Charters",
+    "fileName": "GIS-0047_charter_1.docx",
+    "projectRef": "GIS-0047",
+    "docType": "Charter",
+    "ownerEmail": "tariq.aziz@example.com",
+    "lastModifiedUtc": "2026-04-05T13:45:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000116",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0047_dependency-register_2.docx",
+    "projectRef": "gis-0047 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "tariq.aziz@example.com",
+    "lastModifiedUtc": "2026-05-02T08:01:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0040",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000117",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0047_sow_3.docx",
+    "projectRef": "GIS-0047",
+    "docType": "SOW",
+    "ownerEmail": "tariq.aziz@example.com",
+    "lastModifiedUtc": "2026-07-31T11:28:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000118",
+    "library": "Risk Registers",
+    "fileName": "GIS-0047_risk-register_4.docx",
+    "projectRef": "GIS-0047",
+    "docType": "RiskRegister",
+    "ownerEmail": "tariq.aziz@example.com",
+    "lastModifiedUtc": "2026-04-25T09:18:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0047-01",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000119",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0052_compliance-evidence_1.docx",
+    "projectRef": "GIS-0052",
+    "docType": "Compliance",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-08-31T09:06:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000120",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0052_dependency-register_2.docx",
+    "projectRef": "GIS-0052",
+    "docType": "DependencyRegister",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-09-23T14:06:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0057",
+        "linkType": "FinishToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0054",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000121",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0052_compliance-evidence_3.docx",
+    "projectRef": "GIS-0052",
+    "docType": "Compliance",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-05-30T12:22:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000122",
+    "library": "Risk Registers",
+    "fileName": "GIS-0052_risk-register_4.docx",
+    "projectRef": "GIS-0052",
+    "docType": "RiskRegister",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-06-11T08:16:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0052-01",
+        "severity": "High",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0052-02",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000123",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0052_dependency-register_5.docx",
+    "projectRef": "GIS-0052",
+    "docType": "DependencyRegister",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-08-05T10:29:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0057",
+        "linkType": "FinishToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0054",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000124",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0053_sow_1.docx",
+    "projectRef": "GIS-0053",
+    "docType": "SOW",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-04-12T09:30:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000125",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0053_dependency-register_2.docx",
+    "projectRef": "gis-0053 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-04-05T12:43:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0034",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000126",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0053_sow_3.docx",
+    "projectRef": "GIS-0053",
+    "docType": "SOW",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-10-03T09:37:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000127",
+    "library": "Project Charters",
+    "fileName": "GIS-0053_charter_4.docx",
+    "projectRef": "GIS-0053",
+    "docType": "Charter",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-04-09T11:22:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000128",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0053_compliance-evidence_5.docx",
+    "projectRef": "GIS-0053",
+    "docType": "Compliance",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-09-16T14:44:00Z",
+    "complianceTags": [
+      "ITAR"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000129",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0053_compliance-evidence_6.docx",
+    "projectRef": "GIS-0053",
+    "docType": "Compliance",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-07-27T17:14:00Z",
+    "complianceTags": [
+      "GDPR"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000130",
+    "library": "Risk Registers",
+    "fileName": "GIS-0054_risk-register_1.docx",
+    "projectRef": "GIS-0054",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-07-02T10:51:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0054-01",
+        "severity": "High",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0054-02",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000131",
+    "library": "Project Charters",
+    "fileName": "GIS-0054_charter_2.docx",
+    "projectRef": "GIS-0054",
+    "docType": "Charter",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-06-19T11:14:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000132",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0054_compliance-evidence_3.docx",
+    "projectRef": "GIS-0054",
+    "docType": "Compliance",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-10-05T08:54:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000133",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0056_compliance-evidence_1.docx",
+    "projectRef": "GIS-0056",
+    "docType": "Compliance",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-03-07T15:30:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000134",
+    "library": "Project Charters",
+    "fileName": "GIS-0056_charter_2.docx",
+    "projectRef": "GIS-0056",
+    "docType": "Charter",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-04-06T08:01:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000135",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0056_compliance-evidence_3.docx",
+    "projectRef": "GIS-0056",
+    "docType": "Compliance",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-06-29T16:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000136",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0056_compliance-evidence_4.docx",
+    "projectRef": "GIS-0056",
+    "docType": "Compliance",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-09-19T09:40:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000137",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0056_compliance-evidence_5.docx",
+    "projectRef": "GIS-0056",
+    "docType": "Compliance",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-03-23T17:57:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000138",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0056_sow_6.docx",
+    "projectRef": "GIS-0056",
+    "docType": "SOW",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-03-20T12:55:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000139",
+    "library": "Risk Registers",
+    "fileName": "GIS-0056_risk-register_7.docx",
+    "projectRef": "GIS-0056",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-10-05T17:53:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0056-01",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000140",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0057_dependency-register_1.docx",
+    "projectRef": "GIS-0057",
+    "docType": "DependencyRegister",
+    "ownerEmail": "lucas.chen@example.com",
+    "lastModifiedUtc": "2026-08-12T11:47:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0001",
+        "linkType": "FinishToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000141",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0057_dependency-register_2.docx",
+    "projectRef": "GIS-0057",
+    "docType": "DependencyRegister",
+    "ownerEmail": "lucas.chen@example.com",
+    "lastModifiedUtc": "2026-07-30T10:39:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0001",
+        "linkType": "FinishToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000142",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0057_dependency-register_3.docx",
+    "projectRef": "GIS-0057",
+    "docType": "DependencyRegister",
+    "ownerEmail": "lucas.chen@example.com",
+    "lastModifiedUtc": "2026-08-18T12:18:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0001",
+        "linkType": "FinishToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000143",
+    "library": "Risk Registers",
+    "fileName": "GIS-0057_risk-register_4.docx",
+    "projectRef": "GIS-0057",
+    "docType": "RiskRegister",
+    "ownerEmail": "lucas.chen@example.com",
+    "lastModifiedUtc": "2026-09-03T09:48:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0057-01",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000144",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0057_dependency-register_5.docx",
+    "projectRef": "GIS-0057",
+    "docType": "DependencyRegister",
+    "ownerEmail": "lucas.chen@example.com",
+    "lastModifiedUtc": "2026-10-01T13:37:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0001",
+        "linkType": "FinishToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000145",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0059_sow_1.docx",
+    "projectRef": "GIS-0059",
+    "docType": "SOW",
+    "ownerEmail": "ethan.schmidt@example.com",
+    "lastModifiedUtc": "2026-06-21T12:14:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000146",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0059_sow_2.docx",
+    "projectRef": "gis-0059 ",
+    "docType": "SOW",
+    "ownerEmail": "ethan.schmidt@example.com",
+    "lastModifiedUtc": "2026-04-22T17:03:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000147",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0059_sow_3.docx",
+    "projectRef": "GIS-0059",
+    "docType": "SOW",
+    "ownerEmail": "ethan.schmidt@example.com",
+    "lastModifiedUtc": "2026-04-06T13:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000148",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0060_sow_1.docx",
+    "projectRef": "GIS-0060",
+    "docType": "SOW",
+    "ownerEmail": "grace.lindqvist@example.com",
+    "lastModifiedUtc": "2026-06-20T14:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000149",
+    "library": "Project Charters",
+    "fileName": "GIS-0060_charter_2.docx",
+    "projectRef": "GIS-0060",
+    "docType": "Charter",
+    "ownerEmail": "grace.lindqvist@example.com",
+    "lastModifiedUtc": "2026-05-18T16:43:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000150",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0061_sow_1.docx",
+    "projectRef": "GIS-0061",
+    "docType": "SOW",
+    "ownerEmail": "marcus.aziz@example.com",
+    "lastModifiedUtc": "2026-08-22T13:54:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000151",
+    "library": "Project Charters",
+    "fileName": "GIS-0061_charter_2.docx",
+    "projectRef": "GIS-0061",
+    "docType": "Charter",
+    "ownerEmail": "marcus.aziz@example.com",
+    "lastModifiedUtc": "2026-05-30T13:53:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000152",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0061_dependency-register_3.docx",
+    "projectRef": "GIS-0061",
+    "docType": "DependencyRegister",
+    "ownerEmail": "marcus.aziz@example.com",
+    "lastModifiedUtc": "2026-09-18T08:26:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000153",
+    "library": "Project Charters",
+    "fileName": "GIS-0061_charter_4.docx",
+    "projectRef": "GIS-0061",
+    "docType": "Charter",
+    "ownerEmail": "marcus.aziz@example.com",
+    "lastModifiedUtc": "2026-09-13T15:14:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000154",
+    "library": "Project Charters",
+    "fileName": "GIS-0061_charter_5.docx",
+    "projectRef": "GIS-0061",
+    "docType": "Charter",
+    "ownerEmail": "marcus.aziz@example.com",
+    "lastModifiedUtc": "2026-08-09T12:49:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000155",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0062_dependency-register_1.docx",
+    "projectRef": "GIS-0062",
+    "docType": "DependencyRegister",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-05-26T10:41:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0035",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000156",
+    "library": "Project Charters",
+    "fileName": "GIS-0062_charter_2.docx",
+    "projectRef": "GIS-0062",
+    "docType": "Charter",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-09-25T11:37:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000157",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0062_sow_3.docx",
+    "projectRef": "GIS-0062",
+    "docType": "SOW",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-07-21T16:40:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000158",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0063_dependency-register_1.docx",
+    "projectRef": "gis-0063 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-09-09T10:12:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0035",
+        "linkType": "DataDependency"
+      },
+      {
+        "dependsOnProject": "GIS-0034",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000159",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0063_dependency-register_2.docx",
+    "projectRef": "GIS-0063",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-09-20T14:27:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0035",
+        "linkType": "DataDependency"
+      },
+      {
+        "dependsOnProject": "GIS-0034",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000160",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0063_compliance-evidence_3.docx",
+    "projectRef": "GIS-0063",
+    "docType": "Compliance",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-09-16T10:53:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000161",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0063_sow_4.docx",
+    "projectRef": "GIS-0063",
+    "docType": "SOW",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-07-24T14:12:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000162",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0063_dependency-register_5.docx",
+    "projectRef": "GIS-0063",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-09-01T10:49:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0035",
+        "linkType": "DataDependency"
+      },
+      {
+        "dependsOnProject": "GIS-0034",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000163",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0063_sow_6.docx",
+    "projectRef": "GIS-0063",
+    "docType": "SOW",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-07-14T10:33:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000164",
+    "library": "Project Charters",
+    "fileName": "GIS-0063_charter_7.docx",
+    "projectRef": "GIS-0063",
+    "docType": "Charter",
+    "ownerEmail": "mateo.moreno@example.com",
+    "lastModifiedUtc": "2026-08-22T14:01:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000165",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0064_dependency-register_1.docx",
+    "projectRef": "gis-0064 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "sofia.kim@example.com",
+    "lastModifiedUtc": "2026-04-16T13:07:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0027",
+        "linkType": "SharedResource"
+      },
+      {
+        "dependsOnProject": "GIS-0029",
+        "linkType": "FinishToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000166",
+    "library": "Risk Registers",
+    "fileName": "GIS-0064_risk-register_2.docx",
+    "projectRef": "GIS-0064",
+    "docType": "RiskRegister",
+    "ownerEmail": "sofia.kim@example.com",
+    "lastModifiedUtc": "2026-05-06T13:16:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0064-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0064-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0064-03",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000167",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0064_compliance-evidence_3.docx",
+    "projectRef": "gis-0064 ",
+    "docType": "Compliance",
+    "ownerEmail": "sofia.kim@example.com",
+    "lastModifiedUtc": "2026-10-09T08:24:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000168",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0064_sow_4.docx",
+    "projectRef": "GIS-0064",
+    "docType": "SOW",
+    "ownerEmail": "sofia.kim@example.com",
+    "lastModifiedUtc": "2026-04-20T14:55:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000169",
+    "library": "Risk Registers",
+    "fileName": "GIS-0064_risk-register_5.docx",
+    "projectRef": "GIS-0064",
+    "docType": "RiskRegister",
+    "ownerEmail": "sofia.kim@example.com",
+    "lastModifiedUtc": "2026-03-27T08:33:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0064-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0064-02",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000170",
+    "library": "Project Charters",
+    "fileName": "GIS-0064_charter_6.docx",
+    "projectRef": "GIS-0064",
+    "docType": "Charter",
+    "ownerEmail": "sofia.kim@example.com",
+    "lastModifiedUtc": "2026-05-04T15:35:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000171",
+    "library": "Project Charters",
+    "fileName": "GIS-0066_charter_1.docx",
+    "projectRef": "GIS-0066",
+    "docType": "Charter",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-04T15:14:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000172",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0066_compliance-evidence_2.docx",
+    "projectRef": "GIS-0066",
+    "docType": "Compliance",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-18T11:39:00Z",
+    "complianceTags": [
+      "ITAR",
+      "SOX"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000173",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0066_sow_3.docx",
+    "projectRef": "GIS-0066",
+    "docType": "SOW",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-05-30T10:06:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000174",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0066_dependency-register_4.docx",
+    "projectRef": "GIS-0066",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-06-05T10:48:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0034",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000175",
+    "library": "Project Charters",
+    "fileName": "GIS-0066_charter_5.docx",
+    "projectRef": "gis-0066 ",
+    "docType": "Charter",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-10T15:55:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000176",
+    "library": "Project Charters",
+    "fileName": "GIS-0066_charter_6.docx",
+    "projectRef": "GIS-0066",
+    "docType": "Charter",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-09-11T10:49:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000177",
+    "library": "Risk Registers",
+    "fileName": "GIS-0066_risk-register_7.docx",
+    "projectRef": "GIS-0066",
+    "docType": "RiskRegister",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-09-01T14:52:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0066-01",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000178",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0066_sow_8.docx",
+    "projectRef": "GIS-0066",
+    "docType": "SOW",
+    "ownerEmail": "owen.brandt@example.com",
+    "lastModifiedUtc": "2026-08-07T10:50:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000179",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0067_sow_1.docx",
+    "projectRef": "GIS-0067",
+    "docType": "SOW",
+    "ownerEmail": "chloe.iyer@example.com",
+    "lastModifiedUtc": "2026-03-22T08:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000180",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0067_dependency-register_2.docx",
+    "projectRef": "GIS-0067",
+    "docType": "DependencyRegister",
+    "ownerEmail": "chloe.iyer@example.com",
+    "lastModifiedUtc": "2026-03-25T12:09:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000181",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0067_dependency-register_3.docx",
+    "projectRef": "GIS-0067",
+    "docType": "DependencyRegister",
+    "ownerEmail": "chloe.iyer@example.com",
+    "lastModifiedUtc": "2026-08-17T16:19:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000182",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0067_compliance-evidence_4.docx",
+    "projectRef": "GIS-0067",
+    "docType": "Compliance",
+    "ownerEmail": "chloe.iyer@example.com",
+    "lastModifiedUtc": "2026-09-20T11:07:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000183",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0068_dependency-register_1.docx",
+    "projectRef": "GIS-0068",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-06-05T10:25:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0069",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000184",
+    "library": "Project Charters",
+    "fileName": "GIS-0068_charter_2.docx",
+    "projectRef": "GIS-0068",
+    "docType": "Charter",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-04-21T15:10:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000185",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0068_dependency-register_3.docx",
+    "projectRef": "GIS-0068",
+    "docType": "DependencyRegister",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-08-08T16:12:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0069",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000186",
+    "library": "Risk Registers",
+    "fileName": "GIS-0068_risk-register_4.docx",
+    "projectRef": "GIS-0068",
+    "docType": "RiskRegister",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-08-02T17:44:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0068-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0068-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0068-03",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000187",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0068_sow_5.docx",
+    "projectRef": "GIS-0068",
+    "docType": "SOW",
+    "ownerEmail": "mateo.okafor@example.com",
+    "lastModifiedUtc": "2026-05-13T12:33:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000188",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0069_dependency-register_1.docx",
+    "projectRef": "GIS-0069",
+    "docType": "DependencyRegister",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-04-28T15:17:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0010",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000189",
+    "library": "Project Charters",
+    "fileName": "GIS-0069_charter_2.docx",
+    "projectRef": "GIS-0069",
+    "docType": "Charter",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-07-28T11:18:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000190",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0069_dependency-register_3.docx",
+    "projectRef": "gis-0069 ",
+    "docType": "DependencyRegister",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-05-01T13:58:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0010",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000191",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0069_sow_4.docx",
+    "projectRef": "GIS-0069",
+    "docType": "SOW",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-07-18T10:46:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000192",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0069_dependency-register_5.docx",
+    "projectRef": "GIS-0069",
+    "docType": "DependencyRegister",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-06-17T12:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0010",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000193",
+    "library": "Project Charters",
+    "fileName": "GIS-0069_charter_6.docx",
+    "projectRef": "GIS-0069",
+    "docType": "Charter",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-03-02T09:52:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000194",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0069_compliance-evidence_7.docx",
+    "projectRef": "GIS-0069",
+    "docType": "Compliance",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-03-19T16:56:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000195",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0069_dependency-register_8.docx",
+    "projectRef": "GIS-0069",
+    "docType": "DependencyRegister",
+    "ownerEmail": "carlos.aziz@example.com",
+    "lastModifiedUtc": "2026-10-03T11:26:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0010",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000196",
+    "library": "Risk Registers",
+    "fileName": "GIS-0070_risk-register_1.docx",
+    "projectRef": "GIS-0070",
+    "docType": "RiskRegister",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-05-01T15:25:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0070-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0070-02",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0070-03",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000197",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0070_dependency-register_2.docx",
+    "projectRef": "GIS-0070",
+    "docType": "DependencyRegister",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-07-15T17:55:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0069",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000198",
+    "library": "Risk Registers",
+    "fileName": "GIS-0070_risk-register_3.docx",
+    "projectRef": "GIS-0070",
+    "docType": "RiskRegister",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-03-04T10:11:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0070-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0070-02",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000199",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0070_sow_4.docx",
+    "projectRef": "GIS-0070",
+    "docType": "SOW",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-04-16T08:45:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000200",
+    "library": "Project Charters",
+    "fileName": "GIS-0070_charter_5.docx",
+    "projectRef": "GIS-0070",
+    "docType": "Charter",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-04-08T17:57:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000201",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0070_compliance-evidence_6.docx",
+    "projectRef": "GIS-0070",
+    "docType": "Compliance",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-08-08T08:35:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000202",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0070_sow_7.docx",
+    "projectRef": "GIS-0070",
+    "docType": "SOW",
+    "ownerEmail": "ingrid.brandt@example.com",
+    "lastModifiedUtc": "2026-07-08T16:59:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000203",
+    "library": "Risk Registers",
+    "fileName": "GIS-0073_risk-register_1.docx",
+    "projectRef": "GIS-0073",
+    "docType": "RiskRegister",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-08-09T10:28:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0073-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0073-02",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000204",
+    "library": "Project Charters",
+    "fileName": "GIS-0073_charter_2.docx",
+    "projectRef": "GIS-0073",
+    "docType": "Charter",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-03-14T08:49:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000205",
+    "library": "Project Charters",
+    "fileName": "GIS-0073_charter_3.docx",
+    "projectRef": "GIS-0073",
+    "docType": "Charter",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-03-28T15:59:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000206",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0073_dependency-register_4.docx",
+    "projectRef": "GIS-0073",
+    "docType": "DependencyRegister",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-07-05T17:26:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0070",
+        "linkType": "DataDependency"
+      },
+      {
+        "dependsOnProject": "GIS-0068",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000207",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0073_compliance-evidence_5.docx",
+    "projectRef": "GIS-0073",
+    "docType": "Compliance",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-04-25T10:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000208",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0073_compliance-evidence_6.docx",
+    "projectRef": "GIS-0073",
+    "docType": "Compliance",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-07-18T15:33:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000209",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0073_dependency-register_7.docx",
+    "projectRef": "GIS-0073",
+    "docType": "DependencyRegister",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-07-10T10:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0070",
+        "linkType": "DataDependency"
+      },
+      {
+        "dependsOnProject": "GIS-0068",
+        "linkType": "SecurityGate"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000210",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0073_compliance-evidence_8.docx",
+    "projectRef": "GIS-0073",
+    "docType": "Compliance",
+    "ownerEmail": "ingrid.sullivan@example.com",
+    "lastModifiedUtc": "2026-03-16T13:05:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000211",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0076_dependency-register_1.docx",
+    "projectRef": "GIS-0076",
+    "docType": "DependencyRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-03-24T15:29:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0031",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0032",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000212",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0076_sow_2.docx",
+    "projectRef": "GIS-0076",
+    "docType": "SOW",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-08-10T16:44:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000213",
+    "library": "Risk Registers",
+    "fileName": "GIS-0076_risk-register_3.docx",
+    "projectRef": "GIS-0076",
+    "docType": "RiskRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-05-09T15:02:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0076-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0076-02",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0076-03",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000214",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0076_dependency-register_4.docx",
+    "projectRef": "GIS-0076",
+    "docType": "DependencyRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-05-29T15:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0031",
+        "linkType": "StartToStart"
+      },
+      {
+        "dependsOnProject": "GIS-0032",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000215",
+    "library": "Risk Registers",
+    "fileName": "GIS-0076_risk-register_5.docx",
+    "projectRef": "GIS-0076",
+    "docType": "RiskRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-04-08T11:56:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0076-01",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000216",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0076_compliance-evidence_6.docx",
+    "projectRef": "GIS-0076",
+    "docType": "Compliance",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-08-31T17:43:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000217",
+    "library": "Risk Registers",
+    "fileName": "GIS-0078_risk-register_1.docx",
+    "projectRef": "GIS-0078",
+    "docType": "RiskRegister",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-04-27T17:42:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0078-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0078-02",
+        "severity": "Low",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000218",
+    "library": "Project Charters",
+    "fileName": "GIS-0078_charter_2.docx",
+    "projectRef": "GIS-0078",
+    "docType": "Charter",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-09-15T13:37:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000219",
+    "library": "Risk Registers",
+    "fileName": "GIS-0078_risk-register_3.docx",
+    "projectRef": "GIS-0078",
+    "docType": "RiskRegister",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-03-03T16:03:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0078-01",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0078-02",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0078-03",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000220",
+    "library": "Risk Registers",
+    "fileName": "GIS-0078_risk-register_4.docx",
+    "projectRef": "gis-0078 ",
+    "docType": "RiskRegister",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-04-29T09:52:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0078-01",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0078-02",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000221",
+    "library": "Project Charters",
+    "fileName": "GIS-0078_charter_5.docx",
+    "projectRef": "GIS-0078",
+    "docType": "Charter",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-04-09T11:45:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000222",
+    "library": "Risk Registers",
+    "fileName": "GIS-0078_risk-register_6.docx",
+    "projectRef": "GIS-0078",
+    "docType": "RiskRegister",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-05-20T15:41:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0078-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0078-02",
+        "severity": "High",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0078-03",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000223",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0078_compliance-evidence_7.docx",
+    "projectRef": "GIS-0078",
+    "docType": "Compliance",
+    "ownerEmail": "yara.chen@example.com",
+    "lastModifiedUtc": "2026-08-08T15:23:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000224",
+    "library": "Project Charters",
+    "fileName": "GIS-0080_charter_1.docx",
+    "projectRef": "GIS-0080",
+    "docType": "Charter",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-08-18T12:24:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000225",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0080_compliance-evidence_2.docx",
+    "projectRef": "GIS-0080",
+    "docType": "Compliance",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-09-17T14:50:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000226",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0080_compliance-evidence_3.docx",
+    "projectRef": "GIS-0080",
+    "docType": "Compliance",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-05-02T12:29:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000227",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0080_sow_4.docx",
+    "projectRef": "GIS-0080",
+    "docType": "SOW",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-10-10T13:17:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000228",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0080_dependency-register_5.docx",
+    "projectRef": "GIS-0080",
+    "docType": "DependencyRegister",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-08-19T11:29:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0024",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000229",
+    "library": "Risk Registers",
+    "fileName": "GIS-0080_risk-register_6.docx",
+    "projectRef": "GIS-0080",
+    "docType": "RiskRegister",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-10-10T10:36:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0080-01",
+        "severity": "Critical",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000230",
+    "library": "Project Charters",
+    "fileName": "GIS-0080_charter_7.docx",
+    "projectRef": "GIS-0080",
+    "docType": "Charter",
+    "ownerEmail": "kenji.kim@example.com",
+    "lastModifiedUtc": "2026-06-15T12:02:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000231",
+    "library": "Risk Registers",
+    "fileName": "GIS-0082_risk-register_1.docx",
+    "projectRef": "GIS-0082",
+    "docType": "RiskRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-07-29T14:27:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0082-01",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000232",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0082_dependency-register_2.docx",
+    "projectRef": "GIS-0082",
+    "docType": "DependencyRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-08-04T14:15:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0040",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000233",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0082_sow_3.docx",
+    "projectRef": "gis-0082 ",
+    "docType": "SOW",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-10-07T14:09:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000234",
+    "library": "Risk Registers",
+    "fileName": "GIS-0082_risk-register_4.docx",
+    "projectRef": "GIS-0082",
+    "docType": "RiskRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-03-31T15:33:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0082-01",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0082-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0082-03",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000235",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0082_dependency-register_5.docx",
+    "projectRef": "GIS-0082",
+    "docType": "DependencyRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-09-09T13:02:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0040",
+        "linkType": "DataDependency"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000236",
+    "library": "Risk Registers",
+    "fileName": "GIS-0082_risk-register_6.docx",
+    "projectRef": "GIS-0082",
+    "docType": "RiskRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-06-28T14:38:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0082-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0082-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0082-03",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000237",
+    "library": "Project Charters",
+    "fileName": "GIS-0083_charter_1.docx",
+    "projectRef": "GIS-0083",
+    "docType": "Charter",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-05-25T09:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000238",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0083_sow_2.docx",
+    "projectRef": "GIS-0083",
+    "docType": "SOW",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-03-07T12:06:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000239",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0083_sow_3.docx",
+    "projectRef": "GIS-0083",
+    "docType": "SOW",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-04-17T14:26:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000240",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0083_dependency-register_4.docx",
+    "projectRef": "GIS-0083",
+    "docType": "DependencyRegister",
+    "ownerEmail": "owen.aziz@example.com",
+    "lastModifiedUtc": "2026-04-27T16:09:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000241",
+    "library": "Project Charters",
+    "fileName": "GIS-0087_charter_1.docx",
+    "projectRef": "GIS-0087",
+    "docType": "Charter",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-04-30T16:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000242",
+    "library": "Risk Registers",
+    "fileName": "GIS-0087_risk-register_2.docx",
+    "projectRef": "GIS-0087",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-09-05T11:52:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0087-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0087-02",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000243",
+    "library": "Risk Registers",
+    "fileName": "GIS-0087_risk-register_3.docx",
+    "projectRef": "GIS-0087",
+    "docType": "RiskRegister",
+    "ownerEmail": "carlos.moreno@example.com",
+    "lastModifiedUtc": "2026-03-11T11:11:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0087-01",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0087-02",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0087-03",
+        "severity": "Medium",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000244",
+    "library": "Project Charters",
+    "fileName": "GIS-0089_charter_1.docx",
+    "projectRef": "GIS-0089",
+    "docType": "Charter",
+    "ownerEmail": "leila.nakamura@example.com",
+    "lastModifiedUtc": "2026-08-06T15:54:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000245",
+    "library": "Project Charters",
+    "fileName": "GIS-0089_charter_2.docx",
+    "projectRef": "GIS-0089",
+    "docType": "Charter",
+    "ownerEmail": "leila.nakamura@example.com",
+    "lastModifiedUtc": "2026-06-18T12:54:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000246",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0089_compliance-evidence_3.docx",
+    "projectRef": "GIS-0089",
+    "docType": "Compliance",
+    "ownerEmail": "leila.nakamura@example.com",
+    "lastModifiedUtc": "2026-08-27T13:31:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000247",
+    "library": "Project Charters",
+    "fileName": "GIS-0089_charter_4.docx",
+    "projectRef": "GIS-0089",
+    "docType": "Charter",
+    "ownerEmail": "leila.nakamura@example.com",
+    "lastModifiedUtc": "2026-05-01T12:15:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000248",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0089_compliance-evidence_5.docx",
+    "projectRef": "GIS-0089",
+    "docType": "Compliance",
+    "ownerEmail": "leila.nakamura@example.com",
+    "lastModifiedUtc": "2026-07-17T11:48:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000249",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0090_sow_1.docx",
+    "projectRef": "GIS-0090",
+    "docType": "SOW",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-08-11T17:40:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000250",
+    "library": "Risk Registers",
+    "fileName": "GIS-0090_risk-register_2.docx",
+    "projectRef": "GIS-0090",
+    "docType": "RiskRegister",
+    "ownerEmail": "elena.novak@example.com",
+    "lastModifiedUtc": "2026-09-16T10:50:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0090-01",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000251",
+    "library": "Project Charters",
+    "fileName": "GIS-0094_charter_1.docx",
+    "projectRef": "GIS-0094",
+    "docType": "Charter",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-07-04T10:28:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000252",
+    "library": "Risk Registers",
+    "fileName": "GIS-0094_risk-register_2.docx",
+    "projectRef": "GIS-0094",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-07-09T13:46:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0094-01",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000253",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0094_compliance-evidence_3.docx",
+    "projectRef": "GIS-0094",
+    "docType": "Compliance",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-08-18T14:14:00Z",
+    "complianceTags": [
+      "SOX",
+      "ITAR"
+    ],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000254",
+    "library": "Project Charters",
+    "fileName": "GIS-0094_charter_4.docx",
+    "projectRef": "GIS-0094",
+    "docType": "Charter",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-07-11T15:03:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000255",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0094_dependency-register_5.docx",
+    "projectRef": "GIS-0094",
+    "docType": "DependencyRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-03-09T14:13:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0040",
+        "linkType": "SecurityGate"
+      },
+      {
+        "dependsOnProject": "GIS-0005",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000256",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0094_dependency-register_6.docx",
+    "projectRef": "GIS-0094",
+    "docType": "DependencyRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-03-10T15:25:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0040",
+        "linkType": "SecurityGate"
+      },
+      {
+        "dependsOnProject": "GIS-0005",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000257",
+    "library": "Risk Registers",
+    "fileName": "GIS-0094_risk-register_7.docx",
+    "projectRef": "GIS-0094",
+    "docType": "RiskRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-07-02T09:44:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0094-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0094-02",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0094-03",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000258",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0094_dependency-register_8.docx",
+    "projectRef": "GIS-0094",
+    "docType": "DependencyRegister",
+    "ownerEmail": "isabel.brandt@example.com",
+    "lastModifiedUtc": "2026-04-08T10:59:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": [
+      {
+        "dependsOnProject": "GIS-0040",
+        "linkType": "SecurityGate"
+      },
+      {
+        "dependsOnProject": "GIS-0005",
+        "linkType": "StartToStart"
+      }
+    ]
+  },
+  {
+    "documentId": "DOC-000259",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0096_sow_1.docx",
+    "projectRef": "gis-0096 ",
+    "docType": "SOW",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-08-07T08:38:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000260",
+    "library": "Risk Registers",
+    "fileName": "GIS-0096_risk-register_2.docx",
+    "projectRef": "GIS-0096",
+    "docType": "RiskRegister",
+    "ownerEmail": "priya.okafor@example.com",
+    "lastModifiedUtc": "2026-09-06T13:20:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0096-01",
+        "severity": "High",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000261",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0098_compliance-evidence_1.docx",
+    "projectRef": "GIS-0098",
+    "docType": "Compliance",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-07-17T16:32:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000262",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0098_compliance-evidence_2.docx",
+    "projectRef": "GIS-0098",
+    "docType": "Compliance",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-05-03T11:21:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000263",
+    "library": "Project Charters",
+    "fileName": "GIS-0098_charter_3.docx",
+    "projectRef": "GIS-0098",
+    "docType": "Charter",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-07-15T10:55:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000264",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0098_compliance-evidence_4.docx",
+    "projectRef": "GIS-0098",
+    "docType": "Compliance",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-03-25T10:16:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000265",
+    "library": "Risk Registers",
+    "fileName": "GIS-0098_risk-register_5.docx",
+    "projectRef": "GIS-0098",
+    "docType": "RiskRegister",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-04-19T08:15:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0098-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0098-02",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0098-03",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000266",
+    "library": "Risk Registers",
+    "fileName": "GIS-0098_risk-register_6.docx",
+    "projectRef": "GIS-0098",
+    "docType": "RiskRegister",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-03-08T08:02:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0098-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0098-02",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0098-03",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000267",
+    "library": "Risk Registers",
+    "fileName": "GIS-0098_risk-register_7.docx",
+    "projectRef": "GIS-0098",
+    "docType": "RiskRegister",
+    "ownerEmail": "noah.aziz@example.com",
+    "lastModifiedUtc": "2026-06-20T08:43:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0098-01",
+        "severity": "Low",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0098-02",
+        "severity": "Low",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0098-03",
+        "severity": "Low",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000268",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0099_compliance-evidence_1.docx",
+    "projectRef": "GIS-0099",
+    "docType": "Compliance",
+    "ownerEmail": "lucas.novak@example.com",
+    "lastModifiedUtc": "2026-05-09T14:52:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000269",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0099_compliance-evidence_2.docx",
+    "projectRef": "GIS-0099",
+    "docType": "Compliance",
+    "ownerEmail": "lucas.novak@example.com",
+    "lastModifiedUtc": "2026-07-30T17:00:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000270",
+    "library": "Compliance Evidence",
+    "fileName": "GIS-0099_compliance-evidence_3.docx",
+    "projectRef": "GIS-0099",
+    "docType": "Compliance",
+    "ownerEmail": "lucas.novak@example.com",
+    "lastModifiedUtc": "2026-05-08T10:10:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000271",
+    "library": "Risk Registers",
+    "fileName": "GIS-0099_risk-register_4.docx",
+    "projectRef": "GIS-0099",
+    "docType": "RiskRegister",
+    "ownerEmail": "lucas.novak@example.com",
+    "lastModifiedUtc": "2026-05-08T15:10:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0099-01",
+        "severity": "Medium",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0099-02",
+        "severity": "Medium",
+        "status": "Open"
+      },
+      {
+        "riskId": "R-0099-03",
+        "severity": "Medium",
+        "status": "Closed"
+      }
+    ],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000272",
+    "library": "Project Charters",
+    "fileName": "GIS-0099_charter_5.docx",
+    "projectRef": "GIS-0099",
+    "docType": "Charter",
+    "ownerEmail": "lucas.novak@example.com",
+    "lastModifiedUtc": "2026-04-18T14:35:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000273",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0100_dependency-register_1.docx",
+    "projectRef": "GIS-0100",
+    "docType": "DependencyRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-07-12T09:07:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000274",
+    "library": "Dependency Registers",
+    "fileName": "GIS-0100_dependency-register_2.docx",
+    "projectRef": "GIS-0100",
+    "docType": "DependencyRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-07-23T08:15:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000275",
+    "library": "SOW & Contracts",
+    "fileName": "GIS-0100_sow_3.docx",
+    "projectRef": "GIS-0100",
+    "docType": "SOW",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-08-04T13:52:00Z",
+    "complianceTags": [],
+    "riskItems": [],
+    "dependencies": []
+  },
+  {
+    "documentId": "DOC-000276",
+    "library": "Risk Registers",
+    "fileName": "GIS-0100_risk-register_4.docx",
+    "projectRef": "GIS-0100",
+    "docType": "RiskRegister",
+    "ownerEmail": "avery.romero@example.com",
+    "lastModifiedUtc": "2026-05-27T10:56:00Z",
+    "complianceTags": [],
+    "riskItems": [
+      {
+        "riskId": "R-0100-01",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0100-02",
+        "severity": "High",
+        "status": "Closed"
+      },
+      {
+        "riskId": "R-0100-03",
+        "severity": "High",
+        "status": "Open"
+      }
+    ],
+    "dependencies": []
+  }
+]

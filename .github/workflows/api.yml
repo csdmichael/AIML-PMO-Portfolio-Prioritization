@@ -1,0 +1,98 @@
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "docs/api/**"
+      - "config/*.json"
+      - "infra/config/pmo-deployment.json"
+      - ".github/workflows/api.yml"
+  pull_request:
+    paths:
+      - "api/**"
+      - "docs/api/**"
+      - "config/*.json"
+      - "infra/config/pmo-deployment.json"
+      - ".github/workflows/api.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read CI settings
+        id: ci
+        run: node scripts/ci/read-config.mjs --file config/ci.json --key pythonVersion=python.version
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.ci.outputs.pythonVersion }}
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install the API
+        working-directory: api
+        run: uv sync --frozen
+
+      - name: Check the shared config copies
+        working-directory: api
+        run: uv run python -m tools.sync_shared_config --check
+
+      - name: Test the API
+        working-directory: api
+        run: uv run pytest
+
+      - name: Check the OpenAPI document is current
+        working-directory: api
+        run: uv run python -m app.export_openapi
+
+      - name: Fail when the OpenAPI document changed
+        run: git diff --exit-code -- docs/api/openapi.json
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: demo
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read CI and Azure settings
+        id: ci
+        run: |
+          node scripts/ci/read-config.mjs --file config/ci.json --key pythonVersion=python.version
+          node scripts/ci/read-config.mjs --file infra/config/pmo-deployment.json --key tenantId=tenantId --key subscriptionId=subscriptionId
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ steps.ci.outputs.tenantId }}
+          subscription-id: ${{ steps.ci.outputs.subscriptionId }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.ci.outputs.pythonVersion }}
+
+      - uses: astral-sh/setup-uv@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Publish the API to App Service
+        shell: pwsh
+        run: ./infra/scripts/deploy.ps1 -Mode publish -Component api -Python python -Uv uv

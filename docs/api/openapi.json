@@ -1,0 +1,2807 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PMO Portfolio Prioritization API",
+    "description": "Portfolio data, data entry, uploads, pipeline control, PMO decisions, and quick-add intake for the PMO Portfolio Prioritization solution. OneLake (the Fabric lakehouse) is the only data store.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Process status and lake data availability",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/options": {
+      "get": {
+        "tags": [
+          "options"
+        ],
+        "summary": "Data-entry contract: option lists, field rules, and upload rules",
+        "operationId": "getOptions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Portfolio export (contract v2), unchanged",
+        "operationId": "getPortfolioExport",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "The export is missing. The problem names the OneLake path and the pipeline."
+          }
+        }
+      }
+    },
+    "/v1/portfolios": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Portfolios from the export plus pending entries",
+        "operationId": "listPortfolios",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Create a portfolio entry (pending until the pipeline runs)",
+        "operationId": "createPortfolio",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 40,
+                    "description": "Portfolio key"
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 80,
+                    "description": "Portfolio name"
+                  },
+                  "code": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "description": "Portfolio code"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "main",
+                      "coupled"
+                    ],
+                    "description": "Role"
+                  },
+                  "jiraProjectKey": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "JIRA project key"
+                  },
+                  "adoAreaRoot": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "ADO area root"
+                  },
+                  "programs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "displayName",
+                        "code"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "description": "Programs"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "displayName",
+                  "code",
+                  "role",
+                  "programs"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Processed and pending projects",
+        "operationId": "listProjects",
+        "parameters": [
+          {
+            "name": "portfolio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Portfolio key or code",
+              "title": "Portfolio"
+            },
+            "description": "Portfolio key or code"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "main or coupled",
+              "title": "Role"
+            },
+            "description": "main or coupled"
+          },
+          {
+            "name": "confidence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "High, Medium, or Low",
+              "title": "Confidence"
+            },
+            "description": "High, Medium, or Low"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Text match on ID, name, sponsor, or project manager",
+              "title": "Q"
+            },
+            "description": "Text match on ID, name, sponsor, or project manager"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pagesize"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ProjectListItem_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Create a project entry, assign its GIS number, and start the pipeline",
+        "operationId": "createProject",
+        "parameters": [
+          {
+            "name": "runPipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Start the pipeline after the entry is written",
+              "default": true,
+              "title": "Runpipeline"
+            },
+            "description": "Start the pipeline after the entry is written"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 120,
+                    "description": "Project name"
+                  },
+                  "portfolioKey": {
+                    "type": "string",
+                    "description": "Portfolio"
+                  },
+                  "programKey": {
+                    "type": "string",
+                    "description": "Program"
+                  },
+                  "businessUnit": {
+                    "type": "string",
+                    "enum": [
+                      "Semiconductor Process Equipment",
+                      "Fab Operations",
+                      "Global Supply Chain",
+                      "Digital Transformation",
+                      "Finance and Controls",
+                      "Human Resources",
+                      "Information Security",
+                      "Manufacturing Engineering",
+                      "Customer Services",
+                      "Corporate IT"
+                    ],
+                    "description": "Business unit"
+                  },
+                  "site": {
+                    "type": "string",
+                    "enum": [
+                      "Fremont",
+                      "Tualatin",
+                      "Singapore",
+                      "Penang",
+                      "Hsinchu",
+                      "Global Remote"
+                    ],
+                    "description": "Site"
+                  },
+                  "sponsorName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 80,
+                    "description": "Executive sponsor"
+                  },
+                  "sponsorEmail": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Sponsor email"
+                  },
+                  "projectManager": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Project manager"
+                  },
+                  "projectStatus": {
+                    "type": "string",
+                    "enum": [
+                      "Planning",
+                      "Active",
+                      "On Hold"
+                    ],
+                    "description": "Status"
+                  },
+                  "goLiveDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Go-live date"
+                  },
+                  "businessValue": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 5.0,
+                    "description": "Business value estimate (1 to 5)"
+                  },
+                  "userBase": {
+                    "type": "integer",
+                    "minimum": 0.0,
+                    "maximum": 100000000.0,
+                    "description": "User base (number of users)"
+                  },
+                  "estimatedAnnualBenefitUsd": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 10000000000.0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Estimated annual benefit (USD)"
+                  },
+                  "sponsorLevel": {
+                    "type": "string",
+                    "enum": [
+                      "Executive",
+                      "Director",
+                      "Manager",
+                      "Individual"
+                    ],
+                    "description": "Sponsor level"
+                  },
+                  "regulatorySecurity": {
+                    "type": "boolean",
+                    "description": "Regulatory or security driven"
+                  },
+                  "dtAlignment": {
+                    "type": "boolean",
+                    "description": "Digital transformation aligned"
+                  },
+                  "protectedProgram": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Protected program"
+                  },
+                  "primarySkill": {
+                    "type": "string",
+                    "enum": [
+                      "UC",
+                      "NET",
+                      "APP",
+                      "DATA",
+                      "CLOUD",
+                      "SEC",
+                      "INT",
+                      "PM"
+                    ],
+                    "description": "Primary skill"
+                  },
+                  "skillDemandFte": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 12.0,
+                    "description": "Skill demand (FTE)"
+                  },
+                  "costEstimateUsd": {
+                    "type": "number",
+                    "minimum": 10000.0,
+                    "maximum": 100000000.0,
+                    "description": "Cost estimate (USD)"
+                  },
+                  "dependencies": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "projectId": {
+                              "type": "string"
+                            },
+                            "relationshipType": {
+                              "type": "string",
+                              "enum": [
+                                "FinishToStart",
+                                "StartToStart",
+                                "SharedResource",
+                                "DataDependency",
+                                "SecurityGate"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "projectId",
+                            "relationshipType"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 10
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Dependencies"
+                  },
+                  "riskRating": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High",
+                      "Critical"
+                    ],
+                    "description": "Risk rating"
+                  },
+                  "effortPersonWeeks": {
+                    "type": "number",
+                    "minimum": 1.0,
+                    "maximum": 2000.0,
+                    "description": "Effort (person-weeks)"
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Notes"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "projectName",
+                  "portfolioKey",
+                  "programKey",
+                  "businessUnit",
+                  "site",
+                  "sponsorName",
+                  "projectStatus",
+                  "goLiveDate",
+                  "businessValue",
+                  "userBase",
+                  "sponsorLevel",
+                  "regulatorySecurity",
+                  "dtAlignment",
+                  "primarySkill",
+                  "skillDemandFte",
+                  "costEstimateUsd",
+                  "riskRating",
+                  "effortPersonWeeks"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "One processed or pending project",
+        "operationId": "getProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}/uploads": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Upload a source file for a project",
+        "operationId": "uploadProjectFile",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_uploadProjectFile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadMeta"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Uploads recorded for a project, across all sources",
+        "operationId": "listProjectUploads",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pipeline/runs": {
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Start the Fabric data pipeline",
+        "operationId": "startPipelineRun",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunStarted"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pipeline/runs/{runId}": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Status of a pipeline run, read from Fabric",
+        "operationId": "getPipelineRun",
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Runid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/capacity/scenarios": {
+      "get": {
+        "tags": [
+          "capacity"
+        ],
+        "summary": "Capacity what-if scenarios (capacity_scenarios.json), unchanged",
+        "operationId": "getCapacityScenarios",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "The export is missing. The problem names the OneLake path and the pipeline."
+          }
+        }
+      }
+    },
+    "/v1/decisions": {
+      "get": {
+        "tags": [
+          "decisions"
+        ],
+        "summary": "PMO decisions, newest first",
+        "operationId": "listDecisions",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only decisions for this project",
+              "title": "Projectid"
+            },
+            "description": "Only decisions for this project"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "decisions"
+        ],
+        "summary": "Record a PMO decision for a project",
+        "operationId": "createDecision",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/templates/intake.xlsx": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "Intake workbook template (headers and dropdowns, no data rows)",
+        "operationId": "getIntakeTemplate",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Start a quick-add draft",
+        "operationId": "createIntakeDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}/documents": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Attach a supporting document to a draft",
+        "operationId": "addIntakeDocument",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_addIntakeDocument"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}": {
+      "get": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "A draft with its fields and provenance",
+        "operationId": "getIntakeDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}/prefill": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "AI prefill of every project field with evidence",
+        "operationId": "prefillIntakeDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}/fields": {
+      "patch": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Human edits to prefilled fields",
+        "operationId": "editIntakeFields",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}/submit": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Create the project from the reviewed draft",
+        "operationId": "submitIntakeDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          },
+          {
+            "name": "runPipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Runpipeline"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_addIntakeDocument": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_addIntakeDocument"
+      },
+      "Body_uploadProjectFile": {
+        "properties": {
+          "sourceKey": {
+            "type": "string",
+            "title": "Sourcekey"
+          },
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sourceKey",
+          "file"
+        ],
+        "title": "Body_uploadProjectFile"
+      },
+      "DecisionCreate": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "decidedBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedby"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "projectId",
+          "decision",
+          "reason"
+        ],
+        "title": "DecisionCreate"
+      },
+      "DecisionList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionView"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "DecisionList"
+      },
+      "DecisionView": {
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "title": "Decisionid"
+          },
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "decidedBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedby"
+          },
+          "recordedAtUtc": {
+            "type": "string",
+            "title": "Recordedatutc"
+          },
+          "oneLakePath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onelakepath"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decisionId",
+          "projectId",
+          "decision",
+          "reason",
+          "recordedAtUtc"
+        ],
+        "title": "DecisionView"
+      },
+      "DraftCreate": {
+        "properties": {
+          "projectName": {
+            "type": "string",
+            "title": "Projectname"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectName",
+          "description"
+        ],
+        "title": "DraftCreate"
+      },
+      "DraftDocument": {
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "title": "Uploadid"
+          },
+          "fileName": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "title": "Sizebytes"
+          },
+          "oneLakePath": {
+            "type": "string",
+            "title": "Onelakepath"
+          },
+          "uploadedAtUtc": {
+            "type": "string",
+            "title": "Uploadedatutc"
+          },
+          "textExtraction": {
+            "type": "string",
+            "title": "Textextraction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uploadId",
+          "fileName",
+          "sizeBytes",
+          "oneLakePath",
+          "uploadedAtUtc",
+          "textExtraction"
+        ],
+        "title": "DraftDocument"
+      },
+      "DraftView": {
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "title": "Draftid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "projectName": {
+            "type": "string",
+            "title": "Projectname"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DraftDocument"
+            },
+            "type": "array",
+            "title": "Documents"
+          },
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields"
+          },
+          "missingRequired": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missingrequired"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "title": "Createdatutc"
+          },
+          "updatedAtUtc": {
+            "type": "string",
+            "title": "Updatedatutc"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "draftId",
+          "status",
+          "projectName",
+          "description",
+          "documents",
+          "fields",
+          "missingRequired",
+          "createdAtUtc",
+          "updatedAtUtc"
+        ],
+        "title": "DraftView"
+      },
+      "FieldRule": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": false
+          },
+          "minLength": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minlength"
+          },
+          "maxLength": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxlength"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "minDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mindate"
+          },
+          "maxDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxdate"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "minItems": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minitems"
+          },
+          "maxItems": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxitems"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "type"
+        ],
+        "title": "FieldRule"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthLake": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "portfolioExport": {
+            "$ref": "#/components/schemas/LakeFileStatus"
+          },
+          "capacityScenarios": {
+            "$ref": "#/components/schemas/LakeFileStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "portfolioExport",
+          "capacityScenarios"
+        ],
+        "title": "HealthLake"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "checkedAtUtc": {
+            "type": "string",
+            "title": "Checkedatutc"
+          },
+          "lake": {
+            "$ref": "#/components/schemas/HealthLake"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "title",
+          "version",
+          "checkedAtUtc",
+          "lake"
+        ],
+        "title": "HealthResponse"
+      },
+      "LakeFileStatus": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "LakeFileStatus"
+      },
+      "LakeFolders": {
+        "properties": {
+          "manualProjectsFolder": {
+            "type": "string",
+            "title": "Manualprojectsfolder"
+          },
+          "manualPortfoliosFolder": {
+            "type": "string",
+            "title": "Manualportfoliosfolder"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "manualProjectsFolder",
+          "manualPortfoliosFolder"
+        ],
+        "title": "LakeFolders"
+      },
+      "OptionLists": {
+        "properties": {
+          "businessUnits": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Businessunits"
+          },
+          "sites": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sites"
+          },
+          "projectStatuses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Projectstatuses"
+          },
+          "sponsorLevels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sponsorlevels"
+          },
+          "riskRatings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Riskratings"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillOption"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "relationshipTypes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Relationshiptypes"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "businessUnits",
+          "sites",
+          "projectStatuses",
+          "sponsorLevels",
+          "riskRatings",
+          "skills",
+          "relationshipTypes"
+        ],
+        "title": "OptionLists"
+      },
+      "OptionsResponse": {
+        "properties": {
+          "schemaVersion": {
+            "type": "integer",
+            "title": "Schemaversion"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "projectIdPattern": {
+            "type": "string",
+            "title": "Projectidpattern"
+          },
+          "projectIdPrefix": {
+            "type": "string",
+            "title": "Projectidprefix"
+          },
+          "projectIdDigits": {
+            "type": "integer",
+            "title": "Projectiddigits"
+          },
+          "firstNewProjectNumber": {
+            "type": "integer",
+            "title": "Firstnewprojectnumber"
+          },
+          "options": {
+            "$ref": "#/components/schemas/OptionLists"
+          },
+          "projectFields": {
+            "items": {
+              "$ref": "#/components/schemas/FieldRule"
+            },
+            "type": "array",
+            "title": "Projectfields"
+          },
+          "portfolioFields": {
+            "items": {
+              "$ref": "#/components/schemas/FieldRule"
+            },
+            "type": "array",
+            "title": "Portfoliofields"
+          },
+          "uploads": {
+            "$ref": "#/components/schemas/UploadContract"
+          },
+          "lake": {
+            "$ref": "#/components/schemas/LakeFolders"
+          },
+          "pipeline": {
+            "$ref": "#/components/schemas/PipelineContract"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "description",
+          "projectIdPattern",
+          "projectIdPrefix",
+          "projectIdDigits",
+          "firstNewProjectNumber",
+          "options",
+          "projectFields",
+          "portfolioFields",
+          "uploads",
+          "lake",
+          "pipeline"
+        ],
+        "title": "OptionsResponse",
+        "description": "The data-entry contract as written in data-entry.json."
+      },
+      "Page_ProjectListItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Totalitems"
+          },
+          "totalPages": {
+            "type": "integer",
+            "title": "Totalpages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ],
+        "title": "Page[ProjectListItem]"
+      },
+      "PipelineContract": {
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "folderKey": {
+            "type": "string",
+            "title": "Folderkey"
+          },
+          "notebookRunOrder": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notebookrunorder"
+          },
+          "jobType": {
+            "type": "string",
+            "title": "Jobtype"
+          },
+          "pollSeconds": {
+            "type": "integer",
+            "title": "Pollseconds"
+          },
+          "maxWaitMinutes": {
+            "type": "integer",
+            "title": "Maxwaitminutes"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "displayName",
+          "folderKey",
+          "notebookRunOrder",
+          "jobType",
+          "pollSeconds",
+          "maxWaitMinutes"
+        ],
+        "title": "PipelineContract"
+      },
+      "PipelineRunStarted": {
+        "properties": {
+          "runId": {
+            "type": "string",
+            "title": "Runid"
+          },
+          "jobInstanceId": {
+            "type": "string",
+            "title": "Jobinstanceid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "retryAfterSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retryafterseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runId",
+          "jobInstanceId",
+          "status"
+        ],
+        "title": "PipelineRunStarted"
+      },
+      "PipelineRunStatus": {
+        "properties": {
+          "runId": {
+            "type": "string",
+            "title": "Runid"
+          },
+          "jobInstanceId": {
+            "type": "string",
+            "title": "Jobinstanceid"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "startTimeUtc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starttimeutc"
+          },
+          "endTimeUtc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endtimeutc"
+          },
+          "failureReason": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failurereason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runId",
+          "jobInstanceId"
+        ],
+        "title": "PipelineRunStatus"
+      },
+      "PortfolioList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioView"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PortfolioList"
+      },
+      "PortfolioProgram": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "displayName",
+          "code"
+        ],
+        "title": "PortfolioProgram"
+      },
+      "PortfolioView": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "jiraProjectKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiraprojectkey"
+          },
+          "adoAreaRoot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adoarearoot"
+          },
+          "projectCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectcount"
+          },
+          "programs": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioProgram"
+            },
+            "type": "array",
+            "title": "Programs",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "displayName",
+          "code",
+          "role",
+          "status"
+        ],
+        "title": "PortfolioView"
+      },
+      "ProjectCreated": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "pipelineRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pipelinerunid"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          },
+          "entry": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Entry"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId",
+          "status",
+          "entry"
+        ],
+        "title": "ProjectCreated"
+      },
+      "ProjectListItem": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "projectName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectname"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "portfolioKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliokey"
+          },
+          "portfolioCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliocode"
+          },
+          "portfolio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio"
+          },
+          "portfolioRole": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliorole"
+          },
+          "program": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program"
+          },
+          "businessUnit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Businessunit"
+          },
+          "site": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site"
+          },
+          "sponsor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sponsor"
+          },
+          "projectManager": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectmanager"
+          },
+          "projectStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectstatus"
+          },
+          "goLiveDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Golivedate"
+          },
+          "primarySkill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primaryskill"
+          },
+          "riskRating": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Riskrating"
+          },
+          "confidenceLevel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidencelevel"
+          },
+          "confidenceScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidencescore"
+          },
+          "finalTier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finaltier"
+          },
+          "priorityScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priorityscore"
+          },
+          "recommendedAction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendedaction"
+          },
+          "cluster": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId",
+          "status"
+        ],
+        "title": "ProjectListItem"
+      },
+      "ProjectRecord": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "projectId",
+          "status"
+        ],
+        "title": "ProjectRecord"
+      },
+      "SkillOption": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "key",
+          "displayName"
+        ],
+        "title": "SkillOption"
+      },
+      "SubmitResult": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "pipelineRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pipelinerunid"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId",
+          "status",
+          "pipelineRunId",
+          "warnings"
+        ],
+        "title": "SubmitResult"
+      },
+      "UploadAcceptance": {
+        "properties": {
+          "extensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Extensions"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "extensions"
+        ],
+        "title": "UploadAcceptance"
+      },
+      "UploadContract": {
+        "properties": {
+          "maxFilesPerSourcePerProject": {
+            "type": "integer",
+            "title": "Maxfilespersourceperproject"
+          },
+          "maxFileBytes": {
+            "type": "integer",
+            "title": "Maxfilebytes"
+          },
+          "oneLakeFolderTemplate": {
+            "type": "string",
+            "title": "Onelakefoldertemplate"
+          },
+          "fileNameTemplate": {
+            "type": "string",
+            "title": "Filenametemplate"
+          },
+          "acceptedBySource": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UploadAcceptance"
+            },
+            "type": "object",
+            "title": "Acceptedbysource"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "maxFilesPerSourcePerProject",
+          "maxFileBytes",
+          "oneLakeFolderTemplate",
+          "fileNameTemplate",
+          "acceptedBySource"
+        ],
+        "title": "UploadContract"
+      },
+      "UploadList": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UploadMeta"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId",
+          "items",
+          "count"
+        ],
+        "title": "UploadList"
+      },
+      "UploadMeta": {
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "title": "Uploadid"
+          },
+          "sourceKey": {
+            "type": "string",
+            "title": "Sourcekey"
+          },
+          "fileName": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "title": "Sizebytes"
+          },
+          "oneLakePath": {
+            "type": "string",
+            "title": "Onelakepath"
+          },
+          "uploadedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploadedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uploadId",
+          "sourceKey",
+          "fileName",
+          "sizeBytes",
+          "oneLakePath"
+        ],
+        "title": "UploadMeta"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Process status and lake data availability."
+    },
+    {
+      "name": "options",
+      "description": "Data-entry contract. Forms are built from this response."
+    },
+    {
+      "name": "portfolio",
+      "description": "Portfolio export and portfolio entries."
+    },
+    {
+      "name": "projects",
+      "description": "Projects, project entries, and project uploads."
+    },
+    {
+      "name": "pipeline",
+      "description": "Start and monitor the Fabric data pipeline."
+    },
+    {
+      "name": "capacity",
+      "description": "Capacity what-if scenarios."
+    },
+    {
+      "name": "decisions",
+      "description": "PMO decisions per project."
+    },
+    {
+      "name": "templates",
+      "description": "Intake workbook template with no data rows."
+    },
+    {
+      "name": "intake",
+      "description": "Quick add: drafts, documents, AI prefill, review, and submit."
+    }
+  ]
+}

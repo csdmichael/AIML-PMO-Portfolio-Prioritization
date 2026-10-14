@@ -4,7 +4,12 @@
   "asOfDate": "2026-10-12",
   "seed": 20261012,
   "tiers": {
-    "order": ["Must-do-now", "Proceed", "Can wait", "Candidate to deprioritize"],
+    "order": [
+      "Must-do-now",
+      "Proceed",
+      "Can wait",
+      "Candidate to deprioritize"
+    ],
     "priorityWeight": {
       "Must-do-now": 1.0,
       "Proceed": 0.7,
@@ -13,23 +18,154 @@
     }
   },
   "mappings": {
-    "sponsorLevel": { "Executive": 4, "Director": 3, "Manager": 2, "Individual": 1 },
-    "riskRating": { "Low": 1, "Medium": 2, "High": 3, "Critical": 4 },
-    "businessValueText": { "High": 4, "Medium": 3, "Low": 2 },
-    "ragToRisk": { "Green": 1, "Amber": 2, "Red": 3 },
-    "yesNo": { "Y": 1, "YES": 1, "TRUE": 1, "1": 1, "N": 0, "NO": 0, "FALSE": 0, "0": 0 }
+    "sponsorLevel": {
+      "Executive": 4,
+      "Director": 3,
+      "Manager": 2,
+      "Individual": 1
+    },
+    "riskRating": {
+      "Low": 1,
+      "Medium": 2,
+      "High": 3,
+      "Critical": 4
+    },
+    "businessValueText": {
+      "High": 4,
+      "Medium": 3,
+      "Low": 2
+    },
+    "ragToRisk": {
+      "Green": 1,
+      "Amber": 2,
+      "Red": 3
+    },
+    "yesNo": {
+      "Y": 1,
+      "YES": 1,
+      "TRUE": 1,
+      "1": 1,
+      "N": 0,
+      "NO": 0,
+      "FALSE": 0,
+      "0": 0
+    },
+    "powerAppsSponsorLevel": {
+      "VP+": "Executive",
+      "Director": "Director",
+      "Manager": "Manager",
+      "Individual Contributor": "Individual"
+    },
+    "excelSponsorLevel": {
+      "Exec": "Executive",
+      "Dir": "Director",
+      "Mgr": "Manager",
+      "IC": "Individual"
+    },
+    "excelValueText": {
+      "High": 4,
+      "Medium": 3,
+      "Low": 2
+    },
+    "rosterJobLevelSponsor": {
+      "VP": 4,
+      "M4": 3,
+      "M3": 3,
+      "M2": 2,
+      "M1": 2
+    },
+    "defaultSponsorLevel": 1,
+    "skillNames": {
+      "UC": "Unified Communications",
+      "NET": "Network Engineering",
+      "APP": "Application Development",
+      "DATA": "Data Engineering",
+      "CLOUD": "Cloud and Infrastructure",
+      "SEC": "Cybersecurity",
+      "INT": "Integration (iPaaS)",
+      "PM": "Project Management"
+    }
+  },
+  "capacity": {
+    "supplyUtilization": 0.8,
+    "demandTiers": [
+      "Must-do-now",
+      "Proceed"
+    ],
+    "allocationMonths": [
+      "2026-10-01",
+      "2026-11-01",
+      "2026-12-01"
+    ]
+  },
+  "clustering": {
+    "algorithm": "scikit-learn KMeans",
+    "k": 5,
+    "seed": 20261012,
+    "topFeaturesForName": 2,
+    "nameSeparator": " and "
   },
   "features": [
-    { "name": "timing_urgency", "label": "Timing urgency", "source": "go_live_date", "transform": "urgency" },
-    { "name": "business_value", "label": "Business value", "source": "business_value", "transform": "none" },
-    { "name": "sponsor_priority", "label": "Sponsor priority", "source": "sponsor_priority", "transform": "none" },
-    { "name": "regulatory_security", "label": "Regulatory / security", "source": "regulatory_security", "transform": "none" },
-    { "name": "skill_demand", "label": "Skill / phase demand", "source": "skill_demand", "transform": "none" },
-    { "name": "cost_log10", "label": "Cost", "source": "cost_usd", "transform": "log10" },
-    { "name": "dependencies", "label": "Dependencies", "source": "dependencies", "transform": "none" },
-    { "name": "risk", "label": "Risk", "source": "risk", "transform": "none" },
-    { "name": "dt_alignment", "label": "DT alignment", "source": "dt_alignment", "transform": "none" },
-    { "name": "effort", "label": "Effort", "source": "effort_person_weeks", "transform": "none" }
+    {
+      "name": "timing_urgency",
+      "label": "Timing urgency",
+      "source": "go_live_date",
+      "transform": "urgency"
+    },
+    {
+      "name": "business_value",
+      "label": "Business value",
+      "source": "business_value",
+      "transform": "none"
+    },
+    {
+      "name": "sponsor_priority",
+      "label": "Sponsor priority",
+      "source": "sponsor_priority",
+      "transform": "none"
+    },
+    {
+      "name": "regulatory_security",
+      "label": "Regulatory / security",
+      "source": "regulatory_security",
+      "transform": "none"
+    },
+    {
+      "name": "skill_demand",
+      "label": "Skill / phase demand",
+      "source": "skill_demand",
+      "transform": "none"
+    },
+    {
+      "name": "cost_log10",
+      "label": "Cost",
+      "source": "cost_usd",
+      "transform": "log10"
+    },
+    {
+      "name": "dependencies",
+      "label": "Dependencies",
+      "source": "dependencies",
+      "transform": "none"
+    },
+    {
+      "name": "risk",
+      "label": "Risk",
+      "source": "risk",
+      "transform": "none"
+    },
+    {
+      "name": "dt_alignment",
+      "label": "DT alignment",
+      "source": "dt_alignment",
+      "transform": "none"
+    },
+    {
+      "name": "effort",
+      "label": "Effort",
+      "source": "effort_person_weeks",
+      "transform": "none"
+    }
   ],
   "urgency": {
     "horizonMonths": 36
@@ -62,14 +198,18 @@
       "folds": 5,
       "minFoldsWhenClassSmall": 2,
       "stratified": true,
-      "metrics": ["accuracy", "macro_f1", "log_loss"]
+      "metrics": [
+        "accuracy",
+        "macro_f1",
+        "log_loss"
+      ]
     },
     "sampleWeight": {
       "base": 0.5,
       "completenessQualityWeight": 0.5
     },
     "clustering": {
-      "algorithm": "pyspark.ml KMeans",
+      "algorithm": "scikit-learn KMeans (standardized features, k from config)",
       "k": 5,
       "maxIter": 50,
       "seed": 20261012,
@@ -77,7 +217,7 @@
       "nameTemplate": "{feature1} and {feature2}"
     },
     "baseline": {
-      "algorithm": "pyspark.ml LogisticRegression (multinomial)",
+      "algorithm": "scikit-learn LogisticRegression (multinomial, median impute, standard scale)",
       "maxIter": 100,
       "regParam": 0.01,
       "elasticNetParam": 0.0
@@ -89,26 +229,101 @@
   },
   "dataQuality": {
     "checks": [
-      { "id": "go_live_valid", "type": "dateRange", "field": "go_live_date", "min": "2026-01-01", "max": "2032-12-31" },
-      { "id": "business_value_range", "type": "intRange", "field": "business_value", "min": 1, "max": 5 },
-      { "id": "cost_range", "type": "numberRange", "field": "cost_usd", "min": 10000, "max": 100000000 },
-      { "id": "dependency_range", "type": "intRange", "field": "dependencies", "min": 0, "max": 50 },
-      { "id": "effort_range", "type": "numberRange", "field": "effort_person_weeks", "minExclusive": 0, "max": 2000 },
-      { "id": "risk_known", "type": "inList", "field": "risk", "values": [1, 2, 3, 4] },
-      { "id": "sponsor_resolved", "type": "notNull", "field": "sponsor_roster_match" },
-      { "id": "project_code_valid", "type": "codeFormat", "pattern": "^GIS-\\d{4}$", "field": "project_id_raw", "requireCleanInput": true },
-      { "id": "go_live_consistent", "type": "spreadDays", "field": "go_live_candidates", "maxDays": 45, "minSources": 2 },
-      { "id": "cost_consistent", "type": "spreadPercent", "field": "cost_candidates", "maxPercent": 25, "minSources": 2 }
+      {
+        "id": "go_live_valid",
+        "type": "dateRange",
+        "field": "go_live_date",
+        "min": "2026-01-01",
+        "max": "2032-12-31"
+      },
+      {
+        "id": "business_value_range",
+        "type": "intRange",
+        "field": "business_value",
+        "min": 1,
+        "max": 5
+      },
+      {
+        "id": "cost_range",
+        "type": "numberRange",
+        "field": "cost_usd",
+        "min": 10000,
+        "max": 100000000
+      },
+      {
+        "id": "dependency_range",
+        "type": "intRange",
+        "field": "dependencies",
+        "min": 0,
+        "max": 50
+      },
+      {
+        "id": "effort_range",
+        "type": "numberRange",
+        "field": "effort_person_weeks",
+        "minExclusive": 0,
+        "max": 2000
+      },
+      {
+        "id": "risk_known",
+        "type": "inList",
+        "field": "risk",
+        "values": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "id": "sponsor_resolved",
+        "type": "notNull",
+        "field": "sponsor_roster_match"
+      },
+      {
+        "id": "project_code_valid",
+        "type": "codeFormat",
+        "pattern": "^GIS-\\d{4}$",
+        "field": "project_id_raw",
+        "requireCleanInput": true
+      },
+      {
+        "id": "go_live_consistent",
+        "type": "spreadDays",
+        "field": "go_live_candidates",
+        "maxDays": 45,
+        "minSources": 2
+      },
+      {
+        "id": "cost_consistent",
+        "type": "spreadPercent",
+        "field": "cost_candidates",
+        "maxPercent": 25,
+        "minSources": 2
+      }
     ]
   },
   "confidence": {
-    "weights": { "completeness": 0.45, "quality": 0.35, "modelCertainty": 0.20 },
+    "weights": {
+      "completeness": 0.45,
+      "quality": 0.35,
+      "modelCertainty": 0.2
+    },
     "scale": 100,
     "decimals": 1,
     "levels": [
-      { "name": "High", "minScore": 75 },
-      { "name": "Medium", "minScore": 50 },
-      { "name": "Low", "minScore": 0 }
+      {
+        "name": "High",
+        "minScore": 75
+      },
+      {
+        "name": "Medium",
+        "minScore": 50
+      },
+      {
+        "name": "Low",
+        "minScore": 0
+      }
     ]
   },
   "priority": {
@@ -116,58 +331,130 @@
     "decimals": 1,
     "r1Floor": 90
   },
-  "ruleOrder": ["R1_REGULATORY_FIRST", "R4_DEPRIORITIZE_GUARD", "R5_CROSS_PORTFOLIO_CRITICAL_PATH", "R2_EXECUTIVE_SPONSOR", "R3_PROTECTED_PROGRAM"],
+  "ruleOrder": [
+    "R1_REGULATORY_FIRST",
+    "R4_DEPRIORITIZE_GUARD",
+    "R5_CROSS_PORTFOLIO_CRITICAL_PATH",
+    "R2_EXECUTIVE_SPONSOR",
+    "R3_PROTECTED_PROGRAM"
+  ],
   "rules": [
     {
       "id": "R1_REGULATORY_FIRST",
       "name": "Regulatory first",
       "enabled": true,
-      "when": { "regulatorySecurity": 1, "monthsToGoLiveMax": 18 },
-      "then": { "setTier": "Must-do-now", "priorityFloor": 90 },
+      "when": {
+        "regulatorySecurity": 1,
+        "monthsToGoLiveMax": 18
+      },
+      "then": {
+        "setTier": "Must-do-now",
+        "priorityFloor": 90
+      },
       "owner": "Lam PMO (editable)"
     },
     {
       "id": "R4_DEPRIORITIZE_GUARD",
       "name": "Regulatory projects cannot be deprioritized",
       "enabled": true,
-      "when": { "tierIn": ["Candidate to deprioritize"], "regulatorySecurity": 1 },
-      "then": { "setTier": "Can wait" },
+      "when": {
+        "tierIn": [
+          "Candidate to deprioritize"
+        ],
+        "regulatorySecurity": 1
+      },
+      "then": {
+        "setTier": "Can wait"
+      },
       "owner": "Lam PMO (editable)"
     },
     {
       "id": "R5_CROSS_PORTFOLIO_CRITICAL_PATH",
       "name": "Cross-portfolio critical path",
       "enabled": true,
-      "when": { "tierIn": ["Candidate to deprioritize"], "crossPortfolioSuccessorsMin": 2 },
-      "then": { "setTier": "Can wait" },
+      "when": {
+        "tierIn": [
+          "Candidate to deprioritize"
+        ],
+        "crossPortfolioSuccessorsMin": 2
+      },
+      "then": {
+        "setTier": "Can wait"
+      },
       "owner": "Lam PMO (editable)"
     },
     {
       "id": "R2_EXECUTIVE_SPONSOR",
       "name": "Executive sponsorship",
       "enabled": true,
-      "when": { "tierIn": ["Can wait", "Candidate to deprioritize"], "sponsorLevel": "Executive", "businessValueMin": 4 },
-      "then": { "setTier": "Proceed" },
+      "when": {
+        "tierIn": [
+          "Can wait",
+          "Candidate to deprioritize"
+        ],
+        "sponsorLevel": "Executive",
+        "businessValueMin": 4
+      },
+      "then": {
+        "setTier": "Proceed"
+      },
       "owner": "Lam PMO (editable)"
     },
     {
       "id": "R3_PROTECTED_PROGRAM",
       "name": "Protected programs",
       "enabled": true,
-      "when": { "tierIn": ["Can wait", "Candidate to deprioritize"], "protectedProgram": 1 },
-      "then": { "setTier": "Proceed" },
+      "when": {
+        "tierIn": [
+          "Can wait",
+          "Candidate to deprioritize"
+        ],
+        "protectedProgram": 1
+      },
+      "then": {
+        "setTier": "Proceed"
+      },
       "owner": "Lam PMO (editable)"
     }
   ],
   "recommendedActions": [
-    { "when": { "tier": "Must-do-now", "primarySkillGapFteBelow": 0 }, "action": "Add capacity" },
-    { "when": { "tier": "Must-do-now" }, "action": "Protect slot" },
-    { "when": { "tier": "Proceed" }, "action": "Proceed" },
-    { "when": { "tier": "Can wait" }, "action": "Re-sequence" },
-    { "when": { "tier": "Candidate to deprioritize" }, "action": "Pause or divert skills" }
+    {
+      "when": {
+        "tier": "Must-do-now",
+        "primarySkillGapFteBelow": 0
+      },
+      "action": "Add capacity"
+    },
+    {
+      "when": {
+        "tier": "Must-do-now"
+      },
+      "action": "Protect slot"
+    },
+    {
+      "when": {
+        "tier": "Proceed"
+      },
+      "action": "Proceed"
+    },
+    {
+      "when": {
+        "tier": "Can wait"
+      },
+      "action": "Re-sequence"
+    },
+    {
+      "when": {
+        "tier": "Candidate to deprioritize"
+      },
+      "action": "Pause or divert skills"
+    }
   ],
   "tables": {
-    "silver": ["project_canonical", "signal_provenance"],
+    "silver": [
+      "project_canonical",
+      "signal_provenance"
+    ],
     "gold": [
       "source_coverage",
       "dq_checks",

@@ -19,21 +19,36 @@
       "key": "ml-notebooks",
       "displayName": "ML Notebooks",
       "children": [
-        { "key": "ml-notebooks/01-feature-engineering", "displayName": "01 Feature Engineering" },
-        { "key": "ml-notebooks/02-priority-tier-training", "displayName": "02 Priority Tier Training" },
-        { "key": "ml-notebooks/03-archetype-clustering", "displayName": "03 Archetype Clustering" },
-        { "key": "ml-notebooks/04-batch-inference", "displayName": "04 Batch Inference and Predictions" },
-        { "key": "ml-notebooks/05-capacity-what-if", "displayName": "05 Capacity What-If" }
+        {
+          "key": "ml-notebooks/01-feature-engineering",
+          "displayName": "01 Feature Engineering and Training"
+        },
+        {
+          "key": "ml-notebooks/02-inference-predictions",
+          "displayName": "02 Inference and Predictions"
+        }
       ]
     },
-    { "key": "pipelines", "displayName": "Pipelines" },
+    {
+      "key": "pipelines",
+      "displayName": "Pipelines"
+    },
     {
       "key": "powerbi",
       "displayName": "Power BI",
       "children": [
-        { "key": "powerbi/semantic-models", "displayName": "Semantic Models" },
-        { "key": "powerbi/reports", "displayName": "Reports and Dashboards" },
-        { "key": "powerbi/paginated", "displayName": "Paginated Reports" }
+        {
+          "key": "powerbi/semantic-models",
+          "displayName": "Semantic Models"
+        },
+        {
+          "key": "powerbi/reports",
+          "displayName": "Reports and Dashboards"
+        },
+        {
+          "key": "powerbi/paginated",
+          "displayName": "Paginated Reports"
+        }
       ]
     }
   ],
@@ -51,56 +66,37 @@
   "notebooks": [
     {
       "key": "feature-engineering",
-      "displayName": "01_PMO_Feature_Engineering",
+      "displayName": "01_PMO_Feature_Engineering_Training",
       "folderKey": "ml-notebooks/01-feature-engineering",
-      "localPath": "fabric/ml-notebooks/01-feature-engineering/01_PMO_Feature_Engineering.ipynb",
+      "localPath": "fabric/ml-notebooks/01-feature-engineering/01_PMO_Feature_Engineering_Training.ipynb",
       "sourceParts": "fabric/ml-notebooks/01-feature-engineering/src",
       "runOrder": 1
     },
     {
-      "key": "priority-tier-training",
-      "displayName": "02_PMO_Priority_Tier_Training",
-      "folderKey": "ml-notebooks/02-priority-tier-training",
-      "localPath": "fabric/ml-notebooks/02-priority-tier-training/02_PMO_Priority_Tier_Training.ipynb",
-      "sourceParts": "fabric/ml-notebooks/02-priority-tier-training/src",
+      "key": "inference-predictions",
+      "displayName": "02_PMO_Inference_Predictions",
+      "folderKey": "ml-notebooks/02-inference-predictions",
+      "localPath": "fabric/ml-notebooks/02-inference-predictions/02_PMO_Inference_Predictions.ipynb",
+      "sourceParts": "fabric/ml-notebooks/02-inference-predictions/src",
       "runOrder": 2
-    },
-    {
-      "key": "archetype-clustering",
-      "displayName": "03_PMO_Archetype_Clustering",
-      "folderKey": "ml-notebooks/03-archetype-clustering",
-      "localPath": "fabric/ml-notebooks/03-archetype-clustering/03_PMO_Archetype_Clustering.ipynb",
-      "sourceParts": "fabric/ml-notebooks/03-archetype-clustering/src",
-      "runOrder": 3
-    },
-    {
-      "key": "batch-inference",
-      "displayName": "04_PMO_Batch_Inference",
-      "folderKey": "ml-notebooks/04-batch-inference",
-      "localPath": "fabric/ml-notebooks/04-batch-inference/04_PMO_Batch_Inference.ipynb",
-      "sourceParts": "fabric/ml-notebooks/04-batch-inference/src",
-      "runOrder": 4
-    },
-    {
-      "key": "capacity-what-if",
-      "displayName": "05_PMO_Capacity_What_If",
-      "folderKey": "ml-notebooks/05-capacity-what-if",
-      "localPath": "fabric/ml-notebooks/05-capacity-what-if/05_PMO_Capacity_What_If.ipynb",
-      "sourceParts": "fabric/ml-notebooks/05-capacity-what-if/src",
-      "runOrder": 5
     }
   ],
   "dataPipeline": {
     "displayName": "PMO Full Pipeline",
     "folderKey": "pipelines",
     "localPath": "fabric/pipelines/pmo-full-pipeline/pipeline-content.json",
-    "notebookKeysInOrder": ["feature-engineering", "priority-tier-training", "archetype-clustering", "batch-inference", "capacity-what-if"]
+    "notebookKeysInOrder": [
+      "feature-engineering",
+      "inference-predictions"
+    ]
   },
   "semanticModel": {
     "displayName": "PMO Portfolio Semantic Model",
     "folderKey": "powerbi/semantic-models",
     "localPath": "fabric/powerbi/semantic-model/PMO Portfolio Semantic Model.SemanticModel",
-    "directLakeSchemas": ["gold"]
+    "directLakeSchemas": [
+      "gold"
+    ]
   },
   "reports": [
     {

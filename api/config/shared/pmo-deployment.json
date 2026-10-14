@@ -31,31 +31,68 @@
     "vnetIntegrationSubnetId": "/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.Network/virtualNetworks/caldova-dbx-vnet-westus2/subnets/genie-obo-integration"
   },
   "create": {
-    "description": "New resources created for this solution inside the shared resource group.",
+    "description": "New resources created for this solution inside the shared resource group. Bicep names follow az{resourcePrefix}{uniqueToken}. Terraform names follow azurecaf CAF names built from baseName with no suffix.",
+    "baseName": "pmo-portfolio",
+    "nameLead": "az",
+    "logAnalytics": { "resourcePrefix": "law", "retentionDays": 30 },
+    "appInsights": { "resourcePrefix": "ai" },
+    "identity": { "resourcePrefix": "mi" },
+    "diagnostics": { "resourcePrefix": "dg" },
+    "keyVault": {
+      "resourcePrefix": "kv",
+      "secretName": "apim-subscription-key",
+      "secretsOfficerRoleId": "b86a8fe4-44ce-4948-aee5-eccb2c155cd7"
+    },
     "foundryProject": {
+      "resourcePrefix": "fp",
       "name": "pmo-portfolio",
-      "displayName": "PMO Portfolio Prioritization"
+      "displayName": "PMO Portfolio Prioritization",
+      "description": "Foundry project for the PMO portfolio prioritization solution."
     },
     "apimApi": {
+      "resourcePrefix": "apm",
+      "productResourcePrefix": "prd",
+      "subscriptionResourcePrefix": "sub",
       "name": "pmo-portfolio",
       "displayName": "PMO Portfolio Prioritization API",
       "path": "pmo",
       "productName": "pmo-portfolio",
       "productDisplayName": "PMO Portfolio Prioritization",
+      "subscriptionName": "pmo-ui",
+      "subscriptionDisplayName": "PMO Portfolio UI",
       "openApiFile": "docs/api/openapi.json"
     },
     "apps": {
       "ui": {
-        "name": "caldova-pmo-ui",
+        "resourcePrefix": "ui",
         "runtimeStack": "PYTHON|3.12",
+        "startupCommand": "python -m uvicorn --app-dir server app.main:app --host 0.0.0.0 --port 8000",
+        "port": 8000,
         "artifactFolder": "ui"
       },
       "api": {
-        "name": "caldova-pmo-api",
+        "resourcePrefix": "api",
         "runtimeStack": "PYTHON|3.12",
+        "startupCommand": "python -m uvicorn app.main:app --host 0.0.0.0 --port 8000",
+        "port": 8000,
+        "docsPath": "/docs",
         "artifactFolder": "api"
       }
     }
+  },
+  "entra": {
+    "description": "Entra SPA app registration used by the UI for sign-in. The deploy script adds the hosted UI URL to its redirect URIs.",
+    "spaAppDisplayName": "PMO Portfolio Prioritization UI",
+    "clientId": "5b2b4e8a-53cf-4295-990d-71a34962aadb"
+  },
+  "deployment": {
+    "description": "Entry points for infra/scripts/deploy.ps1. Bicep and Terraform deploy the same resources from this one config. Deploy only one flavor per environment, because both claim the APIM API path.",
+    "name": "pmo-portfolio",
+    "bicepFile": "infra/bicep/main.bicep",
+    "bicepParameters": "infra/bicep/main.parameters.json",
+    "terraformDirectory": "infra/terraform",
+    "terraformVarFile": "main.tfvars.json",
+    "fabricWorkspaceRole": "Contributor"
   },
   "fabric": {
     "description": "Fabric items are created by fabric/scripts (deploy scripts), not by IaC. The API identity needs Contributor on the workspace so it can read and write OneLake and run the pipeline.",

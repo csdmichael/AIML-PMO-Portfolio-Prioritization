@@ -1,0 +1,227 @@
+Row ID,Project Code,Milestone / Task,Row Type,Owner,Start,Finish,Duration (days),% Complete,RAG,Predecessors,Last Modified
+5001,GIS 0002,Go-Live,Milestone,Owen Brandt,26-Aug-28,26-Aug-28,0,50,Green,,5/12/2026 12:01
+5002,GIS 0002,Workstream 1,Task,Owen Brandt,05-Mar-28,13-Apr-28,39,16,Green,5001,5/12/2026 12:01
+5003,GIS 0002,Workstream 2,Task,Owen Brandt,13-May-28,05-Jun-28,23,99,Green,,5/12/2026 12:01
+5004,GIS 0002,Workstream 3,Task,Owen Brandt,27-Dec-27,27-Jan-28,31,64,Green,,5/12/2026 12:01
+5005,GIS 0002,Workstream 4,Task,Owen Brandt,23-Mar-28,11-Apr-28,19,2,Green,,5/12/2026 12:01
+5006,GIS 0002,Workstream 5,Task,Owen Brandt,11-Dec-27,07-Jan-28,27,100,Green,,5/12/2026 12:01
+5007,GIS 0002,Workstream 6,Task,Owen Brandt,20-Mar-28,12-Apr-28,23,2,Green,,5/12/2026 12:01
+5008,GIS 0003,Go-Live,Milestone,Owen Brandt,20-Apr-28,20-Apr-28,0,0,Green,,9/15/2026 16:27
+5009,GIS 0003,Workstream 1,Task,Owen Brandt,29-Sep-27,06-Nov-27,38,52,Green,5008,9/15/2026 16:27
+5010,GIS 0003,Workstream 2,Task,Owen Brandt,23-Nov-27,11-Dec-27,18,41,Green,,9/15/2026 16:27
+5011,GIS 0003,Workstream 3,Task,Owen Brandt,18-Aug-27,05-Sep-27,18,73,Green,,9/15/2026 16:27
+5012,GIS 0005,Go-Live,Milestone,Avery Romero,14-Oct-28,14-Oct-28,0,0,Amber,,12/23/2026 14:18
+5013,GIS 0005,Workstream 1,Task,Avery Romero,26-Mar-28,01-May-28,36,94,Amber,5012,12/23/2026 14:18
+5014,GIS 0005,Workstream 2,Task,Avery Romero,05-May-28,22-May-28,17,25,Amber,,12/23/2026 14:18
+5015,GIS 0005,Workstream 3,Task,Avery Romero,13-Jun-28,24-Jun-28,11,59,Amber,,12/23/2026 14:18
+5016,GIS 0005,Workstream 4,Task,Avery Romero,18-May-28,27-Jun-28,40,62,Amber,,12/23/2026 14:18
+5017,GIS 0005,Workstream 5,Task,Avery Romero,24-Apr-28,21-May-28,27,77,Amber,,12/23/2026 14:18
+5018,GIS 0005,Workstream 6,Task,Avery Romero,16-Jun-28,26-Jul-28,40,92,Amber,,12/23/2026 14:18
+5019,GIS 0007,Go-Live,Milestone,Samuel Haddad,18-Nov-27,18-Nov-27,0,25,Amber,,7/15/2026 08:15
+5020,GIS 0007,Workstream 1,Task,Samuel Haddad,03-May-27,14-May-27,11,45,Amber,5019,7/15/2026 08:15
+5021,GIS 0007,Workstream 2,Task,Samuel Haddad,14-Jul-27,24-Aug-27,41,1,Amber,,7/15/2026 08:15
+5022,GIS 0008,Go-Live,Milestone,Grace Lindqvist,24-Sep-28,24-Sep-28,0,25,Green,,5/27/2026 16:02
+5023,GIS 0008,Workstream 1,Task,Grace Lindqvist,12-Apr-28,08-May-28,26,95,Green,5022,5/27/2026 16:02
+5024,GIS 0008,Workstream 2,Task,Grace Lindqvist,04-Mar-28,06-Apr-28,33,89,Green,,5/27/2026 16:02
+5025,GIS 0010,Go-Live,Milestone,Jordan Okafor,06-Nov-27,06-Nov-27,0,50,Amber,,1/19/2026 09:02
+5026,GIS 0010,Workstream 1,Task,Jordan Okafor,07-Jun-27,21-Jun-27,14,56,Amber,5025,1/19/2026 09:02
+5027,GIS 0010,Workstream 2,Task,Jordan Okafor,08-Jun-27,27-Jun-27,19,51,Amber,,1/19/2026 09:02
+5028,GIS 0010,Workstream 3,Task,Jordan Okafor,26-Feb-27,25-Mar-27,27,30,Amber,,1/19/2026 09:02
+5029,GIS 0010,Workstream 4,Task,Jordan Okafor,16-Jul-27,16-Aug-27,31,29,Amber,,1/19/2026 09:02
+5030,GIS 0010,Workstream 5,Task,Jordan Okafor,27-Apr-27,11-May-27,14,71,Amber,,1/19/2026 09:02
+5031,GIS 0010,Workstream 6,Task,Jordan Okafor,21-Jan-27,14-Feb-27,24,51,Amber,,1/19/2026 09:02
+5032,GIS 0011,Go-Live,Milestone,Isabel Brandt,10-Sep-27,10-Sep-27,0,50,Amber,,8/9/2026 16:36
+5033,GIS 0011,Workstream 1,Task,Isabel Brandt,17-Feb-27,23-Mar-27,34,83,Amber,5032,8/9/2026 16:36
+5034,GIS 0011,Workstream 2,Task,Isabel Brandt,27-Mar-27,20-Apr-27,24,90,Amber,,8/9/2026 16:36
+5035,GIS 0011,Workstream 3,Task,Isabel Brandt,24-May-27,21-Jun-27,28,89,Amber,,8/9/2026 16:36
+5036,GIS 0012,Go-Live,Milestone,Chloe Lindqvist,25-Oct-27,25-Oct-27,0,0,Green,,2/4/2026 12:13
+5037,GIS 0012,Workstream 1,Task,Chloe Lindqvist,06-May-27,07-Jun-27,32,97,Green,5036,2/4/2026 12:13
+5038,GIS 0012,Workstream 2,Task,Chloe Lindqvist,08-Aug-27,12-Sep-27,35,95,Green,,2/4/2026 12:13
+5039,GIS 0015,Go-Live,Milestone,Avery Romero,09-Sep-28,09-Sep-28,0,25,Red,,4/20/2026 17:05
+5040,GIS 0015,Workstream 1,Task,Avery Romero,28-Jan-28,07-Mar-28,39,12,Red,5039,4/20/2026 17:05
+5041,GIS 0015,Workstream 2,Task,Avery Romero,30-Jan-28,11-Feb-28,12,7,Red,,4/20/2026 17:05
+5042,GIS 0015,Workstream 3,Task,Avery Romero,30-Jan-28,03-Mar-28,33,86,Red,,4/20/2026 17:05
+5043,GIS 0015,Workstream 4,Task,Avery Romero,15-Mar-28,01-Apr-28,17,96,Red,,4/20/2026 17:05
+5044,GIS 0015,Workstream 5,Task,Avery Romero,08-Mar-28,24-Mar-28,16,50,Red,,4/20/2026 17:05
+5045,GIS 0017,Go-Live,Milestone,Mateo Iyer,25-May-27,25-May-27,0,25,Green,,5/23/2026 08:46
+5046,GIS 0017,Workstream 1,Task,Mateo Iyer,23-Jan-27,08-Mar-27,44,16,Green,5045,5/23/2026 08:46
+5047,GIS 0017,Workstream 2,Task,Mateo Iyer,06-Nov-26,02-Dec-26,26,38,Green,,5/23/2026 08:46
+5048,GIS 0017,Workstream 3,Task,Mateo Iyer,15-Dec-26,28-Jan-27,44,86,Green,,5/23/2026 08:46
+5049,GIS 0019,Go-Live,Milestone,Owen Brandt,27-Oct-27,27-Oct-27,0,25,Red,,9/27/2026 11:52
+5050,GIS 0019,Workstream 1,Task,Owen Brandt,20-Jun-27,15-Jul-27,25,12,Red,5049,9/27/2026 11:52
+5051,GIS 0019,Workstream 2,Task,Owen Brandt,01-Apr-27,01-May-27,30,63,Red,,9/27/2026 11:52
+5052,GIS 0019,Workstream 3,Task,Owen Brandt,02-May-27,14-Jun-27,43,40,Red,,9/27/2026 11:52
+5053,GIS 0019,Workstream 4,Task,Owen Brandt,27-Jul-27,22-Aug-27,26,96,Red,,9/27/2026 11:52
+5054,GIS 0019,Workstream 5,Task,Owen Brandt,04-Feb-27,26-Feb-27,22,33,Red,,9/27/2026 11:52
+5055,GIS 0020,Go-Live,Milestone,Ingrid Brandt,05-Apr-28,05-Apr-28,0,50,Green,,6/24/2026 09:24
+5056,GIS 0020,Workstream 1,Task,Ingrid Brandt,16-Dec-27,16-Jan-28,31,100,Green,5055,6/24/2026 09:24
+5057,GIS 0020,Workstream 2,Task,Ingrid Brandt,06-Aug-27,13-Sep-27,38,94,Green,,6/24/2026 09:24
+5058,GIS 0020,Workstream 3,Task,Ingrid Brandt,05-Oct-27,02-Nov-27,28,99,Green,,6/24/2026 09:24
+5059,GIS 0020,Workstream 4,Task,Ingrid Brandt,15-Dec-27,10-Jan-28,26,96,Green,,6/24/2026 09:24
+5060,GIS 0020,Workstream 5,Task,Ingrid Brandt,11-Oct-27,28-Oct-27,17,63,Green,,6/24/2026 09:24
+5061,GIS 0020,Workstream 6,Task,Ingrid Brandt,28-Nov-27,09-Jan-28,42,36,Green,,6/24/2026 09:24
+5062,GIS 0023,Go-Live,Milestone,Grace Lindqvist,03-Apr-27,03-Apr-27,0,50,Green,,9/21/2026 12:59
+5063,GIS 0023,Workstream 1,Task,Grace Lindqvist,17-Dec-26,29-Jan-27,43,76,Green,5062,9/21/2026 12:59
+5064,GIS 0023,Workstream 2,Task,Grace Lindqvist,05-Oct-26,12-Nov-26,38,48,Green,,9/21/2026 12:59
+5065,GIS 0023,Workstream 3,Task,Grace Lindqvist,19-Nov-26,18-Dec-26,29,49,Green,,9/21/2026 12:59
+5066,GIS 0023,Workstream 4,Task,Grace Lindqvist,03-Oct-26,20-Oct-26,17,42,Green,,9/21/2026 12:59
+5067,GIS 0025,Go-Live,Milestone,Mateo Schmidt,27-Oct-27,27-Oct-27,0,25,Green,,2/21/2026 10:40
+5068,GIS 0025,Workstream 1,Task,Mateo Schmidt,10-Jun-27,17-Jul-27,37,51,Green,5067,2/21/2026 10:40
+5069,GIS 0025,Workstream 2,Task,Mateo Schmidt,14-Jun-27,21-Jul-27,37,73,Green,,2/21/2026 10:40
+5070,GIS 0025,Workstream 3,Task,Mateo Schmidt,18-Feb-27,01-Mar-27,11,56,Green,,2/21/2026 10:40
+5071,GIS 0025,Workstream 4,Task,Mateo Schmidt,14-Jul-27,01-Aug-27,18,96,Green,,2/21/2026 10:40
+5072,GIS 0025,Workstream 5,Task,Mateo Schmidt,02-Apr-27,12-Apr-27,10,7,Green,,2/21/2026 10:40
+5073,GIS 0025,Workstream 6,Task,Mateo Schmidt,09-May-27,26-May-27,17,49,Green,,2/21/2026 10:40
+5074,GIS 0027,Go-Live,Milestone,Yara Walsh,06-Feb-27,06-Feb-27,0,25,Green,,2/6/2026 13:02
+5075,GIS 0027,Workstream 1,Task,Yara Walsh,17-Sep-26,26-Oct-26,39,36,Green,5074,2/6/2026 13:02
+5076,GIS 0027,Workstream 2,Task,Yara Walsh,18-Jul-26,29-Jul-26,11,50,Green,,2/6/2026 13:02
+5077,GIS 0027,Workstream 3,Task,Yara Walsh,14-Jul-26,15-Aug-26,32,64,Green,,2/6/2026 13:02
+5078,GIS 0027,Workstream 4,Task,Yara Walsh,18-Jun-26,10-Jul-26,22,88,Green,,2/6/2026 13:02
+5079,GIS 0027,Workstream 5,Task,Yara Walsh,09-Jun-26,08-Jul-26,29,12,Green,,2/6/2026 13:02
+5080,GIS 0027,Workstream 6,Task,Yara Walsh,04-Jul-26,14-Aug-26,41,47,Green,,2/6/2026 13:02
+5081,GIS 0029,Go-Live,Milestone,Leila Patel,19-Oct-28,19-Oct-28,0,25,Green,,11/18/2026 13:14
+5082,GIS 0029,Workstream 1,Task,Leila Patel,14-Apr-28,26-May-28,42,54,Green,5081,11/18/2026 13:14
+5083,GIS 0029,Workstream 2,Task,Leila Patel,03-Jul-28,11-Aug-28,39,72,Green,,11/18/2026 13:14
+5084,GIS 0029,Workstream 3,Task,Leila Patel,11-Apr-28,24-Apr-28,13,18,Green,,11/18/2026 13:14
+5085,GIS 0029,Workstream 4,Task,Leila Patel,13-Apr-28,06-May-28,23,94,Green,,11/18/2026 13:14
+5086,GIS 0029,Workstream 5,Task,Leila Patel,26-Apr-28,16-May-28,20,77,Green,,11/18/2026 13:14
+5087,GIS 0030,Go-Live,Milestone,Carlos Moreno,01-Jan-28,01-Jan-28,0,25,Red,,11/11/2026 11:01
+5088,GIS 0030,Workstream 1,Task,Carlos Moreno,06-Jul-27,18-Aug-27,43,72,Red,5087,11/11/2026 11:01
+5089,GIS 0030,Workstream 2,Task,Carlos Moreno,20-Sep-27,04-Oct-27,14,6,Red,,11/11/2026 11:01
+5090,GIS 0030,Workstream 3,Task,Carlos Moreno,21-May-27,01-Jun-27,11,22,Red,,11/11/2026 11:01
+5091,GIS 0030,Workstream 4,Task,Carlos Moreno,06-May-27,09-Jun-27,34,59,Red,,11/11/2026 11:01
+5092,GIS 0030,Workstream 5,Task,Carlos Moreno,31-May-27,22-Jun-27,22,87,Red,,11/11/2026 11:01
+5093,GIS 0031,Go-Live,Milestone,Isabel Okafor,23-Oct-29,23-Oct-29,0,0,Green,,6/28/2026 12:58
+5094,GIS 0031,Workstream 1,Task,Isabel Okafor,11-Apr-29,27-Apr-29,16,86,Green,5093,6/28/2026 12:58
+5095,GIS 0031,Workstream 2,Task,Isabel Okafor,12-Aug-29,02-Sep-29,21,99,Green,,6/28/2026 12:58
+5096,GIS 0032,Go-Live,Milestone,Jordan Okafor,15-May-29,15-May-29,0,0,Amber,,2/3/2026 12:52
+5097,GIS 0032,Workstream 1,Task,Jordan Okafor,13-Nov-28,03-Dec-28,20,27,Amber,5096,2/3/2026 12:52
+5098,GIS 0032,Workstream 2,Task,Jordan Okafor,07-Jan-29,24-Jan-29,17,55,Amber,,2/3/2026 12:52
+5099,GIS 0032,Workstream 3,Task,Jordan Okafor,03-Oct-28,25-Oct-28,22,79,Amber,,2/3/2026 12:52
+5100,GIS 0032,Workstream 4,Task,Jordan Okafor,26-Sep-28,02-Nov-28,37,98,Amber,,2/3/2026 12:52
+5101,GIS 0032,Workstream 5,Task,Jordan Okafor,10-Dec-28,30-Dec-28,20,37,Amber,,2/3/2026 12:52
+5102,GIS 0032,Workstream 6,Task,Jordan Okafor,04-Aug-28,14-Sep-28,41,25,Amber,,2/3/2026 12:52
+5103,GIS 0036,Go-Live,Milestone,Owen Aziz,13-May-27,13-May-27,0,25,Amber,,5/23/2026 11:27
+5104,GIS 0036,Workstream 1,Task,Owen Aziz,04-Oct-26,25-Oct-26,21,4,Amber,5103,5/23/2026 11:27
+5105,GIS 0036,Workstream 2,Task,Owen Aziz,02-Jan-27,20-Jan-27,18,27,Amber,,5/23/2026 11:27
+5106,GIS 0037,Go-Live,Milestone,Priya Okafor,05-Jun-27,05-Jun-27,0,0,Amber,,8/21/2026 10:29
+5107,GIS 0037,Workstream 1,Task,Priya Okafor,06-Dec-26,17-Dec-26,11,34,Amber,5106,8/21/2026 10:29
+5108,GIS 0037,Workstream 2,Task,Priya Okafor,27-Mar-27,16-Apr-27,20,33,Amber,,8/21/2026 10:29
+5109,GIS 0037,Workstream 3,Task,Priya Okafor,16-Oct-26,02-Nov-26,17,59,Amber,,8/21/2026 10:29
+5110,GIS 0037,Workstream 4,Task,Priya Okafor,16-Nov-26,11-Dec-26,25,67,Amber,,8/21/2026 10:29
+5111,GIS 0037,Workstream 5,Task,Priya Okafor,02-Dec-26,01-Jan-27,30,68,Amber,,8/21/2026 10:29
+5112,GIS 0037,Workstream 6,Task,Priya Okafor,10-Oct-26,11-Nov-26,32,64,Amber,,8/21/2026 10:29
+5113,GIS 0038,Go-Live,Milestone,Yara Gallagher,03-May-27,03-May-27,0,50,Green,,10/2/2026 17:21
+5114,GIS 0038,Workstream 1,Task,Yara Gallagher,16-Dec-26,10-Jan-27,25,80,Green,5113,10/2/2026 17:21
+5115,GIS 0038,Workstream 2,Task,Yara Gallagher,02-Oct-26,31-Oct-26,29,83,Green,,10/2/2026 17:21
+5116,GIS 0040,Go-Live,Milestone,Isabel Brandt,17-May-28,17-May-28,0,25,Green,,8/21/2026 08:33
+5117,GIS 0040,Workstream 1,Task,Isabel Brandt,09-Nov-27,08-Dec-27,29,16,Green,5116,8/21/2026 08:33
+5118,GIS 0040,Workstream 2,Task,Isabel Brandt,27-Nov-27,08-Dec-27,11,93,Green,,8/21/2026 08:33
+5119,GIS 0040,Workstream 3,Task,Isabel Brandt,18-Dec-27,21-Jan-28,34,67,Green,,8/21/2026 08:33
+5120,GIS 0040,Workstream 4,Task,Isabel Brandt,03-Dec-27,21-Dec-27,18,48,Green,,8/21/2026 08:33
+5121,GIS 0041,Go-Live,Milestone,Ingrid Brandt,11-Jun-27,11-Jun-27,0,0,Amber,,10/19/2026 11:15
+5122,GIS 0041,Workstream 1,Task,Ingrid Brandt,24-Mar-27,30-Apr-27,37,98,Amber,5121,10/19/2026 11:15
+5123,GIS 0041,Workstream 2,Task,Ingrid Brandt,28-Oct-26,10-Dec-26,43,24,Amber,,10/19/2026 11:15
+5124,GIS 0041,Workstream 3,Task,Ingrid Brandt,18-Nov-26,08-Dec-26,20,37,Amber,,10/19/2026 11:15
+5125,GIS 0044,Go-Live,Milestone,Leila Patel,05-Jun-29,05-Jun-29,0,50,Red,,2/10/2026 16:16
+5126,GIS 0044,Workstream 1,Task,Leila Patel,27-Oct-28,29-Nov-28,33,85,Red,5125,2/10/2026 16:16
+5127,GIS 0044,Workstream 2,Task,Leila Patel,13-Feb-29,01-Mar-29,16,63,Red,,2/10/2026 16:16
+5128,GIS 0044,Workstream 3,Task,Leila Patel,26-Nov-28,21-Dec-28,25,89,Red,,2/10/2026 16:16
+5129,GIS 0044,Workstream 4,Task,Leila Patel,21-Sep-28,14-Oct-28,23,70,Red,,2/10/2026 16:16
+5130,GIS 0044,Workstream 5,Task,Leila Patel,24-Feb-29,04-Apr-29,39,52,Red,,2/10/2026 16:16
+5131,GIS 0044,Workstream 6,Task,Leila Patel,29-Oct-28,21-Nov-28,23,25,Red,,2/10/2026 16:16
+5132,GIS 0048,Go-Live,Milestone,Mateo Moreno,26-Nov-27,26-Nov-27,0,0,Red,,1/8/2026 13:30
+5133,GIS 0048,Workstream 1,Task,Mateo Moreno,10-Apr-27,02-May-27,22,100,Red,5132,1/8/2026 13:30
+5134,GIS 0048,Workstream 2,Task,Mateo Moreno,12-Jun-27,28-Jun-27,16,94,Red,,1/8/2026 13:30
+5135,GIS 0048,Workstream 3,Task,Mateo Moreno,09-May-27,09-Jun-27,31,38,Red,,1/8/2026 13:30
+5136,GIS 0051,Go-Live,Milestone,Mateo Okafor,21-Apr-27,21-Apr-27,0,50,Red,,6/14/2026 13:37
+5137,GIS 0051,Workstream 1,Task,Mateo Okafor,10-Nov-26,03-Dec-26,23,82,Red,5136,6/14/2026 13:37
+5138,GIS 0051,Workstream 2,Task,Mateo Okafor,22-Dec-26,17-Jan-27,26,17,Red,,6/14/2026 13:37
+5139,GIS 0051,Workstream 3,Task,Mateo Okafor,19-Oct-26,26-Nov-26,38,72,Red,,6/14/2026 13:37
+5140,GIS 0054,Go-Live,Milestone,Avery Romero,24-Nov-28,24-Nov-28,0,25,Green,,3/13/2026 13:58
+5141,GIS 0054,Workstream 1,Task,Avery Romero,01-Jul-28,16-Jul-28,15,20,Green,5140,3/13/2026 13:58
+5142,GIS 0054,Workstream 2,Task,Avery Romero,09-Jun-28,06-Jul-28,27,70,Green,,3/13/2026 13:58
+5143,GIS 0054,Workstream 3,Task,Avery Romero,28-May-28,25-Jun-28,28,81,Green,,3/13/2026 13:58
+5144,GIS 0057,Go-Live,Milestone,Lucas Chen,10-Feb-27,10-Feb-27,0,50,Green,,3/27/2026 10:39
+5145,GIS 0057,Workstream 1,Task,Lucas Chen,02-Sep-26,15-Oct-26,43,48,Green,5144,3/27/2026 10:39
+5146,GIS 0057,Workstream 2,Task,Lucas Chen,19-Jul-26,26-Aug-26,38,25,Green,,3/27/2026 10:39
+5147,GIS 0059,Go-Live,Milestone,Ethan Schmidt,28-Jul-27,28-Jul-27,0,0,Red,,4/3/2026 15:27
+5148,GIS 0059,Workstream 1,Task,Ethan Schmidt,16-Mar-27,13-Apr-27,28,55,Red,5147,4/3/2026 15:27
+5149,GIS 0059,Workstream 2,Task,Ethan Schmidt,15-May-27,28-May-27,13,91,Red,,4/3/2026 15:27
+5150,GIS 0061,Go-Live,Milestone,Marcus Aziz,19-Dec-27,19-Dec-27,0,25,Amber,,1/17/2026 09:08
+5151,GIS 0061,Workstream 1,Task,Marcus Aziz,15-May-27,07-Jun-27,23,13,Amber,5150,1/17/2026 09:08
+5152,GIS 0061,Workstream 2,Task,Marcus Aziz,30-Jul-27,04-Sep-27,36,4,Amber,,1/17/2026 09:08
+5153,GIS 0062,Go-Live,Milestone,Ingrid Brandt,31-Mar-28,31-Mar-28,0,25,Red,,7/26/2026 15:00
+5154,GIS 0062,Workstream 1,Task,Ingrid Brandt,26-Aug-27,29-Sep-27,34,59,Red,5153,7/26/2026 15:00
+5155,GIS 0062,Workstream 2,Task,Ingrid Brandt,09-Nov-27,15-Dec-27,36,60,Red,,7/26/2026 15:00
+5156,GIS 0062,Workstream 3,Task,Ingrid Brandt,09-Dec-27,25-Dec-27,16,72,Red,,7/26/2026 15:00
+5157,GIS 0064,Go-Live,Milestone,Sofia Kim,02-Mar-28,02-Mar-28,0,25,,,2/1/2026 14:43
+5158,GIS 0064,Workstream 1,Task,Sofia Kim,26-Nov-27,22-Dec-27,26,20,,5157,2/1/2026 14:43
+5159,GIS 0064,Workstream 2,Task,Sofia Kim,28-Jun-27,03-Aug-27,36,9,,,2/1/2026 14:43
+5160,GIS 0064,Workstream 3,Task,Sofia Kim,05-Nov-27,18-Dec-27,43,32,,,2/1/2026 14:43
+5161,GIS 0065,Go-Live,Milestone,Ethan Schmidt,31-May-28,31-May-28,0,50,Red,,7/1/2026 14:50
+5162,GIS 0065,Workstream 1,Task,Ethan Schmidt,12-Mar-28,21-Apr-28,40,19,Red,5161,7/1/2026 14:50
+5163,GIS 0065,Workstream 2,Task,Ethan Schmidt,22-Nov-27,08-Dec-27,16,8,Red,,7/1/2026 14:50
+5164,GIS 0065,Workstream 3,Task,Ethan Schmidt,08-Nov-27,06-Dec-27,28,37,Red,,7/1/2026 14:50
+5165,GIS 0067,Go-Live,Milestone,Chloe Iyer,08-Jun-28,08-Jun-28,0,50,Green,,6/10/2026 13:52
+5166,GIS 0067,Workstream 1,Task,Chloe Iyer,22-Nov-27,08-Dec-27,16,72,Green,5165,6/10/2026 13:52
+5167,GIS 0067,Workstream 2,Task,Chloe Iyer,07-Nov-27,24-Nov-27,17,37,Green,,6/10/2026 13:52
+5168,GIS 0067,Workstream 3,Task,Chloe Iyer,24-Feb-28,09-Mar-28,14,1,Green,,6/10/2026 13:52
+5169,GIS 0067,Workstream 4,Task,Chloe Iyer,05-Dec-27,20-Dec-27,15,68,Green,,6/10/2026 13:52
+5170,GIS 0067,Workstream 5,Task,Chloe Iyer,15-Sep-27,05-Oct-27,20,29,Green,,6/10/2026 13:52
+5171,GIS 0068,Go-Live,Milestone,Mateo Okafor,31-Mar-28,31-Mar-28,0,50,Amber,,10/20/2026 09:38
+5172,GIS 0068,Workstream 1,Task,Mateo Okafor,08-Aug-27,15-Sep-27,38,53,Amber,5171,10/20/2026 09:38
+5173,GIS 0068,Workstream 2,Task,Mateo Okafor,05-Aug-27,13-Sep-27,39,96,Amber,,10/20/2026 09:38
+5174,GIS 0068,Workstream 3,Task,Mateo Okafor,13-Oct-27,25-Oct-27,12,21,Amber,,10/20/2026 09:38
+5175,GIS 0068,Workstream 4,Task,Mateo Okafor,22-Oct-27,14-Nov-27,23,32,Amber,,10/20/2026 09:38
+5176,GIS 0068,Workstream 5,Task,Mateo Okafor,29-Oct-27,30-Nov-27,32,36,Amber,,10/20/2026 09:38
+5177,GIS 0068,Workstream 6,Task,Mateo Okafor,12-Sep-27,08-Oct-27,26,44,Amber,,10/20/2026 09:38
+5178,GIS 0070,Go-Live,Milestone,Ingrid Brandt,06-Feb-28,06-Feb-28,0,25,Amber,,4/20/2026 13:23
+5179,GIS 0070,Workstream 1,Task,Ingrid Brandt,28-Jul-27,19-Aug-27,22,60,Amber,5178,4/20/2026 13:23
+5180,GIS 0070,Workstream 2,Task,Ingrid Brandt,15-Sep-27,12-Oct-27,27,59,Amber,,4/20/2026 13:23
+5181,GIS 0070,Workstream 3,Task,Ingrid Brandt,14-Sep-27,18-Oct-27,34,71,Amber,,4/20/2026 13:23
+5182,GIS 0072,Go-Live,Milestone,Mateo Iyer,13-Jan-27,13-Jan-27,0,25,Green,,7/9/2026 08:27
+5183,GIS 0072,Workstream 1,Task,Mateo Iyer,03-Jun-26,24-Jun-26,21,50,Green,5182,7/9/2026 08:27
+5184,GIS 0072,Workstream 2,Task,Mateo Iyer,20-Aug-26,11-Sep-26,22,45,Green,,7/9/2026 08:27
+5185,GIS 0072,Workstream 3,Task,Mateo Iyer,17-Oct-26,21-Nov-26,35,4,Green,,7/9/2026 08:27
+5186,GIS 0072,Workstream 4,Task,Mateo Iyer,06-May-26,04-Jun-26,29,27,Green,,7/9/2026 08:27
+5187,GIS 0074,Go-Live,Milestone,Chloe Lindqvist,10-May-28,10-May-28,0,0,,,7/5/2026 13:41
+5188,GIS 0074,Workstream 1,Task,Chloe Lindqvist,01-Dec-27,26-Dec-27,25,2,,5187,7/5/2026 13:41
+5189,GIS 0074,Workstream 2,Task,Chloe Lindqvist,08-Oct-27,29-Oct-27,21,2,,,7/5/2026 13:41
+5190,GIS 0074,Workstream 3,Task,Chloe Lindqvist,01-Sep-27,02-Oct-27,31,94,,,7/5/2026 13:41
+5191,GIS 0074,Workstream 4,Task,Chloe Lindqvist,29-Oct-27,05-Dec-27,37,36,,,7/5/2026 13:41
+5192,GIS 0077,Go-Live,Milestone,Jordan Aziz,30-Sep-28,30-Sep-28,0,50,Red,,11/21/2026 12:26
+5193,GIS 0077,Workstream 1,Task,Jordan Aziz,09-Jul-28,30-Jul-28,21,34,Red,5192,11/21/2026 12:26
+5194,GIS 0077,Workstream 2,Task,Jordan Aziz,14-Apr-28,26-Apr-28,12,68,Red,,11/21/2026 12:26
+5195,GIS 0077,Workstream 3,Task,Jordan Aziz,08-Apr-28,14-May-28,36,70,Red,,11/21/2026 12:26
+5196,GIS 0078,Go-Live,Milestone,Yara Chen,30-Dec-29,30-Dec-29,0,0,Green,,1/14/2026 08:10
+5197,GIS 0078,Workstream 1,Task,Yara Chen,07-Oct-29,15-Nov-29,39,11,Green,5196,1/14/2026 08:10
+5198,GIS 0078,Workstream 2,Task,Yara Chen,27-Jul-29,05-Sep-29,40,80,Green,,1/14/2026 08:10
+5199,GIS 0078,Workstream 3,Task,Yara Chen,27-Aug-29,17-Sep-29,21,49,Green,,1/14/2026 08:10
+5200,GIS 0078,Workstream 4,Task,Yara Chen,15-Apr-29,04-May-29,19,96,Green,,1/14/2026 08:10
+5201,GIS 0078,Workstream 5,Task,Yara Chen,08-Apr-29,23-May-29,45,5,Green,,1/14/2026 08:10
+5202,GIS 0078,Workstream 6,Task,Yara Chen,23-Jul-29,08-Aug-29,16,1,Green,,1/14/2026 08:10
+5203,GIS 0080,Go-Live,Milestone,Kenji Kim,21-Apr-27,21-Apr-27,0,0,Amber,,10/23/2026 10:20
+5204,GIS 0080,Workstream 1,Task,Kenji Kim,03-Nov-26,15-Dec-26,42,56,Amber,5203,10/23/2026 10:20
+5205,GIS 0080,Workstream 2,Task,Kenji Kim,03-Feb-27,26-Feb-27,23,94,Amber,,10/23/2026 10:20
+5206,GIS 0080,Workstream 3,Task,Kenji Kim,03-Jan-27,11-Feb-27,39,60,Amber,,10/23/2026 10:20
+5207,GIS 0080,Workstream 4,Task,Kenji Kim,25-Sep-26,30-Oct-26,35,12,Amber,,10/23/2026 10:20
+5208,GIS 0080,Workstream 5,Task,Kenji Kim,20-Jul-26,29-Aug-26,40,17,Amber,,10/23/2026 10:20
+5209,GIS 0082,Go-Live,Milestone,Elena Novak,23-Jul-27,23-Jul-27,0,25,Green,,11/9/2026 16:40
+5210,GIS 0082,Workstream 1,Task,Elena Novak,06-Feb-27,20-Feb-27,14,98,Green,5209,11/9/2026 16:40
+5211,GIS 0082,Workstream 2,Task,Elena Novak,26-Jan-27,24-Feb-27,29,81,Green,,11/9/2026 16:40
+5212,GIS 0082,Workstream 3,Task,Elena Novak,10-Nov-26,07-Dec-26,27,87,Green,,11/9/2026 16:40
+5213,GIS 0082,Workstream 4,Task,Elena Novak,13-Nov-26,02-Dec-26,19,47,Green,,11/9/2026 16:40
+5214,GIS 0094,Go-Live,Milestone,Isabel Brandt,20-Sep-27,20-Sep-27,0,25,Green,,5/28/2026 13:04
+5215,GIS 0094,Workstream 1,Task,Isabel Brandt,29-Jan-27,11-Mar-27,41,93,Green,5214,5/28/2026 13:04
+5216,GIS 0094,Workstream 2,Task,Isabel Brandt,07-Feb-27,12-Mar-27,33,21,Green,,5/28/2026 13:04
+5217,GIS 0094,Workstream 3,Task,Isabel Brandt,18-May-27,02-Jun-27,15,67,Green,,5/28/2026 13:04
+5218,GIS 0094,Workstream 4,Task,Isabel Brandt,02-Feb-27,03-Mar-27,29,77,Green,,5/28/2026 13:04
+5219,GIS 0094,Workstream 5,Task,Isabel Brandt,02-Jun-27,17-Jun-27,15,81,Green,,5/28/2026 13:04
+5220,GIS 0094,Workstream 6,Task,Isabel Brandt,24-May-27,03-Jul-27,40,26,Green,,5/28/2026 13:04
+5221,GIS 0099,Go-Live,Milestone,Lucas Novak,29-Aug-28,29-Aug-28,0,50,Red,,11/12/2026 13:41
+5222,GIS 0099,Workstream 1,Task,Lucas Novak,22-Mar-28,02-May-28,41,30,Red,5221,11/12/2026 13:41
+5223,GIS 0099,Workstream 2,Task,Lucas Novak,05-Jun-28,10-Jul-28,35,34,Red,,11/12/2026 13:41
+5224,GIS 0100,Go-Live,Milestone,Avery Romero,03-Sep-28,03-Sep-28,0,50,Amber,,12/2/2026 12:56
+5225,GIS 0100,Workstream 1,Task,Avery Romero,29-Jun-28,20-Jul-28,21,31,Amber,5224,12/2/2026 12:56
+5226,GIS 0100,Workstream 2,Task,Avery Romero,05-Mar-28,11-Apr-28,37,61,Amber,,12/2/2026 12:56

@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "description": "Generation parameters for the synthetic PMO source extracts. Read by generate_pmo_data.py. Portfolios, programs, business units, sites, skills, and statuses come from config/portfolios.json and config/data-entry.json, not from this file.",
+  "seed": 20261012,
+  "asOfDate": "2026-10-12",
+  "outputRoot": "data",
+  "excelOnlyCount": 20,
+  "decisionHistoryCount": 70,
+  "labelNoise": 0.10,
+  "inclusion": {
+    "planview": 0.85,
+    "powerapps": 0.75,
+    "ado": 0.55,
+    "jira": 0.45,
+    "ms_project": 0.50,
+    "smartsheet": 0.60,
+    "bu_trackers": 0.70,
+    "bu_repositories": 0.65,
+    "hr_capacity": 0.80,
+    "cost": 0.75
+  },
+  "messiness": {
+    "planviewCode": 0.08,
+    "planviewBusinessUnit": 0.05,
+    "planviewCostString": 0.10,
+    "planviewBlankGoLive": 0.05,
+    "planviewBlankBenefit": 0.06,
+    "planviewRiskAbbrev": 0.05,
+    "planviewBlankRisk": 0.03,
+    "planviewBlankDeps": 0.05,
+    "sponsorLastFirst": 0.04,
+    "powerappsCode": 0.06,
+    "powerappsResubmission": 0.04,
+    "adoCode": 0.05,
+    "adoBlankTarget": 0.15,
+    "jiraCode": 0.06,
+    "smartsheetBlankRag": 0.05,
+    "trackerCode": 0.05,
+    "trackerRegulatoryYesNo": 0.10,
+    "docRefMessy": 0.06,
+    "costCode": 0.04,
+    "excelBlank": 0.08,
+    "excelVariant": 0.05
+  },
+  "distributions": {
+    "value": { "1": 0.08, "2": 0.17, "3": 0.30, "4": 0.28, "5": 0.17 },
+    "risk": { "1": 0.35, "2": 0.35, "3": 0.20, "4": 0.10 },
+    "statusWeights": { "Planning": 0.40, "Active": 0.50, "On Hold": 0.10 },
+    "skillWeights": { "APP": 0.25, "NET": 0.20, "UC": 0.20, "CLOUD": 0.15, "DATA": 0.08, "SEC": 0.06, "INT": 0.04, "PM": 0.02 },
+    "regulatoryShare": 0.20,
+    "dtShare": 0.35,
+    "protectedShare": 0.12,
+    "goLiveBuckets": [
+      { "share": 0.60, "minMonths": 3, "maxMonths": 18 },
+      { "share": 0.25, "minMonths": 18, "maxMonths": 27 },
+      { "share": 0.15, "minMonths": 27, "maxMonths": 39 }
+    ],
+    "fteRange": [0.5, 12.0],
+    "dependencyMean": 2.0,
+    "dependencyMax": 8
+  },
+  "lognormal": {
+    "cost": { "median": 1200000, "sigma": 0.8, "min": 150000, "max": 12000000 },
+    "effort": { "median": 60, "sigma": 0.6, "min": 8, "max": 400 }
+  },
+  "latentScore": {
+    "weights": { "value": 0.9, "sponsor": 0.5, "regulatory": 1.2, "dt": 0.3, "urgency": 0.9, "cost": -0.5, "dependencies": -0.3, "risk": -0.5, "effort": -0.3 },
+    "noiseSigma": 0.35,
+    "urgencyHorizonMonths": 36
+  },
+  "tierCutoffs": {
+    "mustDoNowTopShare": 0.20,
+    "candidateBottomShare": 0.12,
+    "canWaitBottomShare": 0.35,
+    "canWaitMonthsFrom": 27,
+    "deprioritizeOnHoldRisk": 3
+  },
+  "roster": {
+    "executives": 10,
+    "directors": 14,
+    "projectManagers": 40,
+    "engineers": 256,
+    "managerNumberBlankShare": 0.03,
+    "contractorShare": 0.10,
+    "hireDateRange": ["2012-01-01", "2025-12-31"]
+  },
+  "capacity": {
+    "startMonth": "2026-07-01",
+    "months": 12,
+    "phases": ["Discover", "Build", "Test", "Deploy", "Run"],
+    "capacityHours": [160, 152, 168],
+    "bauShare": 0.20,
+    "monthActiveShare": 0.85
+  },
+  "decisionReviewWindow": { "start": "2025-10-01", "end": "2026-09-30" },
+  "decisionTiers": ["Must-do-now", "Proceed", "Can wait", "Candidate to deprioritize"],
+  "ragValues": ["Green", "Amber", "Red"],
+  "riskNames": ["Low", "Medium", "High", "Critical"],
+  "backlogStates": ["New", "Active", "Resolved", "Closed"],
+  "workItemTypes": ["Feature", "User Story", "Task", "Bug"],
+  "jiraTypes": ["Story", "Task", "Bug"],
+  "jiraStatuses": ["To Do", "In Progress", "Done", "Blocked"],
+  "jiraPriorities": ["Highest", "High", "Medium", "Low"],
+  "libraries": [
+    { "library": "Project Charters", "docType": "Charter", "fileStem": "charter" },
+    { "library": "Risk Registers", "docType": "RiskRegister", "fileStem": "risk-register" },
+    { "library": "Dependency Registers", "docType": "DependencyRegister", "fileStem": "dependency-register" },
+    { "library": "Compliance Evidence", "docType": "Compliance", "fileStem": "compliance-evidence" },
+    { "library": "SOW & Contracts", "docType": "SOW", "fileStem": "sow" }
+  ],
+  "complianceTags": ["SOX", "ITAR", "ISO27001", "SOC2", "GDPR"],
+  "rationales": [
+    "Go-live date and regulatory exposure put this in the current window.",
+    "Sponsor priority and business value justify continued funding.",
+    "Dependency on a blocked upstream program lowers near-term value.",
+    "Cost is high relative to benefit; re-sequencing recommended.",
+    "Capacity contention on the primary skill makes a pause the lower-risk option.",
+    "Protected program status keeps this on the plan despite low contention."
+  ],
+  "names": {
+    "adjectives": ["Zero-Trust", "Unified", "Secure", "Automated", "Cloud-First", "Edge", "Resilient", "Next-Gen", "Identity-Led", "Enterprise", "Hybrid", "Intelligent"],
+    "nouns": ["Identity Federation", "SIEM Modernization", "Endpoint Hardening", "Patch Orchestration", "Network Segmentation", "Access Certification", "Key Vault Migration", "Backup Resilience", "Data Catalog", "Model Registry", "API Gateway", "Ticketing Integration", "Collaboration Platform", "Service Desk Automation", "Wi-Fi 7 Refresh", "Datacenter Consolidation"],
+    "suffixes": ["Program", "Rollout", "Phase 2", "Upgrade", "Refresh", "Migration"],
+    "firstNames": ["Avery", "Jordan", "Priya", "Marcus", "Elena", "Daniel", "Mei", "Samuel", "Olivia", "Rahul", "Hannah", "Carlos", "Nadia", "Ethan", "Sofia", "Kenji", "Amara", "Lucas", "Ingrid", "Tariq", "Grace", "Mateo", "Leila", "Owen", "Chloe", "Dmitri", "Yara", "Noah", "Isabel", "Ravi"],
+    "lastNames": ["Patel", "Nakamura", "Okafor", "Brandt", "Lindqvist", "Moreno", "Haddad", "Kowalski", "Chen", "Reyes", "Sullivan", "Mahmoud", "Ferreira", "Tanaka", "Novak", "Gallagher", "Iyer", "Duarte", "Schmidt", "Aziz", "Walsh", "Kim", "Romero", "Bauer"],
+    "emailDomain": "example.com",
+    "executiveTitles": ["Vice President, Fab Operations", "Vice President, Digital Transformation", "Vice President, Information Security", "Vice President, Corporate IT", "Vice President, Global Supply Chain", "Vice President, Engineering", "Vice President, Finance", "Vice President, Human Resources", "Vice President, Manufacturing Engineering", "Vice President, Customer Services"],
+    "directorTitles": ["Director, Network Engineering", "Senior Director, Data and AI", "Director, Cloud Platforms", "Director, Application Development", "Director, Cybersecurity", "Director, Integration", "Director, Unified Communications", "Senior Director, Enterprise Systems", "Director, IT Operations", "Director, PMO", "Director, Security Operations", "Director, Identity", "Director, Data Platforms", "Director, Business Systems"],
+    "pmTitles": ["Program Manager", "Senior Program Manager"],
+    "engineerTitles": ["Senior Software Engineer", "Network Engineer", "Cloud Engineer", "Data Engineer", "Security Analyst", "Solutions Architect", "Systems Engineer", "UC Engineer", "Integration Developer"]
+  },
+  "sourceContext": {
+    "powerapps": "https://example.crm.dynamics.com/api/data/v9.2/$metadata#cr5f2_intakerequests"
+  },
+  "businessUnitCodes": {
+    "Semiconductor Process Equipment": "SPE",
+    "Fab Operations": "FAB-OPS",
+    "Global Supply Chain": "SUPPLY",
+    "Digital Transformation": "DT",
+    "Finance and Controls": "FIN",
+    "Human Resources": "HR",
+    "Information Security": "INFOSEC",
+    "Manufacturing Engineering": "MFG-ENG",
+    "Customer Services": "CUST-SVC",
+    "Corporate IT": "CORP-IT"
+  },
+  "mappings": {
+    "sponsorLevelCodes": { "Executive": 4, "Director": 3, "Manager": 2, "Individual": 1 },
+    "powerAppsSponsorLevel": { "Executive": "VP+", "Director": "Director", "Manager": "Manager", "Individual": "Individual Contributor" },
+    "excelSponsorLevel": { "Executive": "Exec", "Director": "Dir", "Manager": "Mgr", "Individual": "IC" },
+    "excelValueText": { "1": "Low", "2": "Low", "3": "Medium", "4": "High", "5": "High" }
+  },
+  "workbook": {
+    "trackerTitlePrefix": "BU Initiative Tracker",
+    "trackerHeader": ["Proj #", "Initiative Name", "Initiative Owner", "Target Live (FY Qtr)", "Budget ($K)", "Regulatory (Y/N)", "Depends On (codes)", "RAG Notes"],
+    "decisionHeader": ["Review Date", "Project Code", "Decision Tier", "Decided By", "Rationale"],
+    "intakeSignalHeader": ["1 Timing Urgency - Go-Live Date", "2 Business Value (1-5)", "3 Sponsor Priority (Exec/Dir/Mgr/IC)", "4 Regulatory or Security (Y/N)", "5 Skill-Phase Demand (Skill: FTE)", "6 Cost Estimate (USD)", "7 Dependencies (count)", "8 Risk (Low/Med/High/Critical)", "9 DT Alignment (Y/N)", "10 Effort (person-weeks)"],
+    "intakeIdentifierHeader": ["Project ID", "Project Name", "Portfolio", "Business Unit", "Site", "Sponsor Name"]
+  }
+}

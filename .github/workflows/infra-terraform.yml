@@ -1,0 +1,99 @@
+name: Infra (Terraform)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/terraform/**"
+      - "infra/config/**"
+      - "infra/scripts/**"
+      - "docs/api/openapi.json"
+      - ".github/workflows/infra-terraform.yml"
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - "infra/config/**"
+      - "infra/scripts/**"
+      - "docs/api/openapi.json"
+      - ".github/workflows/infra-terraform.yml"
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Apply the Terraform configuration (use a remote state backend for shared environments)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read CI and Azure settings
+        id: ci
+        run: |
+          node scripts/ci/read-config.mjs --file config/ci.json --key terraformVersion=terraform.version
+          node scripts/ci/read-config.mjs --file infra/config/pmo-deployment.json --key tenantId=tenantId --key subscriptionId=subscriptionId
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.ci.outputs.terraformVersion }}
+
+      - name: Check formatting
+        run: terraform -chdir=infra/terraform fmt -check -recursive
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ steps.ci.outputs.tenantId }}
+          subscription-id: ${{ steps.ci.outputs.subscriptionId }}
+
+      - name: Initialize and validate
+        shell: pwsh
+        run: ./infra/scripts/deploy.ps1 -IacTool terraform -Mode validate
+
+      - name: Preview the changes on pull requests
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: ./infra/scripts/deploy.ps1 -IacTool terraform -Mode plan
+
+  deploy:
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    runs-on: ubuntu-latest
+    environment: demo
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read CI and Azure settings
+        id: ci
+        run: |
+          node scripts/ci/read-config.mjs --file config/ci.json --key terraformVersion=terraform.version
+          node scripts/ci/read-config.mjs --file infra/config/pmo-deployment.json --key tenantId=tenantId --key subscriptionId=subscriptionId
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.ci.outputs.terraformVersion }}
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ steps.ci.outputs.tenantId }}
+          subscription-id: ${{ steps.ci.outputs.subscriptionId }}
+
+      - name: Deploy the Terraform infrastructure
+        shell: pwsh
+        run: ./infra/scripts/deploy.ps1 -IacTool terraform -Mode infra

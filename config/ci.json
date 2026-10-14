@@ -20,7 +20,10 @@
     "ui": {
       "workingDirectory": "ui",
       "buildCommand": "npm ci && npm run build",
-      "artifactDirectory": "ui/www"
+      "artifactDirectory": "ui/www",
+      "serverWorkingDirectory": "ui/server",
+      "serverTestCommand": "uv run pytest",
+      "appServiceSetting": "ui"
     },
     "api": {
       "workingDirectory": "api",
@@ -29,14 +32,17 @@
       "openApiExport": "docs/api/openapi.json"
     },
     "fabric": {
-      "notebooksDirectory": "notebooks",
-      "powerbiDirectory": "powerbi",
-      "deployScript": "scripts/fabric/deploy-fabric-items.ps1"
+      "notebooksDirectory": "fabric/ml-notebooks",
+      "buildScript": "fabric/scripts/build_notebooks.py",
+      "deployScript": "fabric/scripts/deploy_fabric_items.py",
+      "pipelinesDirectory": "fabric/pipelines",
+      "powerbiDirectory": "fabric/powerbi"
     },
     "data": {
       "workingDirectory": "data-generator",
       "generatedDirectory": "data",
-      "generateCommand": "npm ci && node generate-pmo-data.mjs"
+      "generateCommand": "uv run python generate_pmo_data.py",
+      "uploadCommand": "uv run python upload_to_onelake.py"
     },
     "infraBicep": {
       "templateFile": "infra/bicep/main.bicep",

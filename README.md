@@ -18,7 +18,10 @@ Prioritize about 100 GIS and BU projects transparently, using the systems Lam al
 10. [Repository layout](#10-repository-layout)
 11. [Limitations and roadmap](#11-limitations-and-roadmap)
 12. [Azure consumption (ACR)](#12-azure-consumption-acr)
-13. [Author](#13-author)
+13. [Hosted endpoints](#13-hosted-endpoints)
+14. [Infrastructure as code (Bicep and Terraform)](#14-infrastructure-as-code-bicep-and-terraform)
+15. [CI/CD (GitHub Actions)](#15-cicd-github-actions)
+16. [Author](#16-author)
 
 ## 1. Architecture
 
@@ -32,7 +35,7 @@ The solution follows the five-layer architecture from the proposal. Evidence flo
 | 2. Data foundation (Fabric) | OneLake lakehouse, medallion layers, governance | `pmo_lakehouse` (schema-enabled). One `src_<source>` schema per source, then `silver` (canonical 10-signal model with provenance) and `gold` (features, predictions, explanations, metrics). Ingestion and normalization run in PySpark inside notebook 01. |
 | 3. Intelligence (Fabric Data Science) | Notebooks, feature importance (GBM + SHAP), priority scoring and tiering, capacity, similarity, MLflow tracking | Two PySpark notebooks in the **ML Notebooks** folder. Notebook 01 trains and explains the model. Notebook 02 runs batch inference. MLflow tracks experiments. |
 | 4. Agentic reasoning | Ranked options with reasoning, Lam-editable business rules, human approval | Deterministic rules R1 to R4 in `gold.pmo_rules` (regulatory first, executive sponsorship, protected programs, deprioritize guard). Each project gets a recommended lever: protect slot, add capacity, re-sequence, or pause or divert skills. Foundry Agent Service and Copilot Studio are not part of this build (see [Limitations](#11-limitations-and-roadmap)). |
-| 5. Presentation and action | Power BI (Direct Lake) and Power Apps intake | A Power BI report with five pages on the gold tables. An Ionic Angular app for web, tablet and mobile with filters, confidence levels, grouping, and approve, adjust or reject decisions. Power Apps write-back is not part of this build. |
+| 5. Presentation and action | Power BI (Direct Lake) and Power Apps intake | The Power BI report on the gold tables is planned and not part of this build. An Ionic Angular app for web, tablet and mobile with filters, confidence levels, grouping, and approve, adjust or reject decisions. Power Apps write-back is not part of this build. |
 
 Flow: **sources → normalize (PySpark) → score and explain (LightGBM, SHAP, calibration, KMeans) → rules and confidence → Power BI and UI → PMO decision (human approval)**.
 
@@ -89,7 +92,14 @@ Levels: **High** at 75 or more, **Medium** from 50 to 74.9, **Low** below 50.
 ## 4. ML algorithms
 
 <!-- ML_TABLE_START -->
-_Results will be filled in after the notebooks run._
+| Algorithm | What it does | Most important feature | Output table in OneLake | Sample output (GIS-0001) | Algo used |
+|---|---|---|---|---|---|
+| LightGBM multiclass tier classifier | Learns the four PMO tiers (Must-do-now, Proceed, Can wait, Candidate to deprioritize) from 70 labelled decisions and gives each project a probability for each tier. The probabilities are calibrated with `CalibratedClassifierCV`. 5-fold cross-validation: accuracy 0.514, macro F1 0.415, log loss 2.08. | Business value. It is the largest SHAP driver for the sample project. | `gold.project_features` (inputs), `gold.model_metrics` (CV scores), `gold.project_predictions` (scores) | Tier **Can wait**, probability 0.48, priority score 48.4 | `LGBMClassifier` in notebook 01 (`05_features_train`). Scoring in notebook 02 (`01_load_score`). |
+| Logistic regression baseline | Simpler reference model on the same features, used to check that LightGBM adds value. 5-fold cross-validation: accuracy 0.486, macro F1 0.427, log loss 3.66. | Same features as the main model | `gold.model_metrics` | Not used for predictions | `LogisticRegression` pipeline in notebook 01 (`05_features_train`) |
+| SHAP explanations (LightGBM `pred_contrib`, TreeSHAP) | Shows which signals pushed each project toward or away from its predicted tier. This run wrote 1,000 project-tier rows. | Business value, Effort, Timing urgency, Cost | `gold.project_shap_drivers` | Top drivers: Business value +2.87, Effort +1.54, Timing urgency +1.52, Cost +0.74 | Notebook 02 (`01_load_score`, `03_outputs`) |
+| KMeans clustering (k = 5) | Groups projects with similar signal profiles so the PMO reviews them together. Each cluster is named from its strongest signals. | Cluster name, taken from the top signals in each group | `gold.project_clusters` | Cluster: Sponsor priority and DT alignment | `sklearn.cluster.KMeans` in notebook 02 (`03_outputs`) |
+| Confidence score (weighted rules, not ML) | Combines completeness (sources present), data quality (checks passed), and model certainty into a 0 to 100 score. High is 75 or more, Medium 50 to 74.9, Low below 50. | Completeness and data quality | `gold.project_predictions` (`confidenceScore`, `confidenceLevel`) | Score 86, High (completeness 1.0, quality 0.9) | Notebook 02 (`02_rules_confidence`) |
+| Decision rules R1 to R5 (deterministic) | Override the model where policy applies. Rules fired in this run: R1 regulatory first (12), R3 protected program (2), R4 deprioritize guard (1), R5 cross-portfolio critical path (3). | Policy flags: regulatory, protected program, DT alignment | `gold.pmo_rules`, `gold.rule_triggers` | Rules fired this run: R1 12, R3 2, R4 1, R5 3 | Notebook 02 (`02_rules_confidence`) |
 <!-- ML_TABLE_END -->
 
 ## 5. ML notebooks (PySpark)
@@ -99,19 +109,11 @@ Both notebooks sit in the **ML Notebooks** folder of the `PMO-Portfolio-Prioriti
 - **`01_PMO_Feature_Engineering_Training`**: ingests all sources into `src_*` schemas, normalizes them into `silver`, runs data-quality checks, builds features, trains and calibrates the tier classifier, computes SHAP and clusters, and logs everything to MLflow.
 - **`02_PMO_Inference_Predictions`**: loads the registered model, scores all projects with `mapInPandas`, applies the rules, computes confidence and priority, writes `gold.project_predictions`, and exports `portfolio.json` for the UI.
 
-Run order: 01, then 02. Local copies are in [notebooks/](notebooks/).
+Run order: 01, then 02. Source parts are in [fabric/ml-notebooks/](fabric/ml-notebooks/). `fabric/scripts/build_notebooks.py` builds the `.ipynb` files, and `fabric/scripts/deploy_fabric_items.py` deploys them.
 
 ## 6. Power BI report
 
-Report **PMO Portfolio Prioritization** on the semantic model **PMO Portfolio Semantic Model** (Direct Lake, `gold` schema). Pages are listed below and will be confirmed after deployment.
-
-1. **Executive overview**: KPI cards, tier donut, business unit by tier, confidence distribution, cost treemap, decomposition tree (business unit > site > tier > project).
-2. **Prioritization board**: hierarchical matrix with data bars, scatter of completeness vs quality, slicers for tier, sponsor level, protected program, and skill.
-3. **Data quality and coverage**: source coverage bars, failed checks, confidence mix by business unit, projects with data issues.
-4. **Capacity by skill**: supply vs demand, gap by skill.
-5. **ML explainability**: average SHAP by signal, model metrics, cluster archetypes.
-
-Source: [powerbi/](powerbi/).
+Not part of this build. The planned report is **PMO Portfolio Prioritization** on a Direct Lake semantic model over the `gold` schema. The UI reads the same gold data through the API, so the decisions match. Adding the report is the next step.
 
 ## 7. Ionic Angular UI
 
@@ -141,18 +143,23 @@ Rules live in `gold.pmo_rules`, so the PMO can edit them. Recommended actions ma
 
 ## 9. Getting started
 
-Prerequisites: Node.js 20 or later, Azure CLI signed in to a tenant with a Fabric capacity, and access to a Fabric workspace.
+Prerequisites: Python 3.12 with [uv](https://docs.astral.sh/uv/), Node.js 22, PowerShell 7, and the Azure CLI signed in to the tenant (`az login`) with access to the Fabric workspace.
 
 ```powershell
-# 1. Generate the synthetic sources (writes data/raw/)
+# 1. Generate the synthetic sources into data/ and upload them to OneLake (Files/raw/<source>/)
 cd data-generator
-npm install
-node generate-pmo-data.mjs
+uv sync --frozen
+uv run python generate_pmo_data.py
+uv run python upload_to_onelake.py
+cd ..
 
-# 2. Upload to OneLake (Files/raw/<source>/ in pmo_lakehouse)
-node upload-to-onelake.mjs
+# 2. In Fabric, run notebook 01, then notebook 02 (ML Notebooks folder), or run the PMO Full Pipeline
 
-# 3. In Fabric, run notebook 01, then notebook 02 (ML Notebooks folder)
+# 3. Run the API locally (Swagger UI at http://127.0.0.1:8000/docs)
+cd api
+uv sync --frozen
+uv run uvicorn app.main:app --port 8000
+cd ..
 
 # 4. Run the UI
 cd ..\ui
@@ -160,7 +167,7 @@ npm install
 npm start
 ```
 
-Power BI deployment steps are in [powerbi/](powerbi/).
+Power BI is not part of this build (see section 6). Deployment steps are in sections 14 and 15.
 
 ## 10. Repository layout
 
@@ -168,12 +175,19 @@ Power BI deployment steps are in [powerbi/](powerbi/).
 README.md                    This file
 docs/images/                 Architecture diagram
 docs/ACR-README.md           Azure consumption report by service and environment (generated)
-data-generator/              Node.js generator and OneLake uploader
-data/raw/                    Generated source extracts (one folder per source)
-notebooks/                   PySpark notebooks 01 and 02 (also deployed to Fabric)
-powerbi/                     PBIP semantic model and report
-ui/                          Ionic Angular app
-scripts/                     Fabric helper scripts
+data-generator/              Python generator and OneLake uploader (uv project)
+data/                        Generated source extracts, one folder per source
+fabric/ml-notebooks/         PySpark notebooks 01 and 02 (source parts, built to .ipynb)
+fabric/scripts/              Notebook build and Fabric deploy scripts
+config/                      Shared JSON settings (data entry, portfolios, ML, AI prefill, Fabric items, CI)
+api/                         Python FastAPI service (OneLake data, quick add, AI prefill)
+ui/                          Ionic Angular app (ui/www is the build output)
+ui/server/                   Python host that serves the UI and proxies /api through APIM
+infra/bicep/                 Bicep template and parameters
+infra/terraform/             Terraform configuration with the same resources
+infra/config/                Deployment contract: names, reused resources, endpoints
+infra/scripts/               deploy.ps1: validate, plan, deploy infrastructure, publish apps
+.github/workflows/           One workflow per component, each with path filters
 ```
 
 ## 11. Limitations and roadmap
@@ -183,6 +197,12 @@ scripts/                     Fabric helper scripts
 - **Governance.** Microsoft Purview is not configured in this demo.
 - **Ingestion.** Ingestion runs in PySpark inside notebook 01. Dataflow Gen2 or Data Factory pipelines are the production option for scheduled loads.
 - **Write-back.** Approved decisions are stored locally in the UI. Write-back to Planview or intake is a later step.
+- **Power BI.** The report and semantic model are planned and not built in this demo.
+- **Foundry agent.** The AI prefill calls the `gpt-5.4-mini` deployment directly. No Foundry agent is created yet.
+- **Terraform state.** Local state for now. Configure a remote backend before sharing a Terraform deployment.
+- **One IaC flavor per environment.** Bicep and Terraform both create the APIM API with path `pmo`, so deploy only one of them to an environment.
+- **Network.** The UI and API App Services accept public traffic. Restricting the API to APIM is a hardening step. The VNet subnet listed in the deployment contract is not wired.
+- **Quick add.** Submit writes the project to OneLake and can start the pipeline. It has not been run end to end in this demo.
 
 ## 12. Azure consumption (ACR)
 
@@ -192,7 +212,69 @@ Latest figures (September 2026, actual cost, USD): total **$892.67** across 19 s
 
 Regenerate with `node scripts/cost/generate-acr-readme.mjs --config config/consumption.json`. Scope, period, and tag mapping live in [config/consumption.json](config/consumption.json).
 
-## 13. Author
+## 13. Hosted endpoints
+
+Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a184-0a52f1830aa9`. App Services and the Foundry project are in West US 2 and West US, APIM is in West US.
+
+| Component | URL or location | Notes |
+|---|---|---|
+| Ionic UI (web, tablet, mobile) | https://azuittlyg2gcvfsso.azurewebsites.net | Sign in with Entra. App Service `azuittlyg2gcvfsso`. |
+| API (direct) | https://azapittlyg2gcvfsso.azurewebsites.net | Health at `/v1/health`. Clients should use the APIM URL below. |
+| API Swagger UI | https://azapittlyg2gcvfsso.azurewebsites.net/docs | OpenAPI document at `/openapi.json`. Also committed as [docs/api/openapi.json](docs/api/openapi.json). |
+| API through APIM | https://caldova-apim-westus.azure-api.net/pmo | Needs the `Ocp-Apim-Subscription-Key` header. The UI host adds it from Key Vault. |
+| Fabric workspace | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b | `PMO-Portfolio-Prioritization`. The ML Notebooks folder holds notebooks 01 and 02. |
+| Lakehouse | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b/lakehouses/44a0e48d-ed47-4d30-8e1e-6db662ea9324 | `pmo_lakehouse`. OneLake is the only data store. |
+| Foundry project | https://portal.azure.com/#resource/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub/projects/azfpttlyg2gcvfsso/overview | Project created by IaC. The AI prefill calls the `gpt-5.4-mini` deployment directly. No Foundry agent exists yet. |
+| Key Vault | azkvttlyg2gcvfsso | Holds the APIM subscription key as `apim-subscription-key`. |
+| Application Insights | azaittlyg2gcvfsso | Telemetry for both App Services. |
+
+## 14. Infrastructure as code (Bicep and Terraform)
+
+[infra/bicep/main.bicep](infra/bicep/main.bicep) and [infra/terraform/](infra/terraform/) deploy the same resources. Both read [infra/config/pmo-deployment.json](infra/config/pmo-deployment.json), which holds names, reused resources, and endpoints, and no secrets.
+
+| Resource | Bicep | Terraform |
+|---|---|---|
+| Reused, never changed: APIM service, Foundry account, App Service plan | `existing` references | `data` sources |
+| Log Analytics and Application Insights | Created | Created |
+| Key Vault (RBAC, public network access enabled) | Created. The shared identity gets Key Vault Secrets Officer. | Created. The shared identity and the deployer get Key Vault Secrets Officer. |
+| APIM subscription key in Key Vault | `listSecrets()` written to a secret | `primary_key` written to a secret |
+| User-assigned managed identity shared by both apps | Created | Created |
+| UI and API App Services (Python 3.12, Linux) | Created, with CORS and Key Vault references | Created, with CORS and Key Vault references |
+| Diagnostic settings for both App Services | Created | Created |
+| APIM product, API (from `docs/api/openapi.json`), and subscription | Created | Created |
+| Foundry project | Created | Created (`azapi`) |
+| Naming | `az{resourcePrefix}{uniqueString token}` | azurecaf CAF names, no suffix |
+
+Run from the repository root with PowerShell 7:
+
+```powershell
+./infra/scripts/deploy.ps1 -IacTool bicep -Mode validate     # build, lint, and validate
+./infra/scripts/deploy.ps1 -IacTool bicep -Mode plan         # what-if
+./infra/scripts/deploy.ps1 -IacTool bicep -Mode infra        # infrastructure only
+./infra/scripts/deploy.ps1 -Mode publish -Component both     # build and zip-deploy the UI and the API
+```
+
+Use `-IacTool terraform` for the Terraform flow. Terraform state is local here, so use a remote backend for any shared environment. Deploy only one flavor to an environment, because both create the APIM API with path `pmo`.
+
+## 15. CI/CD (GitHub Actions)
+
+Each component has its own workflow in [.github/workflows/](.github/workflows/). A workflow runs only when a file in its path filter changes. Each one can also be started by hand.
+
+| Workflow | Runs when these change | Pull requests | Main branch |
+|---|---|---|---|
+| [ui.yml](.github/workflows/ui.yml) | `ui/**` | Build, Ionic tests, UI host tests | Also publishes the UI to App Service |
+| [api.yml](.github/workflows/api.yml) | `api/**`, `docs/api/**`, `config/*.json`, `infra/config/pmo-deployment.json` | Tests, shared-config check, OpenAPI drift check | Also publishes the API to App Service |
+| [fabric.yml](.github/workflows/fabric.yml) | `fabric/**`, `config/fabric-items.json`, `config/ml-model.json` | Notebook build check | Builds and deploys notebooks, folders, and the pipeline. Optional pipeline run. |
+| [data.yml](.github/workflows/data.yml) | `data-generator/**`, `config/data-generation.json`, `config/portfolios.json`, `config/data-sources.json` | Regenerates the data and fails if it differs from the committed data | Uploads to OneLake. Upload is also available by hand. |
+| [infra-bicep.yml](.github/workflows/infra-bicep.yml) | `infra/bicep/**`, `infra/config/**`, `infra/scripts/**`, `docs/api/openapi.json` | Validate and what-if | Manual deploy only |
+| [infra-terraform.yml](.github/workflows/infra-terraform.yml) | `infra/terraform/**`, `infra/config/**`, `infra/scripts/**`, `docs/api/openapi.json` | Format check, validate, and plan | Manual deploy only |
+
+Setup:
+
+- Tool versions come from [config/ci.json](config/ci.json). Tenant, subscription, and Fabric IDs come from `infra/config/pmo-deployment.json` through [scripts/ci/read-config.mjs](scripts/ci/read-config.mjs), so no IDs are typed into the workflows.
+- Deploy jobs use the GitHub environment `demo` and Azure OIDC login. Create a federated credential for that environment and store its client ID in the repository secret `AZURE_CLIENT_ID`.
+
+## 16. Author
 
 **Michael Yaacoub | Sr Solution Engineer, Microsoft**
 

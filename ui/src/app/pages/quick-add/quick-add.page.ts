@@ -916,14 +916,15 @@ export class QuickAddPageComponent implements OnInit, OnDestroy {
       if (this.runPipeline && res.pipelineRunId) {
         this.pollPipeline(res.pipelineRunId, res.projectId);
       } else {
-        // No pipeline run or not deployed yet
+        // No pipeline run or pipelineRunId is null
         this.isSubmitting.set(false);
         this.store.init(); // Reload portfolio
-        if (res.pipelineRunId === null && res.warnings && res.warnings.length > 0) {
-          // Stay on warning state or redirect to list
-          setTimeout(() => {
-            this.router.navigate(['/prioritization']);
-          }, 3000);
+        if (res.pipelineRunId === null) {
+          if (res.warnings && res.warnings.length > 0) {
+            this.submitWarning.set(res.warnings.join('; '));
+          } else {
+            this.submitWarning.set('Project created in OneLake, but priority pipeline run was skipped or not triggered.');
+          }
         } else {
           this.router.navigate(['/projects', res.projectId]);
         }
