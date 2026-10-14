@@ -1,6 +1,6 @@
-export type SponsorLevel = 'Executive' | 'Director' | 'Manager' | 'Individual';
+export type SponsorLevel = 'Executive' | 'Director' | 'Manager' | 'Individual' | 'Unknown';
 export type ProjectStatus = 'Planning' | 'Active' | 'On Hold';
-export type RiskRating = 'Low' | 'Medium' | 'High' | 'Critical';
+export type RiskRating = 'Low' | 'Medium' | 'High' | 'Critical' | 'Unknown';
 export type PriorityTier = 'Must-do-now' | 'Proceed' | 'Can wait' | 'Candidate to deprioritize';
 export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
 export type RecommendedAction =
