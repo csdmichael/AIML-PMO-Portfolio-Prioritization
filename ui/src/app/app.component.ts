@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import {
@@ -21,6 +21,84 @@ import { PortfolioStore } from './services/portfolio.store';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { AgentFabComponent } from './components/agent-fab/agent-fab.component';
+import { addIcons } from 'ionicons';
+import {
+  alertCircleOutline,
+  analytics,
+  analyticsOutline,
+  arrowBackOutline,
+  arrowUpOutline,
+  barChartOutline,
+  checkboxOutline,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  checkmarkDoneOutline,
+  closeOutline,
+  cloudUploadOutline,
+  createOutline,
+  documentAttachOutline,
+  documentTextOutline,
+  downloadOutline,
+  easelOutline,
+  ellipseOutline,
+  flashOutline,
+  funnelOutline,
+  gitNetworkOutline,
+  gridOutline,
+  hardwareChipOutline,
+  helpCircleOutline,
+  layersOutline,
+  logInOutline,
+  openOutline,
+  peopleOutline,
+  personOutline,
+  pieChartOutline,
+  radioOutline,
+  shieldCheckmarkOutline,
+  sparkles,
+  sparklesOutline,
+  trendingUpOutline,
+  warningOutline,
+} from 'ionicons/icons';
+
+addIcons({
+  alertCircleOutline,
+  analytics,
+  analyticsOutline,
+  arrowBackOutline,
+  arrowUpOutline,
+  barChartOutline,
+  checkboxOutline,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  checkmarkDoneOutline,
+  closeOutline,
+  cloudUploadOutline,
+  createOutline,
+  documentAttachOutline,
+  documentTextOutline,
+  downloadOutline,
+  easelOutline,
+  ellipseOutline,
+  flashOutline,
+  funnelOutline,
+  gitNetworkOutline,
+  gridOutline,
+  hardwareChipOutline,
+  helpCircleOutline,
+  layersOutline,
+  logInOutline,
+  openOutline,
+  peopleOutline,
+  personOutline,
+  pieChartOutline,
+  radioOutline,
+  shieldCheckmarkOutline,
+  sparkles,
+  sparklesOutline,
+  trendingUpOutline,
+  warningOutline,
+});
 
 @Component({
   selector: 'app-root',
@@ -52,6 +130,7 @@ import { AgentFabComponent } from './components/agent-fab/agent-fab.component';
 export class AppComponent {
   private readonly configService = inject(ConfigService);
   readonly store = inject(PortfolioStore);
+  readonly navigationCollapsed = signal(false);
 
   get brandConfig() {
     return this.configService.config.brand;
@@ -64,5 +143,11 @@ export class AppComponent {
   get splitPaneBreakpoint(): string {
     const xl = this.configService.config.breakpoints.xl;
     return `(min-width: ${xl}px)`;
+  }
+
+  toggleNavigation(): void {
+    if (window.matchMedia(this.splitPaneBreakpoint).matches) {
+      this.navigationCollapsed.update((collapsed) => !collapsed);
+    }
   }
 }

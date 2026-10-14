@@ -34,11 +34,10 @@ import {
   GridComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import { PowerBiAuthService } from '../../services/powerbi-auth.service';
+import { PowerBiAuthService, ReportEmbedDetails } from '../../services/powerbi-auth.service';
 import {
   PowerBiEmbedConfig,
   isReportConfigured,
-  PowerBiPageSegment,
 } from '../../models/powerbi.models';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { PortfolioStore } from '../../services/portfolio.store';
@@ -287,6 +286,16 @@ echarts.use([
               <ion-icon name="checkmark-circle" class="signed-in-icon"></ion-icon>
               Signed in as {{ userEmail() }}
             </span>
+            @if (availableReports().length > 1) {
+              <label class="report-picker">
+                <span>Report</span>
+                <select [ngModel]="selectedReportId()" (ngModelChange)="onReportChange($event)">
+                  @for (report of availableReports(); track report.id) {
+                    <option [value]="report.id">{{ report.name }}</option>
+                  }
+                </select>
+              </label>
+            }
             <ion-button size="small" fill="outline" color="medium" (click)="onSignOut()">
               Sign out
             </ion-button>
@@ -305,10 +314,10 @@ echarts.use([
           }
         </div>
 
-        @if (!isConfigured()) {
+        @if (!isConfigured() && !isSignedIn()) {
           <app-empty-state
-            title="Fabric Power BI Report Configuration"
-            message="Connect this UI directly to your live Microsoft Fabric workspace report using Entra ID."
+            title="Connect to Fabric Power BI"
+            message="Sign in to discover and render reports from the configured Fabric workspace."
             icon="analytics-outline"
           >
             <div class="setup-steps">
@@ -316,24 +325,25 @@ echarts.use([
               <ol>
                 <li>Open your Fabric workspace <code>PMO-Portfolio-Prioritization</code>.</li>
                 <li>Publish the <code>PMO Portfolio Prioritization</code> Direct Lake report.</li>
-                <li>Copy the report GUID and set <code>reportId</code> in <code>ui/src/assets/config/powerbi-embed.json</code>.</li>
-                <li>Sign in with your organization account above to render the live report frame.</li>
+                <li>Grant the signed-in user Viewer access to the workspace.</li>
+                <li>Sign in above; the dashboard discovers the report automatically.</li>
               </ol>
             </div>
           </app-empty-state>
-        } @else {
-          @if (embedError()) {
-            <app-empty-state
-              title="Embed Error"
-              [message]="embedError()!"
-              [isError]="true"
-              icon="alert-circle-outline"
-            >
-              <ion-button (click)="loadAndEmbed()">Retry Embed</ion-button>
-            </app-empty-state>
-          }
+        }
 
-          <!-- Report Container -->
+        @if (embedError()) {
+          <app-empty-state
+            title="Embed Error"
+            [message]="embedError()!"
+            [isError]="true"
+            icon="alert-circle-outline"
+          >
+            <ion-button (click)="loadAndEmbed()">Retry Embed</ion-button>
+          </app-empty-state>
+        }
+
+        @if (isConfigured()) {
           <div class="report-embed-card" [class.hidden]="!isEmbedded()">
             <div #embedContainer class="pbi-container"></div>
           </div>
@@ -663,6 +673,21 @@ echarts.use([
         font-size: 0.82rem;
         color: #444444;
       }
+      .report-picker {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+      }
+      .report-picker select {
+        min-width: 210px;
+        max-width: 320px;
+        padding: 6px 28px 6px 8px;
+        border: 1px solid var(--pmo-border, #d0d0d0);
+        border-radius: 4px;
+        background: #ffffff;
+      }
       .signed-in-icon {
         color: #107c10;
         font-size: 16px;
@@ -737,6 +762,8 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
   readonly userEmail = signal<string>('');
   readonly isEmbedded = signal<boolean>(false);
   readonly embedError = signal<string | null>(null);
+  readonly availableReports = signal<ReportEmbedDetails[]>([]);
+  readonly selectedReportId = signal<string | null>(null);
 
   // Slicers
   selectedPortfolio = 'All';
@@ -901,8 +928,9 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
         const configured = isReportConfigured(cfg);
         this.isConfigured.set(configured);
         if (configured) {
-          this.checkAuthAndEmbed();
+          this.selectedReportId.set(cfg.reportId);
         }
+        this.checkAuthAndEmbed();
       },
     });
   }
@@ -924,8 +952,9 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
 
   openInPowerBiUrl(): string | null {
     const cfg = this.config();
-    if (!cfg || !this.isConfigured()) return null;
-    return `https://app.powerbi.com/groups/${cfg.workspaceId}/reports/${cfg.reportId}`;
+    const reportId = this.selectedReportId();
+    if (!cfg || !reportId) return null;
+    return `https://app.powerbi.com/groups/${cfg.workspaceId}/reports/${reportId}`;
   }
 
   async checkAuthAndEmbed(): Promise<void> {
@@ -937,10 +966,13 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
       if (account) {
         this.isSignedIn.set(true);
         this.userEmail.set(account.username);
-        await this.loadAndEmbed();
+        const token = await this.auth.acquireAccessToken(cfg);
+        await this.discoverReportsAndEmbed(token);
       }
-    } catch {
+    } catch (err: unknown) {
       this.isSignedIn.set(false);
+      const error = err as { message?: string };
+      this.embedError.set(error.message ?? 'Unable to restore the Power BI sign-in');
     }
   }
 
@@ -949,13 +981,13 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
     if (!cfg) return;
 
     try {
-      await this.auth.signIn(cfg);
+      const token = await this.auth.signIn(cfg);
       const account = await this.auth.getActiveAccount(cfg);
       if (account) {
         this.isSignedIn.set(true);
         this.userEmail.set(account.username);
       }
-      await this.loadAndEmbed();
+      await this.discoverReportsAndEmbed(token);
     } catch (err: unknown) {
       const e = err as { message?: string };
       this.embedError.set(e?.message ?? 'Sign-in failed');
@@ -968,23 +1000,33 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
     await this.auth.signOut(cfg);
     this.isSignedIn.set(false);
     this.userEmail.set('');
+    this.availableReports.set([]);
     const el = this.embedContainer()?.nativeElement;
     if (el) this.powerBiService.reset(el);
     this.isEmbedded.set(false);
   }
 
-  async loadAndEmbed(): Promise<void> {
+  async onReportChange(reportId: string): Promise<void> {
+    this.selectedReportId.set(reportId);
+    this.isConfigured.set(true);
+    await this.loadAndEmbed();
+  }
+
+  async loadAndEmbed(accessToken?: string): Promise<void> {
     const cfg = this.config();
     const el = this.embedContainer()?.nativeElement;
-    if (!cfg || !el || !this.isConfigured()) return;
+    const reportId = this.selectedReportId();
+    if (!cfg || !el || !reportId) return;
 
     try {
       this.embedError.set(null);
-      const token = await this.auth.acquireAccessToken(cfg);
+      const token = accessToken ?? await this.auth.acquireAccessToken(cfg);
+      const knownReport = this.availableReports().find((report) => report.id === reportId);
+      const report = knownReport ?? await this.auth.getReportEmbedDetails(cfg.workspaceId, reportId, token);
       const embedConfig: pbi.models.IReportEmbedConfiguration = {
         type: 'report',
-        id: cfg.reportId,
-        embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${cfg.reportId}&groupId=${cfg.workspaceId}`,
+        id: report.id,
+        embedUrl: report.embedUrl,
         accessToken: token,
         tokenType: pbi.models.TokenType.Aad,
         settings: {
@@ -1002,5 +1044,30 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
       const e = err as { message?: string };
       this.embedError.set(e?.message ?? 'Failed to embed Power BI report');
     }
+  }
+
+  private async discoverReportsAndEmbed(accessToken: string): Promise<void> {
+    const cfg = this.config();
+    if (!cfg) return;
+
+    const reports = await this.auth.getWorkspaceReports(cfg.workspaceId, accessToken);
+    this.availableReports.set(reports);
+
+    const configuredId = isReportConfigured(cfg) ? cfg.reportId : null;
+    const preferredName = cfg.preferredReportName?.trim().toLocaleLowerCase();
+    const selected =
+      reports.find((report) => report.id === configuredId) ??
+      reports.find((report) => report.name.trim().toLocaleLowerCase() === preferredName) ??
+      reports[0];
+
+    if (!selected) {
+      this.isConfigured.set(false);
+      throw new Error('No Power BI reports are available in the configured Fabric workspace.');
+    }
+
+    this.selectedReportId.set(selected.id);
+    this.isConfigured.set(true);
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    await this.loadAndEmbed(accessToken);
   }
 }

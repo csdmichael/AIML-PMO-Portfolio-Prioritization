@@ -99,7 +99,7 @@ The deployment behavior is governed by shared JSON configuration contracts locat
 2. **`config/portfolios.json`**: Master portfolio taxonomy defining the 5 portfolios (`IT InfoSec`, `IT Software Development`, `IT Infrastructure`, `AI Team`, `Data and Analytics`), programs, and cross-portfolio coupling rules.
 3. **`config/data-entry.json`**: Canonical data entry contracts, required fields, and validation boundaries.
 4. **`ui/src/assets/config/ui.json`**: Frontend brand tokens, navigation items, confidence thresholds, and responsive breakpoints.
-5. **`ui/src/assets/config/powerbi-embed.json`**: Power BI workspace, report GUID, and Entra ID client IDs.
+5. **`ui/src/assets/config/powerbi-embed.json`**: Power BI workspace, optional preferred report, and Entra ID client IDs.
 
 ---
 
@@ -218,14 +218,18 @@ The script automatically:
 2. Connect to the `pmo_lakehouse` SQL Analytics Endpoint using **Direct Lake** mode.
 3. Select the `gold.pmo_predictions` table.
 4. Publish the report to the Fabric workspace `PMO-Portfolio-Prioritization`.
-5. Copy the report ID and update `ui/src/assets/config/powerbi-embed.json`:
+5. Add both the local and deployed callback URLs to the app registration's **Single-page application** redirect URIs:
+   - `http://localhost:4200/assets/auth-callback.html`
+   - `https://<your-ui-host>/assets/auth-callback.html`
+6. Update `ui/src/assets/config/powerbi-embed.json`. The UI discovers workspace reports after sign-in. Set `preferredReportName` to select a report by name, or replace `PENDING` with a report GUID to pin one:
 
 ```json
 {
   "clientId": "5b2b4e8a-53cf-4295-990d-71a34962aadb",
   "tenantId": "12a4b86b-e64c-43f9-af05-d9130a72dfd2",
   "workspaceId": "39c02d65-d2cb-4355-9e77-cbf442d7fc8b",
-  "reportId": "<YOUR_POWER_BI_REPORT_GUID>",
+  "reportId": "PENDING",
+  "preferredReportName": "PMO Executive Dashboard",
   "scopes": ["https://analysis.windows.net/powerbi/api/Report.Read.All"]
 }
 ```
@@ -298,7 +302,7 @@ node scripts/capture_guide.mjs
 | **App Service returns 503** | Run `az webapp log tail --name azui... --resource-group m365-myaacoub` | Check startup command in `infra/config/pmo-deployment.json`. Ensure `ui/www` bundle exists before deployment. |
 | **APIM 401 Unauthorized** | Inspect request headers for `Ocp-Apim-Subscription-Key`. | Verify the UI server retrieves the secret from Key Vault via Managed Identity. |
 | **No Data in OneLake Banner** | Verify `Files/gold/exports/pmo_portfolio_export.json` exists in OneLake. | Run `PMO Full Pipeline` in Fabric or use built-in demo data mode. |
-| **Power BI Visuals Loading Skeleton** | Check `powerbi-embed.json` report GUID and Entra ID permissions. | Ensure user has Fabric Viewer permission and popup blockers are disabled for MSAL login. |
+| **Power BI report does not render** | Check the callback redirect URI, `powerbi-embed.json`, and Entra ID permissions. | Ensure the callback URL is registered, the user has Fabric Viewer permission, and popup blockers are disabled for MSAL login. |
 
 ---
 

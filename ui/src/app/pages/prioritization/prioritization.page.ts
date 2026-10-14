@@ -60,10 +60,21 @@ import { ConfigService } from '../../services/config.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ion-content class="prioritization-content">
-      <div class="prioritization-layout">
+      <div class="prioritization-layout" [class.filters-collapsed]="filtersCollapsed()">
         <!-- LEFT FILTER PANEL -->
         <aside class="sidebar-filters">
-          <app-filter-panel></app-filter-panel>
+          <button
+            type="button"
+            class="desktop-filter-collapse"
+            [attr.aria-label]="filtersCollapsed() ? 'Expand filters' : 'Collapse filters'"
+            [title]="filtersCollapsed() ? 'Expand filters' : 'Collapse filters'"
+            (click)="filtersCollapsed.update(collapsed => !collapsed)"
+          >
+            {{ filtersCollapsed() ? '>' : '<' }}
+          </button>
+          @if (!filtersCollapsed()) {
+            <app-filter-panel></app-filter-panel>
+          }
         </aside>
 
         <!-- CENTER WORKSPACE -->
@@ -401,15 +412,36 @@ import { ConfigService } from '../../services/config.service';
       }
       .prioritization-layout {
         display: grid;
-        grid-template-columns: 280px 1fr 380px;
+        grid-template-columns: 240px minmax(0, 1fr) 340px;
         height: 100%;
         overflow: hidden;
+        transition: grid-template-columns 0.18s ease;
+      }
+      .prioritization-layout.filters-collapsed {
+        grid-template-columns: 48px minmax(0, 1fr) 340px;
       }
       .sidebar-filters {
         border-right: 1px solid var(--pmo-border, #e0e0e0);
         background: var(--pmo-surface, #ffffff);
         overflow-y: auto;
-        padding: 10px;
+        padding: 8px;
+      }
+      .desktop-filter-collapse {
+        display: flex;
+        width: 30px;
+        height: 30px;
+        margin: 0 0 6px auto;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--pmo-border, #d6d6d6);
+        border-radius: 5px;
+        background: #ffffff;
+        color: var(--pmo-primary, #0078d4);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .filters-collapsed .desktop-filter-collapse {
+        margin-right: auto;
       }
       .main-workspace {
         overflow-y: auto;
@@ -864,7 +896,10 @@ import { ConfigService } from '../../services/config.service';
       /* Responsive adjustments */
       @media (max-width: 1200px) {
         .prioritization-layout {
-          grid-template-columns: 260px 1fr;
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+        .prioritization-layout.filters-collapsed {
+          grid-template-columns: 48px minmax(0, 1fr);
         }
         .sidebar-detail {
           display: none;
@@ -875,6 +910,9 @@ import { ConfigService } from '../../services/config.service';
           grid-template-columns: 1fr;
         }
         .sidebar-filters {
+          display: none;
+        }
+        .desktop-filter-collapse {
           display: none;
         }
         .mobile-filter-btn {
@@ -890,6 +928,7 @@ export class PrioritizationPageComponent {
   readonly showTableTools = signal<boolean>(false);
   readonly mobileFiltersOpen = signal<boolean>(false);
   readonly mobileDetailOpen = signal<boolean>(false);
+  readonly filtersCollapsed = signal<boolean>(false);
 
   // Pagination state derived from ui.json config
   readonly pageSize = signal<number>(this.configService.config.table?.pageSize ?? 25);

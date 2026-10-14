@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader,
@@ -19,7 +19,12 @@ import { ConfigService } from '../../services/config.service';
     <ion-header class="app-global-header">
       <ion-toolbar color="light">
         <ion-buttons slot="start">
-          <ion-menu-button auto-hide="false" class="menu-toggle-btn" aria-label="Toggle navigation menu"></ion-menu-button>
+          <ion-menu-button
+            auto-hide="false"
+            class="menu-toggle-btn"
+            [attr.aria-label]="navigationCollapsed() ? 'Expand navigation menu' : 'Collapse navigation menu'"
+            (click)="navigationToggle.emit()"
+          ></ion-menu-button>
         </ion-buttons>
 
         <div class="header-brand-wrap">
@@ -131,6 +136,8 @@ import { ConfigService } from '../../services/config.service';
 export class HeaderComponent {
   private readonly configService = inject(ConfigService);
   readonly asOfDate = input<string | null>('');
+  readonly navigationCollapsed = input(false);
+  readonly navigationToggle = output<void>();
 
   get brandConfig() {
     return this.configService.config.brand;

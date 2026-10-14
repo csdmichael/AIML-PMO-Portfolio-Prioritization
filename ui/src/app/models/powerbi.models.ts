@@ -3,6 +3,7 @@ export interface PowerBiEmbedConfig {
   clientId: string;
   workspaceId: string;
   reportId: string;
+  preferredReportName?: string;
   scopes: string[];
 }
 

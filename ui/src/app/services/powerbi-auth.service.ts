@@ -11,6 +11,10 @@ export interface ReportEmbedDetails {
   datasetId?: string;
 }
 
+interface ReportsResponse {
+  value: ReportEmbedDetails[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -38,7 +42,7 @@ export class PowerBiAuthService {
       auth: {
         clientId: config.clientId,
         authority: `https://login.microsoftonline.com/${config.tenantId}`,
-        redirectUri: window.location.origin,
+        redirectUri: `${window.location.origin}/assets/auth-callback.html`,
       },
       cache: {
         cacheLocation: 'localStorage',
@@ -79,21 +83,14 @@ export class PowerBiAuthService {
       }
     }
 
-    try {
-      const popupResult = await msal.acquireTokenPopup({
-        scopes: config.scopes,
-      });
-      if (popupResult.account) {
-        msal.setActiveAccount(popupResult.account);
-      }
-      return popupResult.accessToken;
-    } catch (popupErr) {
-      console.warn('acquireTokenPopup failed, falling back to redirect', popupErr);
-      await msal.acquireTokenRedirect({
-        scopes: config.scopes,
-      });
-      throw new Error('Redirecting to login...');
+    const popupResult = await msal.acquireTokenPopup({
+      scopes: config.scopes,
+      redirectUri: `${window.location.origin}/assets/auth-callback.html`,
+    });
+    if (popupResult.account) {
+      msal.setActiveAccount(popupResult.account);
     }
+    return popupResult.accessToken;
   }
 
   async signIn(config: PowerBiEmbedConfig): Promise<string> {
@@ -125,5 +122,21 @@ export class PowerBiAuthService {
     }
 
     return (await response.json()) as ReportEmbedDetails;
+  }
+
+  async getWorkspaceReports(workspaceId: string, accessToken: string): Promise<ReportEmbedDetails[]> {
+    const url = `https://api.powerbi.com/v1.0/myorg/groups/${workspaceId}/reports`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to list workspace reports: ${response.status} ${response.statusText}`);
+    }
+
+    const result = (await response.json()) as ReportsResponse;
+    return result.value ?? [];
   }
 }
