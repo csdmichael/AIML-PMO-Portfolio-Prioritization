@@ -17,19 +17,62 @@
       <ion-content>
         <ion-list lines="none" class="nav-list">
           @for (item of navigationItems; track item.id) {
-            <ion-menu-toggle auto-hide="false">
-              <ion-item
-                [routerLink]="[item.route]"
-                routerDirection="root"
-                routerLinkActive="active-nav-item"
-                [attr.aria-label]="item.label"
-                class="nav-item"
-                button
-              >
-                <ion-icon slot="start" [name]="item.icon"></ion-icon>
-                <ion-label class="nav-label">{{ item.label }}</ion-label>
-              </ion-item>
-            </ion-menu-toggle>
+            @if (item.children && item.children.length > 0) {
+              <div class="nav-category-group">
+                <ion-item
+                  [attr.aria-label]="item.label"
+                  [attr.aria-expanded]="isCategoryExpanded(item.id)"
+                  class="nav-category-header"
+                  button
+                  lines="none"
+                  (click)="toggleCategory(item.id)"
+                >
+                  <ion-icon slot="start" [name]="item.icon"></ion-icon>
+                  <ion-label class="nav-label category-label">{{ item.label }}</ion-label>
+                  @if (!navigationCollapsed()) {
+                    <ion-icon
+                      slot="end"
+                      [name]="isCategoryExpanded(item.id) ? 'chevron-down-outline' : 'chevron-forward-outline'"
+                      class="category-chevron"
+                    ></ion-icon>
+                  }
+                </ion-item>
+
+                @if (isCategoryExpanded(item.id)) {
+                  <div class="nav-category-children">
+                    @for (subItem of item.children; track subItem.id) {
+                      <ion-menu-toggle auto-hide="false">
+                        <ion-item
+                          [routerLink]="[subItem.route]"
+                          routerDirection="root"
+                          routerLinkActive="active-nav-item"
+                          [attr.aria-label]="subItem.label"
+                          class="nav-item sub-nav-item"
+                          button
+                        >
+                          <ion-icon slot="start" [name]="subItem.icon"></ion-icon>
+                          <ion-label class="nav-label">{{ subItem.label }}</ion-label>
+                        </ion-item>
+                      </ion-menu-toggle>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <ion-menu-toggle auto-hide="false">
+                <ion-item
+                  [routerLink]="[item.route]"
+                  routerDirection="root"
+                  routerLinkActive="active-nav-item"
+                  [attr.aria-label]="item.label"
+                  class="nav-item"
+                  button
+                >
+                  <ion-icon slot="start" [name]="item.icon"></ion-icon>
+                  <ion-label class="nav-label">{{ item.label }}</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+            }
           }
         </ion-list>
       </ion-content>

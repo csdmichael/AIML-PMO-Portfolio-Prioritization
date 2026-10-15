@@ -21,6 +21,16 @@ const TEST_CONFIG = {
   },
   navigation: [
     { id: 'overview', label: 'Overview', icon: 'pie-chart-outline', route: '/overview' },
+    {
+      id: 'documentation',
+      label: 'Documentation',
+      icon: 'book-outline',
+      isCategory: true,
+      children: [
+        { id: 'docs-architecture', label: 'Architecture & Steps', icon: 'git-network-outline', route: '/docs/architecture' },
+        { id: 'docs-algorithms', label: 'ML Algorithms', icon: 'hardware-chip-outline', route: '/docs/algorithms' },
+      ],
+    },
   ],
   breakpoints: { xl: 1200, md: 768 },
   confidence: {
@@ -63,5 +73,34 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('should toggle documentation category expansion', async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: ConfigService,
+          useValue: { config: TEST_CONFIG },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+
+    // Documentation category defaults to expanded
+    expect(app.isCategoryExpanded('documentation')).toBe(true);
+
+    // Toggle to collapse
+    app.toggleCategory('documentation');
+    expect(app.isCategoryExpanded('documentation')).toBe(false);
+
+    // Toggle to re-expand
+    app.toggleCategory('documentation');
+    expect(app.isCategoryExpanded('documentation')).toBe(true);
   });
 });

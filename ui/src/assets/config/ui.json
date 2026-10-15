@@ -23,7 +23,20 @@
     { "id": "powerbi", "label": "Power BI dashboards", "icon": "analytics-outline", "route": "/powerbi" },
     { "id": "quick-add", "label": "Quick add", "icon": "sparkles-outline", "route": "/quick-add" },
     { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },
-    { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" }
+    { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" },
+    {
+      "id": "documentation",
+      "label": "Documentation",
+      "icon": "book-outline",
+      "isCategory": true,
+      "children": [
+        { "id": "docs-architecture", "label": "Architecture & Steps", "icon": "git-network-outline", "route": "/docs/architecture" },
+        { "id": "docs-algorithms", "label": "ML Algorithms", "icon": "hardware-chip-outline", "route": "/docs/algorithms" },
+        { "id": "docs-ai-prefill-confidence", "label": "AI Prefill & Confidence", "icon": "sparkles-outline", "route": "/docs/ai-prefill-confidence" },
+        { "id": "docs-data-pipeline", "label": "Data Pipeline & Sources", "icon": "layers-outline", "route": "/docs/data-pipeline" },
+        { "id": "docs-rules-governance", "label": "Rules & Governance", "icon": "shield-checkmark-outline", "route": "/docs/rules-governance" }
+      ]
+    }
   ],
   "breakpoints": {
     "xl": 1200,

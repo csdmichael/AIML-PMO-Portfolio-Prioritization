@@ -23,7 +23,9 @@ export interface NavigationItem {
   id: string;
   label: string;
   icon: string;
-  route: string;
+  route?: string;
+  isCategory?: boolean;
+  children?: NavigationItem[];
 }
 
 export interface BreakpointsConfig {

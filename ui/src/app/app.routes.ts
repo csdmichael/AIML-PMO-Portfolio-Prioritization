@@ -42,6 +42,47 @@ export const routes: Routes = [
       import('./pages/project-detail/project-detail.page').then((m) => m.ProjectDetailPageComponent),
   },
   {
+    path: 'docs',
+    children: [
+      {
+        path: '',
+        redirectTo: 'architecture',
+        pathMatch: 'full',
+      },
+      {
+        path: 'architecture',
+        loadComponent: () =>
+          import('./pages/docs/architecture/docs-architecture.page').then((m) => m.DocsArchitecturePageComponent),
+      },
+      {
+        path: 'algorithms',
+        loadComponent: () =>
+          import('./pages/docs/algorithms/docs-algorithms.page').then((m) => m.DocsAlgorithmsPageComponent),
+      },
+      {
+        path: 'ai-prefill-confidence',
+        loadComponent: () =>
+          import('./pages/docs/ai-prefill-confidence/docs-ai-prefill-confidence.page').then(
+            (m) => m.DocsAiPrefillConfidencePageComponent
+          ),
+      },
+      {
+        path: 'data-pipeline',
+        loadComponent: () =>
+          import('./pages/docs/data-pipeline/docs-data-pipeline.page').then(
+            (m) => m.DocsDataPipelinePageComponent
+          ),
+      },
+      {
+        path: 'rules-governance',
+        loadComponent: () =>
+          import('./pages/docs/rules-governance/docs-rules-governance.page').then(
+            (m) => m.DocsRulesGovernancePageComponent
+          ),
+      },
+    ],
+  },
+  {
     path: '',
     redirectTo: 'overview',
     pathMatch: 'full',
