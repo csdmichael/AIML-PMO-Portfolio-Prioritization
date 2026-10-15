@@ -24,8 +24,9 @@
     { "id": "quick-add", "label": "Quick add", "icon": "sparkles-outline", "route": "/quick-add" },
     { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },
     { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" },
-    {
-      "id": "documentation",
+      { "id": "lifecycle", "label": "Lifecycle & Import", "icon": "file-tray-stacked-outline", "route": "/lifecycle" },
+      {
+        "id": "documentation",
       "label": "Documentation",
       "icon": "book-outline",
       "isCategory": true,

@@ -2,6 +2,7 @@ import { Injectable, computed, signal, inject } from '@angular/core';
 import {
   PortfolioDataset,
   Project,
+  ProjectStatus,
   FilterCriteria,
   SortField,
   SortDirection,
@@ -19,12 +20,14 @@ import {
   buildHierarchyTree,
   exportProjectsToCsv,
 } from '../core/portfolio-filter';
+import { recalculateDatasetRollups } from '../core/portfolio-normalizer';
 import { PortfolioService } from './portfolio.service';
 import { SAMPLE_PORTFOLIO_DATASET } from '../data/sample-portfolio.data';
 
 const SAVED_VIEWS_STORAGE_KEY = 'pmo_portfolio_saved_views_v1';
 const DECISIONS_STORAGE_KEY = 'pmo_portfolio_decisions_v1';
 const PINNED_STORAGE_KEY = 'pmo_portfolio_pinned_v1';
+const DATASET_STORAGE_KEY = 'pmo_portfolio_dataset_override_v2';
 
 @Injectable({
   providedIn: 'root',
@@ -59,42 +62,63 @@ export class PortfolioStore {
   // Available unique facet values derived from dataset
   readonly rawProjects = computed<Project[]>(() => this.dataset()?.projects ?? []);
 
+  // Derived project subsets
+  readonly activeProjects = computed<Project[]>(() =>
+    this.rawProjects().filter((p) => !p.isDeleted)
+  );
+
+  readonly softDeletedProjects = computed<Project[]>(() =>
+    this.rawProjects().filter((p) => !!p.isDeleted)
+  );
+
+  readonly backlogProjects = computed<Project[]>(() =>
+    this.activeProjects().filter((p) => p.projectStatus === 'Backlog')
+  );
+
+  readonly availablePortfolios = computed<string[]>(() => [
+    'IT InfoSec',
+    'IT Software Development',
+    'IT Infrastructure',
+    'AI Team',
+    'Data and Analytics',
+  ]);
+
   readonly businessUnits = computed<string[]>(() => {
     const set = new Set<string>();
-    for (const p of this.rawProjects()) set.add(p.businessUnit);
+    for (const p of this.activeProjects()) set.add(p.businessUnit);
     return Array.from(set).sort();
   });
 
   readonly sites = computed<string[]>(() => {
     const set = new Set<string>();
-    for (const p of this.rawProjects()) set.add(p.site);
+    for (const p of this.activeProjects()) set.add(p.site);
     return Array.from(set).sort();
   });
 
   readonly portfolios = computed<string[]>(() => {
     const set = new Set<string>();
-    for (const p of this.rawProjects()) set.add(p.portfolio);
+    for (const p of this.activeProjects()) set.add(p.portfolio);
     return Array.from(set).sort();
   });
 
   readonly primarySkills = computed<string[]>(() => {
     const set = new Set<string>();
-    for (const p of this.rawProjects()) set.add(p.primarySkill);
+    for (const p of this.activeProjects()) set.add(p.primarySkill);
     return Array.from(set).sort();
   });
 
   readonly clusters = computed<string[]>(() => {
     const set = new Set<string>();
-    for (const p of this.rawProjects()) set.add(p.cluster);
+    for (const p of this.activeProjects()) set.add(p.cluster);
     return Array.from(set).sort();
   });
 
-  // Confidence counts across unfiltered dataset
+  // Confidence counts across active dataset
   readonly confidenceCounts = computed<{ high: number; medium: number; low: number }>(() => {
     let high = 0;
     let medium = 0;
     let low = 0;
-    for (const p of this.rawProjects()) {
+    for (const p of this.activeProjects()) {
       if (p.confidenceLevel === 'High') high++;
       else if (p.confidenceLevel === 'Medium') medium++;
       else if (p.confidenceLevel === 'Low') low++;
@@ -165,6 +189,20 @@ export class PortfolioStore {
     this.isLoading.set(true);
     this.loadError.set(null);
     this.problemDetail.set(null);
+
+    const stored = this.loadStoredDataset();
+    if (stored) {
+      this.dataset.set(stored);
+      this.isLoading.set(false);
+      const active = stored.projects.filter((p) => !p.isDeleted);
+      if (active.length > 0) {
+        this.selectedProjectId.set(active[0].projectId);
+      } else {
+        this.selectedProjectId.set(null);
+      }
+      return;
+    }
+
     this.portfolioService.getPortfolioData().subscribe({
       next: (data) => {
         if (data && data.projects && data.projects.length > 0) {
@@ -306,12 +344,157 @@ export class PortfolioStore {
     });
   }
 
+  // Lifecycle & Deletion operations
+  updateDatasetProjects(updatedProjects: Project[]): void {
+    const current = this.dataset() ?? { ...SAMPLE_PORTFOLIO_DATASET, projects: [] };
+    const rollups = recalculateDatasetRollups(updatedProjects);
+    const updated: PortfolioDataset = {
+      ...current,
+      projects: updatedProjects,
+      capacityBySkill: rollups.capacityBySkill,
+      clusters: rollups.clusters,
+      asOfDate: new Date().toISOString().slice(0, 10),
+    };
+    this.dataset.set(updated);
+    this.persistDataset(updated);
+
+    // If current selected project is deleted or removed, pick first active
+    const active = updatedProjects.filter((p) => !p.isDeleted);
+    const selId = this.selectedProjectId();
+    if (!selId || !active.some((p) => p.projectId === selId)) {
+      this.selectedProjectId.set(active[0]?.projectId ?? null);
+    }
+  }
+
+  setProjectStatus(projectIds: string | string[], status: ProjectStatus): void {
+    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
+    const projects = this.rawProjects().map((p) =>
+      ids.includes(p.projectId) ? { ...p, projectStatus: status } : p
+    );
+    this.updateDatasetProjects(projects);
+  }
+
+  markAsBacklog(projectIds: string | string[]): void {
+    this.setProjectStatus(projectIds, 'Backlog');
+  }
+
+  softDeleteProjects(projectIds: string | string[]): void {
+    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
+    const now = new Date().toISOString();
+    const projects = this.rawProjects().map((p) =>
+      ids.includes(p.projectId) ? { ...p, isDeleted: true, deletedAt: now } : p
+    );
+    this.updateDatasetProjects(projects);
+  }
+
+  restoreProjects(projectIds: string | string[]): void {
+    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
+    const projects = this.rawProjects().map((p) =>
+      ids.includes(p.projectId) ? { ...p, isDeleted: false, deletedAt: undefined } : p
+    );
+    this.updateDatasetProjects(projects);
+  }
+
+  permanentDeleteProjects(projectIds: string | string[]): void {
+    const ids = new Set(Array.isArray(projectIds) ? projectIds : [projectIds]);
+    const projects = this.rawProjects().filter((p) => !ids.has(p.projectId));
+    this.updateDatasetProjects(projects);
+  }
+
+  deleteByPortfolio(portfolio: string, permanent = false): void {
+    if (permanent) {
+      const projects = this.rawProjects().filter((p) => p.portfolio !== portfolio);
+      this.updateDatasetProjects(projects);
+    } else {
+      const now = new Date().toISOString();
+      const projects = this.rawProjects().map((p) =>
+        p.portfolio === portfolio ? { ...p, isDeleted: true, deletedAt: now } : p
+      );
+      this.updateDatasetProjects(projects);
+    }
+  }
+
+  clearAllProjects(): void {
+    this.updateDatasetProjects([]);
+  }
+
+  resetToDefaultData(): void {
+    this.clearDatasetStorage();
+    this.dataset.set(SAMPLE_PORTFOLIO_DATASET);
+    if (SAMPLE_PORTFOLIO_DATASET.projects.length > 0) {
+      this.selectedProjectId.set(SAMPLE_PORTFOLIO_DATASET.projects[0].projectId);
+    }
+  }
+
+  importProjects(
+    newProjects: Project[],
+    mode: 'append' | 'replacePortfolio' | 'replaceAll' = 'append'
+  ): { added: number; updated: number; total: number } {
+    let resultProjects: Project[] = [];
+    let added = 0;
+    let updated = 0;
+
+    if (mode === 'replaceAll') {
+      resultProjects = [...newProjects];
+      added = newProjects.length;
+    } else if (mode === 'replacePortfolio') {
+      const importedPortfolios = new Set(newProjects.map((p) => p.portfolio));
+      const kept = this.rawProjects().filter((p) => !importedPortfolios.has(p.portfolio));
+      resultProjects = [...kept, ...newProjects];
+      added = newProjects.length;
+    } else {
+      // Append / Merge
+      const existingMap = new Map<string, Project>();
+      for (const p of this.rawProjects()) {
+        existingMap.set(p.projectId, p);
+      }
+      for (const p of newProjects) {
+        if (existingMap.has(p.projectId)) {
+          existingMap.set(p.projectId, p);
+          updated++;
+        } else {
+          existingMap.set(p.projectId, p);
+          added++;
+        }
+      }
+      resultProjects = Array.from(existingMap.values());
+    }
+
+    this.updateDatasetProjects(resultProjects);
+    return { added, updated, total: resultProjects.length };
+  }
+
   // CSV export
   exportCsv(): string {
     return exportProjectsToCsv(this.sortedFilteredProjects());
   }
 
   // Storage helpers
+  private loadStoredDataset(): PortfolioDataset | null {
+    try {
+      const raw = localStorage.getItem(DATASET_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  private persistDataset(dataset: PortfolioDataset): void {
+    try {
+      localStorage.setItem(DATASET_STORAGE_KEY, JSON.stringify(dataset));
+    } catch {
+      // Storage unavailable or quota exceeded
+    }
+  }
+
+  private clearDatasetStorage(): void {
+    try {
+      localStorage.removeItem(DATASET_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
+  }
   private loadSavedViews(): SavedView[] {
     try {
       const raw = localStorage.getItem(SAVED_VIEWS_STORAGE_KEY);

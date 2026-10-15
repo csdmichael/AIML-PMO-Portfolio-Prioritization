@@ -35,12 +35,24 @@ export const DEFAULT_FILTER_CRITERIA: FilterCriteria = {
   maxCostUsd: 15000000,
   goLiveFrom: '',
   goLiveTo: '',
+  statuses: [],
+  includeDeleted: false,
 };
 
 export function filterProjects(projects: readonly Project[], criteria: FilterCriteria): Project[] {
   const searchNormalized = criteria.search.trim().toLowerCase();
 
   return projects.filter((p) => {
+    // Soft delete check
+    if (!criteria.includeDeleted && p.isDeleted) {
+      return false;
+    }
+
+    // Status filter
+    if (criteria.statuses && criteria.statuses.length > 0 && !criteria.statuses.includes(p.projectStatus)) {
+      return false;
+    }
+
     // Free-text search over project id, name, sponsor, and project manager
     if (searchNormalized) {
       const matchId = p.projectId.toLowerCase().includes(searchNormalized);

@@ -1,5 +1,5 @@
 export type SponsorLevel = 'Executive' | 'Director' | 'Manager' | 'Individual' | 'Unknown';
-export type ProjectStatus = 'Planning' | 'Active' | 'On Hold';
+export type ProjectStatus = 'Planning' | 'Active' | 'On Hold' | 'Backlog';
 export type RiskRating = 'Low' | 'Medium' | 'High' | 'Critical' | 'Unknown';
 export type PriorityTier = 'Must-do-now' | 'Proceed' | 'Can wait' | 'Candidate to deprioritize';
 export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
@@ -80,6 +80,8 @@ export interface Project {
   cluster: string;
   topDrivers: SignalDriver[];
   dataIssues: string[];
+  isDeleted?: boolean;
+  deletedAt?: string;
 }
 
 export interface CapacityBySkill {
@@ -169,6 +171,8 @@ export interface FilterCriteria {
   maxCostUsd: number;
   goLiveFrom: string; // YYYY-MM-DD or empty
   goLiveTo: string;   // YYYY-MM-DD or empty
+  statuses?: ProjectStatus[];
+  includeDeleted?: boolean;
 }
 
 export interface SavedView {

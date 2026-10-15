@@ -37,6 +37,11 @@ export const routes: Routes = [
       import('./pages/decisions/decisions.page').then((m) => m.DecisionsPageComponent),
   },
   {
+    path: 'lifecycle',
+    loadComponent: () =>
+      import('./pages/lifecycle/lifecycle.page').then((m) => m.LifecyclePageComponent),
+  },
+  {
     path: 'projects/:projectId',
     loadComponent: () =>
       import('./pages/project-detail/project-detail.page').then((m) => m.ProjectDetailPageComponent),

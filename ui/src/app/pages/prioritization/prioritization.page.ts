@@ -194,6 +194,17 @@ import { ConfigService } from '../../services/config.service';
             >
               <ion-button (click)="store.init()">Retry</ion-button>
             </app-empty-state>
+          } @else if (store.rawProjects().length === 0) {
+            <app-empty-state
+              title="No Projects in Portfolio (Demo Ready)"
+              message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load demo datasets."
+              icon="file-tray-outline"
+            >
+              <ion-button routerLink="/lifecycle">
+                <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+                Go to Portfolio Import & Lifecycle
+              </ion-button>
+            </app-empty-state>
           } @else if (store.filteredProjects().length === 0) {
             <app-empty-state
               title="No Matching Projects"

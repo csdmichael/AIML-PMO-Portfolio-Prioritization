@@ -25,6 +25,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { AgentFabComponent } from './components/agent-fab/agent-fab.component';
 import { addIcons } from 'ionicons';
 import {
+  addCircleOutline,
   alertCircleOutline,
   analytics,
   analyticsOutline,
@@ -53,6 +54,8 @@ import {
   downloadOutline,
   easelOutline,
   ellipseOutline,
+  fileTrayOutline,
+  fileTrayStackedOutline,
   flashOutline,
   funnelOutline,
   gitNetworkOutline,
@@ -65,16 +68,20 @@ import {
   peopleOutline,
   personOutline,
   pieChartOutline,
+  playOutline,
   radioOutline,
+  refreshOutline,
   serverOutline,
   shieldCheckmarkOutline,
   sparkles,
   sparklesOutline,
+  trashOutline,
   trendingUpOutline,
   warningOutline,
 } from 'ionicons/icons';
 
 addIcons({
+  addCircleOutline,
   alertCircleOutline,
   analytics,
   analyticsOutline,
@@ -103,6 +110,8 @@ addIcons({
   downloadOutline,
   easelOutline,
   ellipseOutline,
+  fileTrayOutline,
+  fileTrayStackedOutline,
   flashOutline,
   funnelOutline,
   gitNetworkOutline,
@@ -115,11 +124,14 @@ addIcons({
   peopleOutline,
   personOutline,
   pieChartOutline,
+  playOutline,
   radioOutline,
+  refreshOutline,
   serverOutline,
   shieldCheckmarkOutline,
   sparkles,
   sparklesOutline,
+  trashOutline,
   trendingUpOutline,
   warningOutline,
 });

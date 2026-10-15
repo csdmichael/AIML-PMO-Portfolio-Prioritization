@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import {
   IonContent,
   IonCard,
@@ -19,6 +20,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -49,6 +51,17 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
           [isError]="true"
         >
           <ion-button (click)="store.init()">Retry</ion-button>
+        </app-empty-state>
+      } @else if (store.rawProjects().length === 0) {
+        <app-empty-state
+          title="No Projects in Portfolio (Demo Ready)"
+          message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load demo datasets."
+          icon="file-tray-outline"
+        >
+          <ion-button routerLink="/lifecycle">
+            <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+            Go to Portfolio Import & Lifecycle
+          </ion-button>
         </app-empty-state>
       } @else if (store.hierarchyTree().length === 0) {
         <app-empty-state

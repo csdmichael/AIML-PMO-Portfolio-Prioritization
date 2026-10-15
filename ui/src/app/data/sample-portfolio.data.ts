@@ -9045,7 +9045,8 @@ export const SAMPLE_OPTIONS_RESPONSE: OptionsResponse = {
   "projectStatuses": [
     "Planning",
     "Active",
-    "On Hold"
+    "On Hold",
+    "Backlog"
   ],
   "sponsorLevels": [
     "Executive",

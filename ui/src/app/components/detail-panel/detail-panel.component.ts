@@ -96,6 +96,26 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
               </div>
             </div>
 
+            <!-- Lifecycle Management Bar -->
+            <div class="lifecycle-bar">
+              <span class="lifecycle-lbl">Lifecycle Actions:</span>
+              @if (p.projectStatus !== 'Backlog') {
+                <button type="button" class="life-btn backlog" (click)="store.markAsBacklog(p.projectId)">
+                  Mark as Backlog
+                </button>
+              } @else {
+                <button type="button" class="life-btn active" (click)="store.setProjectStatus(p.projectId, 'Active')">
+                  Move to Active
+                </button>
+              }
+              <button type="button" class="life-btn soft" (click)="store.softDeleteProjects(p.projectId)">
+                Soft Delete (Trash)
+              </button>
+              <button type="button" class="life-btn hard" (click)="onPermanentDelete(p)">
+                Permanent Delete
+              </button>
+            </div>
+
             <!-- TIER PREDICTION & RULE OVERRIDES -->
             <div class="detail-section tier-section">
               <div class="section-heading">Tier Alignment & Rules</div>
@@ -603,6 +623,54 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
       .text-danger {
         color: #d13438;
       }
+      .lifecycle-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+      }
+      .lifecycle-lbl {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-right: 4px;
+      }
+      .life-btn {
+        border: none;
+        border-radius: 3px;
+        padding: 3px 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+      }
+      .life-btn:hover {
+        opacity: 0.85;
+      }
+      .life-btn.backlog {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+      }
+      .life-btn.active {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+      .life-btn.soft {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+      .life-btn.hard {
+        background: #ef4444;
+        color: #ffffff;
+      }
     `,
   ],
 })
@@ -694,5 +762,11 @@ export class DetailPanelComponent {
       },
     });
     this.decisionReason = '';
+  }
+
+  onPermanentDelete(p: Project): void {
+    if (confirm(`Are you sure you want to PERMANENTLY delete project ${p.projectId} (${p.projectName})? This action cannot be undone.`)) {
+      this.store.permanentDeleteProjects(p.projectId);
+    }
   }
 }

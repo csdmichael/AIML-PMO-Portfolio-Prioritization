@@ -29,7 +29,8 @@
     "projectStatuses": [
       "Planning",
       "Active",
-      "On Hold"
+      "On Hold",
+      "Backlog"
     ],
     "sponsorLevels": [
       "Executive",
