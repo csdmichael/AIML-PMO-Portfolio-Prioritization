@@ -451,7 +451,8 @@
                     "enum": [
                       "Planning",
                       "Active",
-                      "On Hold"
+                      "On Hold",
+                      "Backlog"
                     ],
                     "description": "Status"
                   },
