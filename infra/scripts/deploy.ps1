@@ -126,9 +126,16 @@ function Publish-Apps($outputs) {
     $publishApi = $Component -ne "ui"
 
     if ($publishUi) {
-        Invoke-Checked "UI build" {
-            Push-Location (Join-Path $repoRoot "ui")
-            try { npm run build } finally { Pop-Location }
+        if (-not (Test-Path (Join-Path $repoRoot "ui/www/index.html"))) {
+            Invoke-Checked "UI build" {
+                Push-Location (Join-Path $repoRoot "ui")
+                try {
+                    if (-not (Test-Path "node_modules")) {
+                        npm ci
+                    }
+                    npm run build
+                } finally { Pop-Location }
+            }
         }
         Copy-Item -Recurse -Force (Join-Path $repoRoot "ui/server/app") (Join-Path $uiStage "server/app")
         Copy-Item -Force (Join-Path $repoRoot "ui/server/config.json") (Join-Path $uiStage "server/config.json")
