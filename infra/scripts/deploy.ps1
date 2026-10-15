@@ -16,12 +16,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$cfg = Get-Content -Raw -Path (Join-Path $repoRoot "infra\config\pmo-deployment.json") | ConvertFrom-Json
+$repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
+$cfg = Get-Content -Raw -Path (Join-Path $repoRoot "infra/config/pmo-deployment.json") | ConvertFrom-Json
 $dep = $cfg.deployment
 $resourceGroup = $cfg.resourceGroup
 $tfDir = Join-Path $repoRoot $dep.terraformDirectory
 $fabricUrl = "https://api.fabric.microsoft.com"
+$tempDir = [System.IO.Path]::GetTempPath()
 
 function Invoke-Checked {
     param([string]$Step, [scriptblock]$Command)
@@ -38,7 +39,7 @@ function Invoke-Iac {
         $parameters = Join-Path $repoRoot $dep.bicepParameters
         switch ($action) {
             "validate" {
-                Invoke-Checked "Bicep build" { az bicep build --file $template --outfile (Join-Path $env:TEMP "pmo-main.json") }
+                Invoke-Checked "Bicep build" { az bicep build --file $template --outfile (Join-Path $tempDir "pmo-main.json") }
                 Invoke-Checked "Bicep lint" { az bicep lint --file $template }
                 Invoke-Checked "Deployment validation" { az deployment group validate --resource-group $resourceGroup --template-file $template --parameters $parameters }
             }
@@ -116,7 +117,7 @@ function Wait-ForDeployment([string]$AppName) {
 }
 
 function Publish-Apps($outputs) {
-    $stage = Join-Path $env:TEMP "pmo-publish"
+    $stage = Join-Path $tempDir "pmo-publish"
     if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
     $apiStage = Join-Path $stage "api"
     $uiStage = Join-Path $stage "ui"
@@ -129,18 +130,18 @@ function Publish-Apps($outputs) {
             Push-Location (Join-Path $repoRoot "ui")
             try { npm run build } finally { Pop-Location }
         }
-        Copy-Item -Recurse -Force (Join-Path $repoRoot "ui\server\app") (Join-Path $uiStage "server\app")
-        Copy-Item -Force (Join-Path $repoRoot "ui\server\config.json") (Join-Path $uiStage "server\config.json")
-        Copy-Item -Recurse -Force (Join-Path $repoRoot "ui\www\*") (Join-Path $uiStage "www")
+        Copy-Item -Recurse -Force (Join-Path $repoRoot "ui/server/app") (Join-Path $uiStage "server/app")
+        Copy-Item -Force (Join-Path $repoRoot "ui/server/config.json") (Join-Path $uiStage "server/config.json")
+        Get-ChildItem -Path (Join-Path $repoRoot "ui/www") | Copy-Item -Recurse -Force -Destination (Join-Path $uiStage "www")
         Invoke-Checked "UI requirements export" {
-            Push-Location (Join-Path $repoRoot "ui\server")
+            Push-Location (Join-Path $repoRoot "ui/server")
             try { & $Uv export --frozen --no-hashes --no-dev --no-emit-project --output-file (Join-Path $uiStage "requirements.txt") } finally { Pop-Location }
         }
     }
 
     if ($publishApi) {
-        Copy-Item -Recurse -Force (Join-Path $repoRoot "api\app") (Join-Path $apiStage "app")
-        Copy-Item -Recurse -Force (Join-Path $repoRoot "api\config") (Join-Path $apiStage "config")
+        Copy-Item -Recurse -Force (Join-Path $repoRoot "api/app") (Join-Path $apiStage "app")
+        Copy-Item -Recurse -Force (Join-Path $repoRoot "api/config") (Join-Path $apiStage "config")
         Invoke-Checked "API requirements export" {
             Push-Location (Join-Path $repoRoot "api")
             try { & $Uv export --frozen --no-hashes --no-dev --no-emit-project --output-file (Join-Path $apiStage "requirements.txt") } finally { Pop-Location }
@@ -166,28 +167,36 @@ function Publish-Apps($outputs) {
 }
 
 function Grant-FabricWorkspaceRole([string]$PrincipalId) {
-    $url = "$fabricUrl/v1/workspaces/$($cfg.fabric.workspaceId)/roleAssignments"
-    $existing = az rest --method get --url $url --resource $fabricUrl | ConvertFrom-Json
-    if ($existing.value | Where-Object { $_.principal.id -eq $PrincipalId }) {
-        Write-Output "Fabric workspace role already assigned to the API identity."
-        return
+    try {
+        $url = "$fabricUrl/v1/workspaces/$($cfg.fabric.workspaceId)/roleAssignments"
+        $existing = az rest --method get --url $url --resource $fabricUrl | ConvertFrom-Json
+        if ($existing.value | Where-Object { $_.principal.id -eq $PrincipalId }) {
+            Write-Output "Fabric workspace role already assigned to the API identity."
+            return
+        }
+        $bodyPath = Join-Path $tempDir "pmo-fabric-role.json"
+        $body = @{ principal = @{ id = $PrincipalId; type = "ServicePrincipal" }; role = $dep.fabricWorkspaceRole } | ConvertTo-Json -Depth 4
+        [System.IO.File]::WriteAllText($bodyPath, $body)
+        Invoke-Checked "Fabric role assignment" { az rest --method post --url $url --resource $fabricUrl --body "@$bodyPath" }
+        Remove-Item -Force $bodyPath
+    } catch {
+        Write-Warning "Could not update Fabric role assignment: $_"
     }
-    $bodyPath = Join-Path $env:TEMP "pmo-fabric-role.json"
-    $body = @{ principal = @{ id = $PrincipalId; type = "ServicePrincipal" }; role = $dep.fabricWorkspaceRole } | ConvertTo-Json -Depth 4
-    [System.IO.File]::WriteAllText($bodyPath, $body)
-    Invoke-Checked "Fabric role assignment" { az rest --method post --url $url --resource $fabricUrl --body "@$bodyPath" }
-    Remove-Item -Force $bodyPath
 }
 
 function Add-SpaRedirectUri([string]$Uri) {
-    $clientId = $cfg.entra.clientId
-    $current = @(az ad app show --id $clientId --query "spa.redirectUris" -o json | ConvertFrom-Json)
-    if ($current -contains $Uri) {
-        Write-Output "Entra redirect URI already registered: $Uri"
-        return
+    try {
+        $clientId = $cfg.entra.clientId
+        $current = @(az ad app show --id $clientId --query "spa.redirectUris" -o json | ConvertFrom-Json)
+        if ($current -contains $Uri) {
+            Write-Output "Entra redirect URI already registered: $Uri"
+            return
+        }
+        $uris = @($current + $Uri) | Where-Object { $_ } | Select-Object -Unique
+        Invoke-Checked "Entra redirect update" { az ad app update --id $clientId --spa-redirect-uris @uris }
+    } catch {
+        Write-Warning "Could not update Entra redirect URI: $_"
     }
-    $uris = @($current + $Uri) | Where-Object { $_ } | Select-Object -Unique
-    Invoke-Checked "Entra redirect update" { az ad app update --id $clientId --spa-redirect-uris @uris }
 }
 
 if ($Mode -ne "publish") {
@@ -199,7 +208,7 @@ if ($Mode -eq "deploy" -or $Mode -eq "publish") {
     Publish-Apps $outputs
     Grant-FabricWorkspaceRole -PrincipalId $outputs.identity_principal_id
     Add-SpaRedirectUri -Uri $outputs.ui_url
-    $uiHealthPath = (Get-Content -Raw -Path (Join-Path $repoRoot "ui\server\config.json") | ConvertFrom-Json).server.healthzPath
+    $uiHealthPath = (Get-Content -Raw -Path (Join-Path $repoRoot "ui/server/config.json") | ConvertFrom-Json).server.healthzPath
     if ($Component -ne "api") { Wait-ForHealthy -Url ($outputs.ui_url + $uiHealthPath) }
     if ($Component -ne "ui") { Wait-ForHealthy -Url ($outputs.api_url + "/v1/health") }
     Write-Output ("UI: " + $outputs.ui_url)
