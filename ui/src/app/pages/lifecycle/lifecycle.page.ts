@@ -73,10 +73,10 @@ import { EditProjectModalComponent } from '../../components/edit-project-modal/e
             type="button"
             class="ctrl-btn outline"
             (click)="onRestoreFactoryDefaults()"
-            title="Restore default 100 sample projects"
+            title="Restore default sample projects"
           >
             <ion-icon name="refresh-outline"></ion-icon>
-            Restore 100 Sample Projects
+            Restore Sample Portfolio
           </button>
         </div>
       </div>
@@ -195,7 +195,9 @@ import { EditProjectModalComponent } from '../../components/edit-project-modal/e
                 <div class="sample-file-card" [style.border-left-color]="file.color">
                   <div class="sample-card-head">
                     <span class="sample-code-tag">{{ file.code }}</span>
-                    <span class="sample-count-badge">{{ file.projectCount }} Projects</span>
+                    @if (store.rawProjects().length > 0) {
+                      <span class="sample-count-badge">{{ file.projectCount }} Projects</span>
+                    }
                   </div>
                   <h4 class="sample-pf-name">{{ file.portfolioName }}</h4>
                   <p class="sample-pf-desc">{{ file.description }}</p>
@@ -209,7 +211,7 @@ import { EditProjectModalComponent } from '../../components/edit-project-modal/e
                       (click)="onQuickImportSample(file)"
                     >
                       <ion-icon name="add-circle-outline"></ion-icon>
-                      Load {{ file.projectCount }} Projects
+                      {{ store.rawProjects().length === 0 ? 'Load Projects' : 'Load ' + file.projectCount + ' Projects' }}
                     </button>
                     <a
                       [href]="'assets/data/portfolios/' + file.filename"
@@ -261,6 +263,99 @@ import { EditProjectModalComponent } from '../../components/edit-project-modal/e
         </ion-card-header>
 
         <ion-card-content>
+          <!-- Portfolio Directory & Add/Delete Portfolios Bar -->
+          <div class="portfolio-directory-box">
+            <div class="portfolios-bar-head">
+              <div class="bar-head-left">
+                <ion-icon name="albums-outline" class="dir-icon"></ion-icon>
+                <span class="bar-title">Portfolio Directory ({{ store.availablePortfolios().length }} Portfolios):</span>
+              </div>
+              <button
+                type="button"
+                class="add-pf-toggle-btn"
+                (click)="isAddingPortfolio.set(!isAddingPortfolio())"
+              >
+                <ion-icon [name]="isAddingPortfolio() ? 'close-outline' : 'add-outline'"></ion-icon>
+                {{ isAddingPortfolio() ? 'Cancel' : '+ Add Portfolio' }}
+              </button>
+            </div>
+
+            @if (isAddingPortfolio()) {
+              <div class="add-portfolio-form">
+                <div class="add-pf-grid">
+                  <div class="pf-field">
+                    <label>Portfolio Name *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. IT - InfoSec, Cloud CoE..."
+                      [(ngModel)]="newPfName"
+                      class="pf-input"
+                    />
+                  </div>
+                  <div class="pf-field">
+                    <label>Code / Prefix *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. INFOSEC, CCOE..."
+                      [(ngModel)]="newPfCode"
+                      class="pf-input"
+                    />
+                  </div>
+                  <div class="pf-field">
+                    <label>Description</label>
+                    <input
+                      type="text"
+                      placeholder="Strategic charter or scope..."
+                      [(ngModel)]="newPfDesc"
+                      class="pf-input"
+                    />
+                  </div>
+                  <div class="pf-field">
+                    <label>Theme Color</label>
+                    <select [(ngModel)]="newPfColor" class="pf-select">
+                      <option value="#0078D4">Blue (#0078D4)</option>
+                      <option value="#107C10">Green (#107C10)</option>
+                      <option value="#8B5CF6">Purple (#8B5CF6)</option>
+                      <option value="#0284C7">Sky Blue (#0284C7)</option>
+                      <option value="#D97706">Amber (#D97706)</option>
+                      <option value="#DC2626">Red (#DC2626)</option>
+                      <option value="#475569">Slate (#475569)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="add-pf-actions">
+                  <button
+                    type="button"
+                    class="btn-create-pf"
+                    [disabled]="!newPfName.trim()"
+                    (click)="onCreatePortfolio()"
+                  >
+                    Create Portfolio
+                  </button>
+                </div>
+              </div>
+            }
+
+            <!-- Active Portfolios List with Delete Button -->
+            <div class="portfolio-chips-list">
+              @for (pfName of store.availablePortfolios(); track pfName) {
+                <div class="pf-chip-item">
+                  <span class="pf-color-dot" [style.background]="getPortfolioColor(pfName)"></span>
+                  <span class="pf-chip-name">{{ pfName }}</span>
+                  <span class="pf-chip-count">({{ getPortfolioCount(pfName) }} active)</span>
+                  <button
+                    type="button"
+                    class="pf-delete-btn"
+                    title="Delete portfolio {{ pfName }}"
+                    (click)="onDeletePortfolio(pfName)"
+                  >
+                    &times;
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
           <!-- Filters & Scope Controls -->
           <div class="filters-toolbar">
             <div class="filter-col">
@@ -408,10 +503,10 @@ import { EditProjectModalComponent } from '../../components/edit-project-modal/e
               @if (store.rawProjects().length === 0) {
                 <div class="quick-import-empty-row">
                   <ion-button size="small" (click)="onQuickImportSample(importService.sampleFiles[0])">
-                    Load IT InfoSec (40)
+                    Load IT - InfoSec Projects
                   </ion-button>
                   <ion-button size="small" fill="outline" (click)="onRestoreFactoryDefaults()">
-                    Load All 100 Projects
+                    Load All Portfolio Projects
                   </ion-button>
                 </div>
               }
@@ -933,6 +1028,137 @@ import { EditProjectModalComponent } from '../../components/edit-project-modal/e
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
       }
 
+      /* Portfolio Directory Box */
+      .portfolio-directory-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+      }
+      .portfolios-bar-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .bar-head-left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .dir-icon {
+        font-size: 1.1rem;
+        color: var(--pmo-primary, #0078d4);
+      }
+      .bar-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+      }
+      .add-pf-toggle-btn {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        padding: 3px 8px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: var(--pmo-primary, #0078d4);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .add-pf-toggle-btn:hover {
+        background: #f1f5f9;
+      }
+      .add-portfolio-form {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .add-pf-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px 12px;
+        margin-bottom: 8px;
+      }
+      .pf-field label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 2px;
+      }
+      .pf-input, .pf-select {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.78rem;
+        outline: none;
+      }
+      .add-pf-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .btn-create-pf {
+        background: var(--pmo-primary, #0078d4);
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 12px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-create-pf:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .portfolio-chips-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .pf-chip-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        padding: 3px 8px;
+        font-size: 0.75rem;
+      }
+      .pf-color-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .pf-chip-name {
+        font-weight: 600;
+        color: #1e293b;
+      }
+      .pf-chip-count {
+        font-size: 0.7rem;
+        color: #64748b;
+      }
+      .pf-delete-btn {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 2px;
+      }
+      .pf-delete-btn:hover {
+        color: #dc2626;
+      }
+
       /* Filters Toolbar */
       .filters-toolbar {
         display: flex;
@@ -1321,6 +1547,48 @@ export class LifecyclePageComponent {
 
   getPortfolioCount(portfolio: string): number {
     return this.store.rawProjects().filter((p) => p.portfolio === portfolio && !p.isDeleted).length;
+  }
+
+  readonly isAddingPortfolio = signal<boolean>(false);
+  newPfName = '';
+  newPfCode = '';
+  newPfDesc = '';
+  newPfColor = '#0078D4';
+
+  onCreatePortfolio(): void {
+    const name = this.newPfName.trim();
+    if (!name) return;
+    this.store.addPortfolio({
+      name,
+      code: this.newPfCode.trim() || name.slice(0, 4).toUpperCase(),
+      description: this.newPfDesc.trim() || `${name} strategic portfolio`,
+      color: this.newPfColor,
+      role: 'coupled',
+    });
+    this.notify(`Created portfolio "${name}".`, 'success');
+    this.newPfName = '';
+    this.newPfCode = '';
+    this.newPfDesc = '';
+    this.isAddingPortfolio.set(false);
+  }
+
+  onDeletePortfolio(pfName: string): void {
+    const count = this.getPortfolioCount(pfName);
+    const msg = count > 0
+      ? `Delete portfolio "${pfName}" and permanently delete its ${count} project(s)?`
+      : `Delete empty portfolio "${pfName}"?`;
+    if (confirm(msg)) {
+      this.store.deletePortfolio(pfName, true);
+      this.notify(`Deleted portfolio "${pfName}".`, 'info');
+      if (this.selectedPortfolioFilter === pfName) {
+        this.selectedPortfolioFilter = 'ALL';
+      }
+    }
+  }
+
+  getPortfolioColor(pfName: string): string {
+    const found = this.store.portfolioDefinitions().find((p) => p.name.toLowerCase() === pfName.toLowerCase());
+    return found?.color || '#0078D4';
   }
 
   // Bulk Actions

@@ -25,7 +25,7 @@ export interface SamplePortfolioFile {
 export const SAMPLE_PORTFOLIO_FILES: SamplePortfolioFile[] = [
   {
     id: 'it-infosec',
-    portfolioName: 'IT InfoSec',
+    portfolioName: 'IT - InfoSec',
     filename: 'portfolio_it_infosec.xlsx',
     projectCount: 40,
     description: 'Zero Trust architecture, identity, SOC operations, compliance, and cleanroom cyber defense.',

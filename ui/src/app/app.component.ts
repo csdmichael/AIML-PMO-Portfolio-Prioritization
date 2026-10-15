@@ -26,6 +26,8 @@ import { AgentFabComponent } from './components/agent-fab/agent-fab.component';
 import { addIcons } from 'ionicons';
 import {
   addCircleOutline,
+  addOutline,
+  albumsOutline,
   alertCircleOutline,
   analytics,
   analyticsOutline,
@@ -82,6 +84,8 @@ import {
 
 addIcons({
   addCircleOutline,
+  addOutline,
+  albumsOutline,
   alertCircleOutline,
   analytics,
   analyticsOutline,

@@ -140,4 +140,23 @@ describe('LifecyclePageComponent', () => {
     expect(stored?.projectName).toBe('Updated Project Name by User');
     expect(stored?.businessValue).toBe(5);
   });
+
+  it('should support adding and deleting portfolios', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const fixture = TestBed.createComponent(LifecyclePageComponent);
+    const component = fixture.componentInstance;
+
+    const initialCount = store.availablePortfolios().length;
+    component.newPfName = 'Cloud Center of Excellence';
+    component.newPfCode = 'CCOE';
+    component.newPfDesc = 'Enterprise multi-cloud architecture';
+    component.onCreatePortfolio();
+
+    expect(store.availablePortfolios().length).toBe(initialCount + 1);
+    expect(store.availablePortfolios()).toContain('Cloud Center of Excellence');
+
+    // Delete the newly added portfolio
+    component.onDeletePortfolio('Cloud Center of Excellence');
+    expect(store.availablePortfolios()).not.toContain('Cloud Center of Excellence');
+  });
 });

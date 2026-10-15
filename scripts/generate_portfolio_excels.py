@@ -237,12 +237,18 @@ def main():
             wb.save(target_path)
         print(f"Generated {filename} (Minimal Template, 10 fields max)")
 
+    # Normalize IT InfoSec to IT - InfoSec
+    for p in projects:
+        if p.get("portfolio") == "IT InfoSec":
+            p["portfolio"] = "IT - InfoSec"
+
     by_portfolio = {}
     for p in projects:
         pf = p["portfolio"]
         by_portfolio.setdefault(pf, []).append(p)
 
     file_map = {
+        "IT - InfoSec": "portfolio_it_infosec.xlsx",
         "IT InfoSec": "portfolio_it_infosec.xlsx",
         "IT Software Development": "portfolio_it_software_development.xlsx",
         "IT Infrastructure": "portfolio_it_infrastructure.xlsx",
@@ -250,9 +256,65 @@ def main():
         "Data and Analytics": "portfolio_data_and_analytics.xlsx",
     }
 
+    import xlwt
+
+    def make_xls(filepath, project_list, title, h_list):
+        wb = xlwt.Workbook()
+        ws = wb.add_sheet(title[:31])
+        header_mand_style = xlwt.easyxf(
+            "font: bold 1, color white, name Segoe UI; pattern: pattern solid, fore_colour dark_blue; align: horiz center, vert center"
+        )
+        header_opt_style = xlwt.easyxf(
+            "font: bold 1, color white, name Segoe UI; pattern: pattern solid, fore_colour gray50; align: horiz center, vert center"
+        )
+        data_style = xlwt.easyxf("font: name Segoe UI; borders: left thin, right thin, top thin, bottom thin")
+        data_num_style = xlwt.easyxf("font: name Segoe UI; align: horiz right; borders: left thin, right thin, top thin, bottom thin")
+        data_bool_style = xlwt.easyxf("font: name Segoe UI; align: horiz center; borders: left thin, right thin, top thin, bottom thin")
+
+        for col_idx, (_, label, is_mand) in enumerate(h_list):
+            style = header_mand_style if is_mand else header_opt_style
+            ws.write(0, col_idx, label, style)
+            ws.col(col_idx).width = 256 * max(min(len(label) + 4, 38), 14)
+
+        for row_idx, p in enumerate(project_list, 1):
+            for col_idx, (k, _, _) in enumerate(h_list):
+                val = p.get(k)
+                if k == "ruleOverrides" and isinstance(val, list):
+                    val = "; ".join(str(x) for x in val)
+                elif k == "dataIssues" and isinstance(val, list):
+                    val = "; ".join(str(x) for x in val)
+                elif k == "topDrivers" and isinstance(val, list):
+                    val = "; ".join(
+                        f"{d.get('signalLabel')} ({d.get('shapValue'):+.2f})"
+                        for d in val
+                        if isinstance(d, dict)
+                    )
+
+                if isinstance(val, (int, float)):
+                    ws.write(row_idx, col_idx, val, data_num_style)
+                elif isinstance(val, bool):
+                    ws.write(row_idx, col_idx, str(val).upper(), data_bool_style)
+                else:
+                    ws.write(row_idx, col_idx, str(val or ""), data_style)
+
+        wb.save(filepath)
+
     for pf_name, p_list in by_portfolio.items():
         fname = file_map.get(pf_name, f"portfolio_{pf_name.lower().replace(' ', '_')}.xlsx")
         make_excel(fname, p_list, pf_name)
+
+    # Specific IT - InfoSec files
+    infosec_projects = by_portfolio.get("IT - InfoSec", [])
+    if infosec_projects:
+        make_excel("portfolio_it_-_infosec.xlsx", infosec_projects, "IT - InfoSec")
+        make_excel("it_infosec_sample_projects.xlsx", infosec_projects, "IT - InfoSec")
+        
+        # Save directly in data/ folder as requested: "Add IT - InfoSec Portfolio and sample projects xls in data folder"
+        make_excel("../it_infosec_sample_projects.xlsx", infosec_projects, "IT - InfoSec")
+        make_xls(os.path.join(root_dir, "data", "it_infosec_sample_projects.xls"), infosec_projects, "IT - InfoSec", headers)
+        make_xls(os.path.join(root_dir, "data", "portfolios", "it_infosec_sample_projects.xls"), infosec_projects, "IT - InfoSec", headers)
+        make_xls(os.path.join(root_dir, "ui", "src", "assets", "data", "portfolios", "it_infosec_sample_projects.xls"), infosec_projects, "IT - InfoSec", headers)
+        print("Generated it_infosec_sample_projects.xls and .xlsx in data/ and data/portfolios/")
 
     make_excel("portfolio_all_100_projects.xlsx", projects, "All Portfolios")
     make_template("project_intake_template.xlsx")
