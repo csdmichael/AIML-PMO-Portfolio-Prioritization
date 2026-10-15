@@ -213,12 +213,15 @@ if ($Mode -ne "publish") {
 if ($Mode -eq "deploy" -or $Mode -eq "publish") {
     $outputs = Get-DeploymentOutputs
     Publish-Apps $outputs
-    Grant-FabricWorkspaceRole -PrincipalId $outputs.identity_principal_id
-    Add-SpaRedirectUri -Uri $outputs.ui_url
+    if ($Mode -eq "deploy") {
+        Grant-FabricWorkspaceRole -PrincipalId $outputs.identity_principal_id
+        Add-SpaRedirectUri -Uri $outputs.ui_url
+    }
     $uiHealthPath = (Get-Content -Raw -Path (Join-Path $repoRoot "ui/server/config.json") | ConvertFrom-Json).server.healthzPath
     if ($Component -ne "api") { Wait-ForHealthy -Url ($outputs.ui_url + $uiHealthPath) }
     if ($Component -ne "ui") { Wait-ForHealthy -Url ($outputs.api_url + "/v1/health") }
     Write-Output ("UI: " + $outputs.ui_url)
     Write-Output ("API: " + $outputs.api_url)
     Write-Output ("Swagger: " + $outputs.api_swagger_url)
+    $global:LASTEXITCODE = 0
 }
