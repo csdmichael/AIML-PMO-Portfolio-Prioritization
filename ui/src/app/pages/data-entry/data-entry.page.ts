@@ -647,7 +647,7 @@ export class DataEntryPageComponent implements OnInit {
   }
 
   get templateUrl(): string {
-    return this.api.getIntakeTemplateUrl();
+    return 'assets/data/portfolios/project_intake_template.xlsx';
   }
 
   loadOptions(): void {

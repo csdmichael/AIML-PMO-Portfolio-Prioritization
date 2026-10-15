@@ -196,8 +196,8 @@ import { ConfigService } from '../../services/config.service';
             </app-empty-state>
           } @else if (store.rawProjects().length === 0) {
             <app-empty-state
-              title="No Projects in Portfolio (Demo Ready)"
-              message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load demo datasets."
+              title="No Projects in Portfolio"
+              message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load baseline datasets."
               icon="file-tray-outline"
             >
               <ion-button routerLink="/lifecycle">

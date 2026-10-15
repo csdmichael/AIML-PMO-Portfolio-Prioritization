@@ -112,7 +112,7 @@ describe('LifecyclePageComponent', () => {
     expect(store.softDeletedProjects().length).toBe(0);
   });
 
-  it('should support clearing all projects for demo and restoring defaults', () => {
+  it('should support clearing all projects and restoring defaults', () => {
     const fixture = TestBed.createComponent(LifecyclePageComponent);
     const component = fixture.componentInstance;
 
@@ -122,5 +122,22 @@ describe('LifecyclePageComponent', () => {
 
     store.resetToDefaultData();
     expect(store.rawProjects().length).toBe(SAMPLE_PORTFOLIO_DATASET.projects.length);
+  });
+
+  it('should support opening edit modal and saving project modifications', () => {
+    const fixture = TestBed.createComponent(LifecyclePageComponent);
+    const component = fixture.componentInstance;
+
+    const firstProj = store.activeProjects()[0];
+    component.onOpenEditModal(firstProj);
+    expect(component.editingProject()?.projectId).toBe(firstProj.projectId);
+
+    const modified = { ...firstProj, projectName: 'Updated Project Name by User', businessValue: 5 };
+    component.onSaveEditedProject(modified);
+    expect(component.editingProject()).toBeNull();
+
+    const stored = store.rawProjects().find((p) => p.projectId === firstProj.projectId);
+    expect(stored?.projectName).toBe('Updated Project Name by User');
+    expect(stored?.businessValue).toBe(5);
   });
 });

@@ -22,6 +22,7 @@ import { PortfolioStore } from '../../services/portfolio.store';
 import { DataApiService } from '../../services/data-api.service';
 import { ConfidenceRingComponent } from '../confidence-ring/confidence-ring.component';
 import { Project, DecisionAction, LocalDecision } from '../../models/portfolio.models';
+import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
@@ -43,6 +44,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
     IonNote,
     ConfidenceRingComponent,
     NgxEchartsDirective,
+    EditProjectModalComponent,
   ],
   providers: [provideEchartsCore({ echarts })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,6 +101,10 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
             <!-- Lifecycle Management Bar -->
             <div class="lifecycle-bar">
               <span class="lifecycle-lbl">Lifecycle Actions:</span>
+              <button type="button" class="life-btn edit-proj-btn" (click)="isEditing.set(true)">
+                <ion-icon name="create-outline"></ion-icon>
+                Edit Project & AI Signals
+              </button>
               @if (p.projectStatus !== 'Backlog') {
                 <button type="button" class="life-btn backlog" (click)="store.markAsBacklog(p.projectId)">
                   Mark as Backlog
@@ -232,7 +238,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
               <div class="action-box">
                 <div class="action-title">{{ p.recommendedAction }}</div>
                 <div class="action-subnote">
-                  <strong>Notice:</strong> Every recommendation requires human approval. Machine suggestions inform human PMO decision-making; automated write-back is out of scope for this demo.
+                  <strong>Notice:</strong> Every recommendation requires human approval. Machine suggestions inform human PMO decision-making; final authorization rests with the PMO committee.
                 </div>
               </div>
             </div>
@@ -293,6 +299,14 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
             </div>
           </ion-card-content>
         </ion-card>
+
+        @if (isEditing()) {
+          <app-edit-project-modal
+            [project]="p"
+            (save)="onSaveEditedProject($event)"
+            (cancel)="isEditing.set(false)"
+          ></app-edit-project-modal>
+        }
       </div>
     } @else {
       <div class="no-selection">
@@ -667,6 +681,14 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
         color: #b91c1c;
         border: 1px solid #fecaca;
       }
+      .life-btn.edit-proj-btn {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
       .life-btn.hard {
         background: #ef4444;
         color: #ffffff;
@@ -677,7 +699,14 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 export class DetailPanelComponent {
   readonly store = inject(PortfolioStore);
   private readonly api = inject(DataApiService);
+  readonly isEditing = signal<boolean>(false);
   decisionReason = '';
+
+  onSaveEditedProject(updated: Project): void {
+    const list = this.store.rawProjects().map((p) => (p.projectId === updated.projectId ? updated : p));
+    this.store.updateDatasetProjects(list);
+    this.isEditing.set(false);
+  }
 
   getSourcesList(p: Project): Array<{ name: string; present: boolean }> {
     return [

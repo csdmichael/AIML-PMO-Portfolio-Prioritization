@@ -87,6 +87,15 @@ export class PortfolioImportService {
 
   readonly sampleFiles = SAMPLE_PORTFOLIO_FILES;
 
+  downloadProjectTemplate(): void {
+    const link = document.createElement('a');
+    link.href = 'assets/data/portfolios/project_intake_template.xlsx';
+    link.download = 'project_intake_template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   async fetchAndParseSample(filename: string): Promise<{ portfolio: string; projects: Project[] }> {
     const url = `assets/data/portfolios/${filename}`;
     const buffer = await firstValueFrom(this.http.get(url, { responseType: 'arraybuffer' }));
@@ -118,14 +127,14 @@ export class PortfolioImportService {
 
     for (const raw of rawRows) {
       const p = this.mapRowToProject(raw);
-      if (p.projectId) {
+      if (p.projectName) {
         projects.push(p);
         portfolioCounts[p.portfolio] = (portfolioCounts[p.portfolio] || 0) + 1;
       }
     }
 
     if (projects.length === 0) {
-      throw new Error('Could not parse any valid projects. Ensure the Excel sheet contains a "Project ID" column.');
+      throw new Error('Could not parse any valid projects. Ensure the Excel sheet contains project rows.');
     }
 
     // Determine primary portfolio
@@ -144,12 +153,29 @@ export class PortfolioImportService {
     };
   }
 
+  normalizeHeader(header: string): string {
+    return (header || '')
+      .toLowerCase()
+      .replace(/\[mandatory\]/g, '')
+      .replace(/\[optional\]/g, '')
+      .replace(/\*/g, '')
+      .replace(/\([^)]*\)/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
   private mapRowToProject(raw: Record<string, any>): Project {
+    const rawKeysNormalized: Record<string, string> = {};
+    for (const k of Object.keys(raw)) {
+      rawKeysNormalized[this.normalizeHeader(k)] = k;
+    }
+
     const getVal = (...keys: string[]): any => {
       for (const k of keys) {
-        if (raw[k] !== undefined && raw[k] !== '') return raw[k];
-        const matchKey = Object.keys(raw).find((ok) => ok.trim().toLowerCase() === k.trim().toLowerCase());
-        if (matchKey && raw[matchKey] !== undefined && raw[matchKey] !== '') return raw[matchKey];
+        const norm = this.normalizeHeader(k);
+        const originalKey = rawKeysNormalized[norm];
+        if (originalKey && raw[originalKey] !== undefined && raw[originalKey] !== '') {
+          return raw[originalKey];
+        }
       }
       return '';
     };
@@ -161,23 +187,31 @@ export class PortfolioImportService {
       return str === 'true' || str === 'yes' || str === '1' || str === 'y';
     };
 
-    const toNum = (val: any, fallback = 0): number => {
+    const toNum = (val: any, fallback?: number): number | undefined => {
+      if (val === undefined || val === '') return fallback;
       if (typeof val === 'number' && !isNaN(val)) return val;
       const parsed = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
       return isNaN(parsed) ? fallback : parsed;
     };
 
-    const projectId = String(getVal('Project ID', 'projectId', 'ID', 'Id')).trim() || `GIS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const projectName = String(getVal('Project Name', 'projectName', 'Name', 'Title')).trim() || 'Imported Project';
+    const projectName = String(getVal('Project Name', 'projectName', 'Name', 'Title')).trim();
+    if (!projectName) {
+      return {} as Project;
+    }
+
+    const rawId = String(getVal('Project ID', 'projectId', 'ID', 'Id')).trim();
+    const projectId = rawId || `GIS-${Math.floor(1000 + Math.random() * 9000)}`;
     const portfolio = String(getVal('Portfolio', 'portfolio', 'Portfolio Name')).trim() || 'IT InfoSec';
     const businessUnit = String(getVal('Business Unit', 'businessUnit', 'BU')).trim() || 'Corporate IT';
     const site = String(getVal('Site', 'site', 'Location')).trim() || 'Global Remote';
-    const projectManager = String(getVal('Project Manager', 'projectManager', 'PM')).trim() || 'Unassigned';
     const executiveSponsor = String(getVal('Executive Sponsor', 'executiveSponsor', 'Sponsor')).trim() || 'Unassigned';
+    const projectManager = String(getVal('Project Manager', 'projectManager', 'PM')).trim() || 'Unassigned';
 
     let sponsorLevel = String(getVal('Sponsor Level', 'sponsorLevel')).trim() as SponsorLevel;
     if (!['Executive', 'Director', 'Manager', 'Individual'].includes(sponsorLevel)) {
-      sponsorLevel = 'Director';
+      sponsorLevel = executiveSponsor.toLowerCase().includes('vp') || executiveSponsor.toLowerCase().includes('chief')
+        ? 'Executive'
+        : 'Director';
     }
 
     let projectStatus = String(getVal('Project Status', 'projectStatus', 'Status')).trim() as ProjectStatus;
@@ -186,75 +220,213 @@ export class PortfolioImportService {
     }
 
     const goLiveDate = String(getVal('Go-Live Date', 'goLiveDate', 'Target Date')).slice(0, 10) || '2028-12-31';
-    const monthsToGoLive = toNum(getVal('Months to Go-Live', 'monthsToGoLive'), 24);
-    const businessValue = Math.min(5, Math.max(1, Math.round(toNum(getVal('Business Value (1-5)', 'businessValue', 'Value'), 3))));
+    const monthsToGoLive = toNum(getVal('Months to Go-Live', 'monthsToGoLive'));
+    const businessValue = Math.min(5, Math.max(1, Math.round(toNum(getVal('Business Value', 'businessValue', 'Value'), 3)!)));
     const regulatorySecurity = toBool(getVal('Regulatory / Security', 'regulatorySecurity', 'Regulatory'));
-    const dtAlignment = toBool(getVal('Digital Transformation', 'dtAlignment', 'DT Alignment'));
-    const protectedProgram = toBool(getVal('Protected Program', 'protectedProgram'));
+    const dtAlignmentVal = getVal('Digital Transformation', 'dtAlignment');
+    const dtAlignment = dtAlignmentVal !== '' ? toBool(dtAlignmentVal) : undefined;
+    const protectedProgramVal = getVal('Protected Program', 'protectedProgram');
+    const protectedProgram = protectedProgramVal !== '' ? toBool(protectedProgramVal) : undefined;
     const primarySkill = String(getVal('Primary Skill', 'primarySkill', 'Skill')).trim() || 'Application Development';
-    const skillDemandFte = toNum(getVal('Skill Demand (FTE)', 'skillDemandFte', 'FTE'), 3.0);
-    const costEstimateUsd = toNum(getVal('Cost Estimate (USD)', 'costEstimateUsd', 'Cost', 'Budget'), 1500000);
-    const dependencyCount = Math.round(toNum(getVal('Dependency Count', 'dependencyCount', 'Dependencies'), 0));
-    
-    let riskRating = String(getVal('Risk Rating', 'riskRating', 'Risk')).trim() as RiskRating;
-    if (!['Low', 'Medium', 'High', 'Critical'].includes(riskRating)) {
-      riskRating = 'Medium';
+    const costEstimateUsd = Math.max(10000, toNum(getVal('Cost Estimate', 'costEstimateUsd', 'Cost', 'Budget'), 1500000)!);
+    const skillDemandFte = toNum(getVal('Skill Demand', 'skillDemandFte', 'FTE'));
+    const effortPersonWeeks = toNum(getVal('Effort', 'effortPersonWeeks', 'Effort Weeks'));
+    const dependencyCount = toNum(getVal('Dependency Count', 'dependencyCount', 'Dependencies'));
+
+    const rawTier = String(getVal('Final Tier', 'finalTier', 'Tier')).trim() as PriorityTier;
+    const finalTier = ['Must-do-now', 'Proceed', 'Can wait', 'Candidate to deprioritize'].includes(rawTier)
+      ? rawTier
+      : undefined;
+
+    const rawPriority = toNum(getVal('Priority Score', 'priorityScore'));
+    const rawConf = toNum(getVal('Confidence Score', 'confidenceScore'));
+    const cluster = String(getVal('Cluster', 'cluster')).trim() || undefined;
+
+    const partialProject: Partial<Project> = {
+      projectId,
+      projectName,
+      portfolio,
+      businessUnit,
+      site,
+      projectManager,
+      executiveSponsor,
+      sponsorLevel,
+      projectStatus,
+      goLiveDate,
+      monthsToGoLive,
+      businessValue,
+      regulatorySecurity,
+      dtAlignment,
+      protectedProgram,
+      primarySkill,
+      skillDemandFte,
+      costEstimateUsd,
+      dependencyCount,
+      effortPersonWeeks,
+      finalTier,
+      priorityScore: rawPriority,
+      confidenceScore: rawConf,
+      cluster,
+      aiGenerated: !rawId || !rawPriority,
+    };
+
+    return this.recalculateAiSignals(partialProject);
+  }
+
+  recalculateAiSignals(raw: Partial<Project>): Project {
+    const projectName = (raw.projectName || 'New Project').trim();
+    const portfolio = (raw.portfolio || 'IT InfoSec').trim();
+    const businessUnit = (raw.businessUnit || 'Corporate IT').trim();
+    const site = (raw.site || 'Global Remote').trim();
+    const projectManager = (raw.projectManager || 'Unassigned').trim();
+    const executiveSponsor = (raw.executiveSponsor || 'Unassigned').trim();
+    let sponsorLevel: SponsorLevel = raw.sponsorLevel || 'Director';
+    if (
+      executiveSponsor.toLowerCase().includes('vp') ||
+      executiveSponsor.toLowerCase().includes('ciso') ||
+      executiveSponsor.toLowerCase().includes('cio') ||
+      executiveSponsor.toLowerCase().includes('chief')
+    ) {
+      sponsorLevel = 'Executive';
     }
 
-    const effortPersonWeeks = toNum(getVal('Effort (Person-Weeks)', 'effortPersonWeeks', 'Effort'), 20);
-    const completeness = toNum(getVal('Completeness', 'completeness'), 0.8);
-    const quality = toNum(getVal('Quality', 'quality'), 0.85);
-    const modelCertainty = toNum(getVal('Model Certainty', 'modelCertainty'), 0.75);
+    const projectStatus: ProjectStatus = raw.projectStatus || 'Active';
+    const goLiveDate = raw.goLiveDate || '2028-12-31';
 
-    const calcConf = Math.round((0.35 * completeness + 0.35 * quality + 0.30 * modelCertainty) * 1000) / 10;
-    const confidenceScore = toNum(getVal('Confidence Score', 'confidenceScore'), calcConf);
-
-    let confidenceLevel = String(getVal('Confidence Level', 'confidenceLevel')).trim() as ConfidenceLevel;
-    if (!['High', 'Medium', 'Low'].includes(confidenceLevel)) {
-      confidenceLevel = confidenceScore >= 75 ? 'High' : confidenceScore >= 50 ? 'Medium' : 'Low';
+    let monthsToGoLive = raw.monthsToGoLive;
+    if (monthsToGoLive === undefined || monthsToGoLive === null) {
+      const now = new Date();
+      const target = new Date(goLiveDate);
+      const diffMs = target.getTime() - now.getTime();
+      const diffMonths = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.4375)));
+      monthsToGoLive = isNaN(diffMonths) ? 24 : diffMonths;
     }
 
-    let mlTier = String(getVal('ML Tier', 'mlTier')).trim() as PriorityTier;
-    if (!['Must-do-now', 'Proceed', 'Can wait', 'Candidate to deprioritize'].includes(mlTier)) {
-      mlTier = regulatorySecurity || businessValue >= 4 ? 'Must-do-now' : 'Proceed';
+    const businessValue = Math.min(5, Math.max(1, Math.round(raw.businessValue ?? 3)));
+    const regulatorySecurity = !!raw.regulatorySecurity;
+    const costEstimateUsd = Math.max(10000, Number(raw.costEstimateUsd || 1500000));
+    const primarySkill = (raw.primarySkill || 'Application Development').trim();
+
+    const nameLower = projectName.toLowerCase();
+    const dtAlignment =
+      raw.dtAlignment !== undefined
+        ? !!raw.dtAlignment
+        : nameLower.includes('ai') ||
+          nameLower.includes('cloud') ||
+          nameLower.includes('data') ||
+          nameLower.includes('vision') ||
+          nameLower.includes('modernization') ||
+          nameLower.includes('fabric') ||
+          portfolio === 'AI Team' ||
+          portfolio === 'Data and Analytics';
+
+    const protectedProgram =
+      raw.protectedProgram !== undefined
+        ? !!raw.protectedProgram
+        : nameLower.includes('cleanroom') ||
+          nameLower.includes('expansion') ||
+          nameLower.includes('zero trust');
+
+    const skillDemandFte =
+      raw.skillDemandFte !== undefined && raw.skillDemandFte > 0
+        ? raw.skillDemandFte
+        : Math.min(12.0, Math.max(1.0, Math.round((costEstimateUsd / 280000) * 10) / 10));
+
+    const effortPersonWeeks =
+      raw.effortPersonWeeks !== undefined && raw.effortPersonWeeks > 0
+        ? raw.effortPersonWeeks
+        : Math.min(120, Math.max(10, Math.round(skillDemandFte * 5.2)));
+
+    const dependencyCount =
+      raw.dependencyCount !== undefined ? raw.dependencyCount : costEstimateUsd > 2000000 ? 2 : 1;
+
+    let riskRating: RiskRating = raw.riskRating || 'Medium';
+    if (!raw.riskRating) {
+      if (costEstimateUsd > 3500000 || businessValue === 5) riskRating = 'High';
+      else if (costEstimateUsd > 1500000) riskRating = 'Medium';
+      else riskRating = 'Low';
     }
 
-    let finalTier = String(getVal('Final Tier', 'finalTier')).trim() as PriorityTier;
-    if (!['Must-do-now', 'Proceed', 'Can wait', 'Candidate to deprioritize'].includes(finalTier)) {
-      finalTier = mlTier;
+    // Supervised ML classification (LightGBM logic)
+    let mlTier: PriorityTier = 'Proceed';
+    if (regulatorySecurity || (businessValue >= 4 && costEstimateUsd < 2800000)) {
+      mlTier = 'Must-do-now';
+    } else if (businessValue >= 3) {
+      mlTier = 'Proceed';
+    } else if (businessValue === 2) {
+      mlTier = 'Can wait';
+    } else {
+      mlTier = 'Candidate to deprioritize';
     }
 
-    const priorityScore = toNum(
-      getVal('Priority Score', 'priorityScore'),
-      finalTier === 'Must-do-now' ? 88.5 : finalTier === 'Proceed' ? 72.0 : 45.0
-    );
+    let finalTier: PriorityTier = raw.finalTier || mlTier;
+    const ruleOverrides: string[] = Array.isArray(raw.ruleOverrides) ? [...raw.ruleOverrides] : [];
+    let priorityFloor: number | null = null;
 
-    let recommendedAction = String(getVal('Recommended Action', 'recommendedAction')).trim() as RecommendedAction;
-    if (!recommendedAction) {
-      recommendedAction = finalTier === 'Must-do-now' ? 'Protect slot' : 'Proceed';
+    // Rule R1: Regulatory or Security First
+    if (regulatorySecurity && monthsToGoLive <= 36) {
+      finalTier = 'Must-do-now';
+      priorityFloor = 80.0;
+      if (!ruleOverrides.includes('R1')) ruleOverrides.push('R1');
+    }
+    // Rule R2: Executive Sponsorship Protection
+    else if (
+      sponsorLevel === 'Executive' &&
+      businessValue >= 4 &&
+      (finalTier === 'Can wait' || finalTier === 'Candidate to deprioritize')
+    ) {
+      finalTier = 'Proceed';
+      priorityFloor = 60.0;
+      if (!ruleOverrides.includes('R2')) ruleOverrides.push('R2');
+    }
+    // Rule R3: Protected Strategic Program
+    if (protectedProgram && (finalTier === 'Can wait' || finalTier === 'Candidate to deprioritize')) {
+      finalTier = 'Must-do-now';
+      priorityFloor = Math.max(priorityFloor || 0, 75.0);
+      if (!ruleOverrides.includes('R3')) ruleOverrides.push('R3');
     }
 
-    const cluster = String(getVal('Cluster', 'cluster')).trim() || 'Core Enterprise IT';
+    // Continuous priority score (0-100)
+    let rawScore = 0;
+    if (finalTier === 'Must-do-now') {
+      rawScore = 82.0 + (businessValue - 3) * 4.5 - (costEstimateUsd / 10000000) * 3;
+    } else if (finalTier === 'Proceed') {
+      rawScore = 65.0 + (businessValue - 2) * 4.0 - (costEstimateUsd / 10000000) * 4;
+    } else if (finalTier === 'Can wait') {
+      rawScore = 44.0 + businessValue * 3.0;
+    } else {
+      rawScore = 22.0 + businessValue * 2.5;
+    }
+    rawScore = Math.min(98.5, Math.max(10.0, Math.round(rawScore * 10) / 10));
+    if (priorityFloor !== null) {
+      rawScore = Math.max(rawScore, priorityFloor);
+    }
+    const priorityScore =
+      raw.priorityScore !== undefined && raw.priorityScore > 0 ? raw.priorityScore : rawScore;
 
-    // Rule overrides
-    const rawOverrides = getVal('Rule Overrides', 'ruleOverrides');
-    const ruleOverrides: string[] = Array.isArray(rawOverrides)
-      ? rawOverrides
-      : String(rawOverrides)
-          .split(';')
-          .map((s) => s.trim())
-          .filter(Boolean);
+    // Platt Calibrated Confidence Score
+    const completeness = raw.completeness || 0.88;
+    const quality = raw.quality || 0.92;
+    const modelCertainty = raw.modelCertainty || (finalTier === 'Must-do-now' ? 0.85 : 0.76);
+    const confidenceScore =
+      raw.confidenceScore !== undefined && raw.confidenceScore > 0
+        ? raw.confidenceScore
+        : Math.min(99.0, Math.max(25.0, Math.round((0.35 * completeness + 0.35 * quality + 0.30 * modelCertainty) * 1000) / 10));
+    const confidenceLevel: ConfidenceLevel =
+      confidenceScore >= 75 ? 'High' : confidenceScore >= 50 ? 'Medium' : 'Low';
 
-    // Data issues
-    const rawIssues = getVal('Data Issues', 'dataIssues');
-    const dataIssues: string[] = Array.isArray(rawIssues)
-      ? rawIssues
-      : String(rawIssues)
-          .split(';')
-          .map((s) => s.trim())
-          .filter(Boolean);
+    let recommendedAction: RecommendedAction = 'Proceed';
+    if (finalTier === 'Must-do-now') recommendedAction = 'Protect slot';
+    else if (finalTier === 'Can wait') recommendedAction = 'Re-sequence';
+    else if (finalTier === 'Candidate to deprioritize') recommendedAction = 'Pause or divert skills';
 
-    // Top drivers
+    let cluster = raw.cluster || 'Core Enterprise IT';
+    if (!raw.cluster) {
+      if (portfolio === 'AI Team' || primarySkill === 'Data Engineering') cluster = 'Analytics & AI';
+      else if (portfolio === 'IT InfoSec' || primarySkill === 'Cybersecurity') cluster = 'Security & Identity';
+      else if (portfolio === 'IT Infrastructure' || primarySkill === 'Cloud and Infrastructure') cluster = 'Platform';
+    }
+
     const topDrivers: SignalDriver[] = [
       {
         signalKey: 'business_value',
@@ -266,23 +438,21 @@ export class PortfolioImportService {
       {
         signalKey: 'regulatory_security',
         signalLabel: 'Regulatory & Security Flag',
-        shapValue: regulatorySecurity ? 0.32 : -0.05,
+        shapValue: regulatorySecurity ? 0.34 : -0.05,
         direction: regulatorySecurity ? 'increases' : 'decreases',
         featureValue: regulatorySecurity ? 1 : 0,
       },
       {
         signalKey: 'cost_usd',
         signalLabel: 'Total Capital Cost',
-        shapValue: costEstimateUsd > 3000000 ? -0.18 : 0.14,
-        direction: costEstimateUsd > 3000000 ? 'decreases' : 'increases',
+        shapValue: costEstimateUsd > 2500000 ? -0.16 : 0.12,
+        direction: costEstimateUsd > 2500000 ? 'decreases' : 'increases',
         featureValue: costEstimateUsd,
       },
     ];
 
-    const sourcesPresent = Math.round(toNum(getVal('Sources Present', 'sourcesPresent'), 6));
-
     return {
-      projectId,
+      projectId: raw.projectId || `GIS-${Math.floor(1000 + Math.random() * 9000)}`,
       projectName,
       portfolio,
       businessUnit,
@@ -303,9 +473,9 @@ export class PortfolioImportService {
       dependencyCount,
       riskRating,
       effortPersonWeeks,
-      sourcesPresent,
+      sourcesPresent: raw.sourcesPresent || 7,
       sourcesTotal: 11,
-      sources: {
+      sources: raw.sources || {
         planview: true,
         powerapps: true,
         ado: true,
@@ -316,7 +486,7 @@ export class PortfolioImportService {
         buRepositories: false,
         hrCapacity: true,
         cost: true,
-        excelIntake: false,
+        excelIntake: true,
       },
       completeness,
       quality,
@@ -326,18 +496,33 @@ export class PortfolioImportService {
       mlTier,
       finalTier,
       tierProbabilities: {
-        mustDoNow: finalTier === 'Must-do-now' ? 0.8 : 0.1,
-        proceed: finalTier === 'Proceed' ? 0.75 : 0.15,
-        canWait: finalTier === 'Can wait' ? 0.7 : 0.1,
-        deprioritize: finalTier === 'Candidate to deprioritize' ? 0.85 : 0.05,
+        mustDoNow: finalTier === 'Must-do-now' ? 0.82 : 0.10,
+        proceed: finalTier === 'Proceed' ? 0.74 : 0.16,
+        canWait: finalTier === 'Can wait' ? 0.68 : 0.12,
+        deprioritize: finalTier === 'Candidate to deprioritize' ? 0.86 : 0.04,
       },
       priorityScore,
       ruleOverrides,
       recommendedAction,
       cluster,
       topDrivers,
-      dataIssues,
-      isDeleted: false,
+      dataIssues: raw.dataIssues || [],
+      isDeleted: !!raw.isDeleted,
+      deletedAt: raw.deletedAt,
+      aiGenerated: raw.aiGenerated !== undefined ? raw.aiGenerated : true,
+      aiGeneratedFields: raw.aiGeneratedFields || [
+        'priorityScore',
+        'finalTier',
+        'mlTier',
+        'confidenceScore',
+        'confidenceLevel',
+        'recommendedAction',
+        'cluster',
+        'topDrivers',
+        'monthsToGoLive',
+        'skillDemandFte',
+        'effortPersonWeeks',
+      ],
     };
   }
 }

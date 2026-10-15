@@ -82,6 +82,8 @@ export interface Project {
   dataIssues: string[];
   isDeleted?: boolean;
   deletedAt?: string;
+  aiGenerated?: boolean;
+  aiGeneratedFields?: string[];
 }
 
 export interface CapacityBySkill {

@@ -1,6 +1,7 @@
 """
-Generates per-portfolio Excel files from the sample portfolio dataset.
+Generates per-portfolio Excel files and minimal Project Intake Template.
 Outputs to data/portfolios/ and ui/src/assets/data/portfolios/.
+Highlights Mandatory (* [MANDATORY]) and Optional ([OPTIONAL]) columns with distinct styling.
 """
 
 import json
@@ -8,6 +9,68 @@ import os
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+
+MANDATORY_KEYS = {
+    "projectId",
+    "projectName",
+    "portfolio",
+    "businessUnit",
+    "primarySkill",
+    "costEstimateUsd",
+    "businessValue",
+}
+
+TEMPLATE_FIELDS = [
+    ("projectName", "Project Name * [MANDATORY]", True, "Title of project / initiative (min 3 chars)"),
+    ("portfolio", "Portfolio * [MANDATORY]", True, "Allowed: IT InfoSec, IT Software Development, IT Infrastructure, AI Team, Data and Analytics"),
+    ("businessUnit", "Business Unit * [MANDATORY]", True, "Allowed: Semiconductor Process Equipment, Fab Operations, Global Supply Chain, Digital Transformation, etc."),
+    ("primarySkill", "Primary Skill * [MANDATORY]", True, "Allowed: Application Development, Cloud and Infrastructure, Data Engineering, Cybersecurity, Network Engineering, etc."),
+    ("costEstimateUsd", "Cost Estimate (USD) * [MANDATORY]", True, "Total estimated budget in USD (e.g. 1500000)"),
+    ("businessValue", "Business Value (1-5) * [MANDATORY]", True, "Integer from 1 (lowest) to 5 (highest strategic impact)"),
+    ("site", "Site [OPTIONAL]", False, "Allowed: Fremont, Tualatin, Singapore, Penang, Hsinchu, Global Remote (Default: Global Remote)"),
+    ("executiveSponsor", "Executive Sponsor [OPTIONAL]", False, "Accountable executive sponsor name and title"),
+    ("goLiveDate", "Target Go-Live Date [OPTIONAL]", False, "ISO Date YYYY-MM-DD (e.g. 2028-06-30; Default: +24 months)"),
+    ("regulatorySecurity", "Regulatory / Security [OPTIONAL]", False, "TRUE if statutory, compliance, cleanroom, or cyber mandate; else FALSE"),
+]
+
+TEMPLATE_SAMPLES = [
+    {
+        "projectName": "Edge Wafer Defect Detection Vision System",
+        "portfolio": "AI Team",
+        "businessUnit": "Fab Operations",
+        "primarySkill": "Data Engineering",
+        "costEstimateUsd": 1850000,
+        "businessValue": 5,
+        "site": "Fremont",
+        "executiveSponsor": "Dr. Lin Chen, VP Fab Ops",
+        "goLiveDate": "2028-09-30",
+        "regulatorySecurity": True,
+    },
+    {
+        "projectName": "Zero Trust Microsegmentation Phase 2",
+        "portfolio": "IT InfoSec",
+        "businessUnit": "Information Security",
+        "primarySkill": "Cybersecurity",
+        "costEstimateUsd": 2400000,
+        "businessValue": 4,
+        "site": "Singapore",
+        "executiveSponsor": "Dmitri Nakamura, CISO",
+        "goLiveDate": "2028-04-15",
+        "regulatorySecurity": True,
+    },
+    {
+        "projectName": "Supplier Direct EDI Portal Modernization",
+        "portfolio": "IT Software Development",
+        "businessUnit": "Global Supply Chain",
+        "primarySkill": "Application Development",
+        "costEstimateUsd": 950000,
+        "businessValue": 3,
+        "site": "Tualatin",
+        "executiveSponsor": "Elena Rostova, Dir Supply",
+        "goLiveDate": "2027-11-30",
+        "regulatorySecurity": False,
+    },
+]
 
 def main():
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,66 +95,71 @@ def main():
         os.makedirs(d, exist_ok=True)
 
     headers = [
-        ("projectId", "Project ID"),
-        ("projectName", "Project Name"),
-        ("portfolio", "Portfolio"),
-        ("businessUnit", "Business Unit"),
-        ("site", "Site"),
-        ("projectManager", "Project Manager"),
-        ("executiveSponsor", "Executive Sponsor"),
-        ("sponsorLevel", "Sponsor Level"),
-        ("projectStatus", "Project Status"),
-        ("goLiveDate", "Go-Live Date"),
-        ("monthsToGoLive", "Months to Go-Live"),
-        ("businessValue", "Business Value (1-5)"),
-        ("regulatorySecurity", "Regulatory / Security"),
-        ("dtAlignment", "Digital Transformation"),
-        ("protectedProgram", "Protected Program"),
-        ("primarySkill", "Primary Skill"),
-        ("skillDemandFte", "Skill Demand (FTE)"),
-        ("costEstimateUsd", "Cost Estimate (USD)"),
-        ("dependencyCount", "Dependency Count"),
-        ("riskRating", "Risk Rating"),
-        ("effortPersonWeeks", "Effort (Person-Weeks)"),
-        ("completeness", "Completeness"),
-        ("quality", "Quality"),
-        ("modelCertainty", "Model Certainty"),
-        ("confidenceScore", "Confidence Score"),
-        ("confidenceLevel", "Confidence Level"),
-        ("mlTier", "ML Tier"),
-        ("finalTier", "Final Tier"),
-        ("priorityScore", "Priority Score"),
-        ("recommendedAction", "Recommended Action"),
-        ("cluster", "Cluster"),
-        ("ruleOverrides", "Rule Overrides"),
-        ("topDrivers", "Top Drivers"),
-        ("dataIssues", "Data Issues"),
-        ("sourcesPresent", "Sources Present"),
+        ("projectId", "Project ID * [MANDATORY]", True),
+        ("projectName", "Project Name * [MANDATORY]", True),
+        ("portfolio", "Portfolio * [MANDATORY]", True),
+        ("businessUnit", "Business Unit * [MANDATORY]", True),
+        ("site", "Site [OPTIONAL]", False),
+        ("projectManager", "Project Manager [OPTIONAL]", False),
+        ("executiveSponsor", "Executive Sponsor [OPTIONAL]", False),
+        ("sponsorLevel", "Sponsor Level [OPTIONAL]", False),
+        ("projectStatus", "Project Status [OPTIONAL]", False),
+        ("goLiveDate", "Go-Live Date [OPTIONAL]", False),
+        ("monthsToGoLive", "Months to Go-Live [OPTIONAL]", False),
+        ("businessValue", "Business Value (1-5) * [MANDATORY]", True),
+        ("regulatorySecurity", "Regulatory / Security [OPTIONAL]", False),
+        ("dtAlignment", "Digital Transformation [OPTIONAL]", False),
+        ("protectedProgram", "Protected Program [OPTIONAL]", False),
+        ("primarySkill", "Primary Skill * [MANDATORY]", True),
+        ("skillDemandFte", "Skill Demand (FTE) [OPTIONAL]", False),
+        ("costEstimateUsd", "Cost Estimate (USD) * [MANDATORY]", True),
+        ("dependencyCount", "Dependency Count [OPTIONAL]", False),
+        ("riskRating", "Risk Rating [OPTIONAL]", False),
+        ("effortPersonWeeks", "Effort (Person-Weeks) [OPTIONAL]", False),
+        ("completeness", "Completeness [OPTIONAL]", False),
+        ("quality", "Quality [OPTIONAL]", False),
+        ("modelCertainty", "Model Certainty [OPTIONAL]", False),
+        ("confidenceScore", "Confidence Score [OPTIONAL]", False),
+        ("confidenceLevel", "Confidence Level [OPTIONAL]", False),
+        ("mlTier", "ML Tier [OPTIONAL]", False),
+        ("finalTier", "Final Tier [OPTIONAL]", False),
+        ("priorityScore", "Priority Score [OPTIONAL]", False),
+        ("recommendedAction", "Recommended Action [OPTIONAL]", False),
+        ("cluster", "Cluster [OPTIONAL]", False),
+        ("ruleOverrides", "Rule Overrides [OPTIONAL]", False),
+        ("topDrivers", "Top Drivers [OPTIONAL]", False),
+        ("dataIssues", "Data Issues [OPTIONAL]", False),
+        ("sourcesPresent", "Sources Present [OPTIONAL]", False),
     ]
+
+    mandatory_fill = PatternFill(start_color="004578", end_color="004578", fill_type="solid")
+    optional_fill = PatternFill(start_color="5C6873", end_color="5C6873", fill_type="solid")
+    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+    data_font = Font(name="Segoe UI", size=10)
+    guidance_font = Font(name="Segoe UI", size=9, italic=True, color="555555")
+    guidance_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    border_thin = Border(
+        left=Side(style="thin", color="E0E0E0"),
+        right=Side(style="thin", color="E0E0E0"),
+        top=Side(style="thin", color="E0E0E0"),
+        bottom=Side(style="thin", color="E0E0E0"),
+    )
 
     def make_excel(filename, project_list, title):
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = title[:31]
 
-        header_fill = PatternFill(start_color="0078D4", end_color="0078D4", fill_type="solid")
-        header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
-        data_font = Font(name="Segoe UI", size=10)
-        border_thin = Border(
-            left=Side(style="thin", color="E0E0E0"),
-            right=Side(style="thin", color="E0E0E0"),
-            top=Side(style="thin", color="E0E0E0"),
-            bottom=Side(style="thin", color="E0E0E0"),
-        )
-
-        for col_idx, (_, label) in enumerate(headers, 1):
+        for col_idx, (_, label, is_mand) in enumerate(headers, 1):
             cell = ws.cell(row=1, column=col_idx, value=label)
-            cell.fill = header_fill
+            cell.fill = mandatory_fill if is_mand else optional_fill
             cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.row_dimensions[1].height = 28
 
         for row_idx, p in enumerate(project_list, 2):
-            for col_idx, (k, _) in enumerate(headers, 1):
+            for col_idx, (k, _, _) in enumerate(headers, 1):
                 val = p.get(k)
                 if k == "ruleOverrides" and isinstance(val, list):
                     val = "; ".join(str(x) for x in val)
@@ -115,12 +183,59 @@ def main():
         for col in ws.columns:
             max_len = max(len(str(cell.value or "")) for cell in col)
             col_letter = get_column_letter(col[0].column)
-            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+            ws.column_dimensions[col_letter].width = max(min(max_len + 3, 40), 14)
 
         for d in out_dirs:
             target_path = os.path.join(d, filename)
             wb.save(target_path)
         print(f"Generated {filename} ({len(project_list)} projects)")
+
+    # Generate Minimal Template
+    def make_template(filename):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Project Intake Template"
+
+        # Row 1: Headers
+        for col_idx, (_, label, is_mand, _) in enumerate(TEMPLATE_FIELDS, 1):
+            cell = ws.cell(row=1, column=col_idx, value=label)
+            cell.fill = mandatory_fill if is_mand else optional_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.row_dimensions[1].height = 32
+
+        # Row 2: Guidance
+        for col_idx, (_, _, _, guidance) in enumerate(TEMPLATE_FIELDS, 1):
+            cell = ws.cell(row=2, column=col_idx, value=guidance)
+            cell.fill = guidance_fill
+            cell.font = guidance_font
+            cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+            cell.border = border_thin
+
+        ws.row_dimensions[2].height = 26
+
+        # Row 3-5: Sample starter rows
+        for row_idx, sample in enumerate(TEMPLATE_SAMPLES, 3):
+            for col_idx, (k, _, _, _) in enumerate(TEMPLATE_FIELDS, 1):
+                val = sample.get(k, "")
+                cell = ws.cell(row=row_idx, column=col_idx, value=val)
+                cell.font = data_font
+                cell.border = border_thin
+                if isinstance(val, (int, float)):
+                    cell.alignment = Alignment(horizontal="right")
+                elif isinstance(val, bool):
+                    cell.alignment = Alignment(horizontal="center")
+
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or "")) for cell in col)
+            col_letter = get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(min(max_len + 4, 38), 16)
+
+        for d in out_dirs:
+            target_path = os.path.join(d, filename)
+            wb.save(target_path)
+        print(f"Generated {filename} (Minimal Template, 10 fields max)")
 
     by_portfolio = {}
     for p in projects:
@@ -140,7 +255,8 @@ def main():
         make_excel(fname, p_list, pf_name)
 
     make_excel("portfolio_all_100_projects.xlsx", projects, "All Portfolios")
-    print("Done generating portfolio Excel files.")
+    make_template("project_intake_template.xlsx")
+    print("Done generating portfolio Excel files and template.")
 
 if __name__ == "__main__":
     main()

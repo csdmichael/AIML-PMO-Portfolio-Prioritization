@@ -17,6 +17,8 @@ import {
 import { PortfolioStore } from '../../services/portfolio.store';
 import { PortfolioImportService, SamplePortfolioFile } from '../../services/portfolio-import.service';
 import { Project, ProjectStatus } from '../../models/portfolio.models';
+import { EditProjectModalComponent } from '../../components/edit-project-modal/edit-project-modal.component';
+
 @Component({
   selector: 'app-lifecycle-page',
   standalone: true,
@@ -34,6 +36,7 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
     IonIcon,
     IonBadge,
     IonProgressBar,
+    EditProjectModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -46,20 +49,29 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
           </p>
         </div>
 
-        <!-- Quick Demo Reset Actions -->
-        <div class="demo-actions-bar">
+        <!-- Portfolio Reset & Ingestion Controls -->
+        <div class="portfolio-actions-bar">
           <button
             type="button"
-            class="demo-btn danger"
-            (click)="onConfirmClearAll()"
-            title="Wipe all projects to 0 so you can demo importing portfolio by portfolio"
+            class="ctrl-btn template-btn"
+            (click)="importService.downloadProjectTemplate()"
+            title="Download minimal Excel intake template (10 fields max with mandatory & optional highlighted)"
           >
-            <ion-icon name="trash-outline"></ion-icon>
-            Clear All (Demo Reset: 0 Projects)
+            <ion-icon name="download-outline"></ion-icon>
+            Export Project Template (.xlsx)
           </button>
           <button
             type="button"
-            class="demo-btn outline"
+            class="ctrl-btn danger"
+            (click)="onConfirmClearAll()"
+            title="Clear all projects to start fresh with a clean portfolio state"
+          >
+            <ion-icon name="trash-outline"></ion-icon>
+            Clear All (Reset to 0 Projects)
+          </button>
+          <button
+            type="button"
+            class="ctrl-btn outline"
             (click)="onRestoreFactoryDefaults()"
             title="Restore default 100 sample projects"
           >
@@ -156,6 +168,11 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
                 <ion-icon name="document-attach-outline" slot="start"></ion-icon>
                 Browse Excel File
               </ion-button>
+
+              <ion-button size="small" fill="outline" color="secondary" (click)="importService.downloadProjectTemplate()">
+                <ion-icon name="download-outline" slot="start"></ion-icon>
+                Download Template (.xlsx)
+              </ion-button>
             </div>
           </div>
 
@@ -170,7 +187,7 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
           <div class="quick-samples-section">
             <div class="samples-title">
               <ion-icon name="sparkles-outline"></ion-icon>
-              <span>One-Click Sample Portfolio Import (Demo Datasets in <code>data/portfolios/</code>):</span>
+              <span>One-Click Portfolio Ingestion (Preconfigured Datasets in <code>data/portfolios/</code>):</span>
             </div>
 
             <div class="sample-cards-grid">
@@ -464,6 +481,14 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
                       </td>
                       <td>
                         <div class="row-actions">
+                          <button
+                            type="button"
+                            class="mini-btn edit"
+                            title="Edit Project Details & AI Signals"
+                            (click)="onOpenEditModal(p)"
+                          >
+                            Edit
+                          </button>
                           @if (!p.isDeleted) {
                             @if (p.projectStatus !== 'Backlog') {
                               <button
@@ -528,6 +553,15 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
           }
         </ion-card-content>
       </ion-card>
+
+      <!-- Edit Project Modal -->
+      @if (editingProject(); as proj) {
+        <app-edit-project-modal
+          [project]="proj"
+          (save)="onSaveEditedProject($event)"
+          (cancel)="editingProject.set(null)"
+        ></app-edit-project-modal>
+      }
     </ion-content>
   `,
   styles: [
@@ -559,13 +593,13 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
         line-height: 1.45;
       }
 
-      .demo-actions-bar {
+      .portfolio-actions-bar {
         display: flex;
         align-items: center;
         gap: 8px;
         flex-shrink: 0;
       }
-      .demo-btn {
+      .ctrl-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -576,22 +610,30 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
         cursor: pointer;
         transition: all 0.15s ease;
       }
-      .demo-btn.danger {
+      .ctrl-btn.danger {
         background: #fee2e2;
         color: #b91c1c;
         border: 1px solid #f87171;
       }
-      .demo-btn.danger:hover {
+      .ctrl-btn.danger:hover {
         background: #dc2626;
         color: #ffffff;
       }
-      .demo-btn.outline {
+      .ctrl-btn.outline {
         background: #ffffff;
         color: var(--pmo-primary, #0078d4);
         border: 1px solid var(--pmo-primary, #0078d4);
       }
-      .demo-btn.outline:hover {
+      .ctrl-btn.outline:hover {
         background: rgba(0, 120, 212, 0.08);
+      }
+      .ctrl-btn.template-btn {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+      }
+      .ctrl-btn.template-btn:hover {
+        background: #dcfce7;
       }
 
       .notification-banner {
@@ -1161,6 +1203,7 @@ import { Project, ProjectStatus } from '../../models/portfolio.models';
         font-weight: 600;
         cursor: pointer;
       }
+      .mini-btn.edit { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
       .mini-btn.backlog { background: #fef3c7; color: #92400e; }
       .mini-btn.active { background: #dcfce7; color: #166534; }
       .mini-btn.soft { background: #fee2e2; color: #b91c1c; }
@@ -1202,6 +1245,7 @@ export class LifecyclePageComponent {
 
   readonly viewTab = signal<'active' | 'trash'>('active');
   readonly selectedIds = signal<Set<string>>(new Set());
+  readonly editingProject = signal<Project | null>(null);
   readonly isDragOver = signal<boolean>(false);
   readonly isImporting = signal<boolean>(false);
   readonly importProgressMessage = signal<string>('');
@@ -1339,6 +1383,17 @@ export class LifecyclePageComponent {
   }
 
   // Single row actions
+  onOpenEditModal(p: Project): void {
+    this.editingProject.set(p);
+  }
+
+  onSaveEditedProject(updated: Project): void {
+    const list = this.store.rawProjects().map((p) => (p.projectId === updated.projectId ? updated : p));
+    this.store.updateDatasetProjects(list);
+    this.editingProject.set(null);
+    this.notify(`Successfully updated project ${updated.projectId} (${updated.projectName}).`, 'success');
+  }
+
   onSingleMarkBacklog(p: Project): void {
     this.store.markAsBacklog(p.projectId);
     this.notify(`Project ${p.projectId} marked as Backlog.`, 'success');
@@ -1366,12 +1421,12 @@ export class LifecyclePageComponent {
     }
   }
 
-  // Demo resets
+  // Portfolio resets
   onConfirmClearAll(): void {
-    if (confirm('WIPE ALL PROJECTS? This sets the portfolio to 0 projects so you can demo importing from scratch.')) {
+    if (confirm('CLEAR ALL PROJECTS? This sets the portfolio to 0 projects so you can import clean datasets.')) {
       this.store.clearAllProjects();
       this.selectedIds.set(new Set());
-      this.notify('Portfolio cleared (0 projects). Ready for import demo!', 'danger');
+      this.notify('Portfolio cleared (0 projects). Ready for data import.', 'info');
     }
   }
 
