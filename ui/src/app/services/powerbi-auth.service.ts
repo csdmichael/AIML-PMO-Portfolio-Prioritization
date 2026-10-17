@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
-import { PublicClientApplication, AccountInfo } from '@azure/msal-browser';
+import {
+  AccountInfo,
+  InteractionRequiredAuthError,
+  PublicClientApplication,
+} from '@azure/msal-browser';
 import { PowerBiEmbedConfig } from '../models/powerbi.models';
 
 export interface ReportEmbedDetails {
@@ -21,8 +25,8 @@ interface ReportsResponse {
 export class PowerBiAuthService {
   private readonly http = inject(HttpClient);
   private config$?: Observable<PowerBiEmbedConfig>;
-  private msalInstance?: PublicClientApplication;
-  private isInitialized = false;
+  private msalInitialization?: Promise<PublicClientApplication>;
+  private tokenRequest?: Promise<string>;
 
   getConfig(): Observable<PowerBiEmbedConfig> {
     if (!this.config$) {
@@ -34,24 +38,27 @@ export class PowerBiAuthService {
   }
 
   async getMsalInstance(config: PowerBiEmbedConfig): Promise<PublicClientApplication> {
-    if (this.msalInstance && this.isInitialized) {
-      return this.msalInstance;
+    if (!this.msalInitialization) {
+      const msal = new PublicClientApplication({
+        auth: {
+          clientId: config.clientId,
+          authority: `https://login.microsoftonline.com/${config.tenantId}`,
+          redirectUri: `${window.location.origin}/assets/auth-callback.html`,
+        },
+        cache: {
+          cacheLocation: 'localStorage',
+        },
+      });
+      this.msalInitialization = msal
+        .initialize()
+        .then(() => msal)
+        .catch((error: unknown) => {
+          this.msalInitialization = undefined;
+          throw error;
+        });
     }
 
-    this.msalInstance = new PublicClientApplication({
-      auth: {
-        clientId: config.clientId,
-        authority: `https://login.microsoftonline.com/${config.tenantId}`,
-        redirectUri: `${window.location.origin}/assets/auth-callback.html`,
-      },
-      cache: {
-        cacheLocation: 'localStorage',
-      },
-    });
-
-    await this.msalInstance.initialize();
-    this.isInitialized = true;
-    return this.msalInstance;
+    return this.msalInitialization;
   }
 
   async getActiveAccount(config: PowerBiEmbedConfig): Promise<AccountInfo | null> {
@@ -67,6 +74,22 @@ export class PowerBiAuthService {
   }
 
   async acquireAccessToken(config: PowerBiEmbedConfig): Promise<string> {
+    if (this.tokenRequest) {
+      return this.tokenRequest;
+    }
+
+    const request = this.acquireAccessTokenOnce(config);
+    this.tokenRequest = request;
+    try {
+      return await request;
+    } finally {
+      if (this.tokenRequest === request) {
+        this.tokenRequest = undefined;
+      }
+    }
+  }
+
+  private async acquireAccessTokenOnce(config: PowerBiEmbedConfig): Promise<string> {
     const msal = await this.getMsalInstance(config);
     const account = await this.getActiveAccount(config);
 
@@ -78,8 +101,9 @@ export class PowerBiAuthService {
         });
         return silentResult.accessToken;
       } catch (err) {
-        // Fall back to popup if silent acquisition fails
-        console.warn('acquireTokenSilent failed, falling back to popup', err);
+        if (!(err instanceof InteractionRequiredAuthError)) {
+          throw err;
+        }
       }
     }
 

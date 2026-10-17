@@ -223,6 +223,13 @@ The script automatically:
    - `https://<your-ui-host>/assets/auth-callback.html`
 6. Update `ui/src/assets/config/powerbi-embed.json`. The UI discovers workspace reports after sign-in. Set `preferredReportName` to select a report by name, or replace `PENDING` with a report GUID to pin one:
 
+   The callback page loads the MSAL redirect bridge shipped with the installed
+   `@azure/msal-browser` package. The Angular build copies it to
+   `assets/msal/msal-redirect-bridge.min.js`; deploy that file together with
+   `assets/auth-callback.html` and `assets/auth-callback.js`. A blank callback
+   page cannot complete MSAL 5 popup sign-in. Do not route the callback through
+   the Angular app or remove its scripts.
+
 ```json
 {
   "clientId": "5b2b4e8a-53cf-4295-990d-71a34962aadb",

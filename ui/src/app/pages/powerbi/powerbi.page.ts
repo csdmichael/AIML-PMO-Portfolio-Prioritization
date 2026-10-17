@@ -5,9 +5,6 @@ import {
   signal,
   computed,
   OnInit,
-  OnDestroy,
-  ElementRef,
-  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,7 +39,7 @@ import {
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { PortfolioStore } from '../../services/portfolio.store';
 import { Project } from '../../models/portfolio.models';
-import * as pbi from 'powerbi-client';
+import { PowerBiEmbedComponent } from '../../components/powerbi-embed/powerbi-embed.component';
 
 echarts.use([
   BarChart,
@@ -74,6 +71,7 @@ echarts.use([
     IonBadge,
     NgxEchartsDirective,
     EmptyStateComponent,
+    PowerBiEmbedComponent,
   ],
   providers: [provideEchartsCore({ echarts })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -289,18 +287,18 @@ echarts.use([
             @if (availableReports().length > 1) {
               <label class="report-picker">
                 <span>Report</span>
-                <select [ngModel]="selectedReportId()" (ngModelChange)="onReportChange($event)">
+                <select [disabled]="isBusy()" [ngModel]="selectedReportId()" (ngModelChange)="onReportChange($event)">
                   @for (report of availableReports(); track report.id) {
                     <option [value]="report.id">{{ report.name }}</option>
                   }
                 </select>
               </label>
             }
-            <ion-button size="small" fill="outline" color="medium" (click)="onSignOut()">
+            <ion-button size="small" fill="outline" color="medium" [disabled]="isBusy()" (click)="onSignOut()">
               Sign out
             </ion-button>
           } @else {
-            <ion-button size="small" color="primary" (click)="onSignIn()">
+            <ion-button size="small" color="primary" [disabled]="isBusy()" (click)="onSignIn()">
               <ion-icon name="log-in-outline" slot="start"></ion-icon>
               Sign in with Microsoft Entra ID
             </ion-button>
@@ -339,13 +337,17 @@ echarts.use([
             [isError]="true"
             icon="alert-circle-outline"
           >
-            <ion-button (click)="loadAndEmbed()">Retry Embed</ion-button>
+            <ion-button [disabled]="isBusy()" (click)="onSignIn()">Retry Embed</ion-button>
           </app-empty-state>
         }
 
-        @if (isConfigured()) {
-          <div class="report-embed-card" [class.hidden]="!isEmbedded()">
-            <div #embedContainer class="pbi-container"></div>
+        @if (embedReport(); as report) {
+          <div class="report-embed-card">
+            <app-powerbi-embed
+              [report]="report"
+              [accessToken]="embedAccessToken()"
+              (embedError)="embedError.set($event)"
+            />
           </div>
         }
       }
@@ -732,35 +734,21 @@ echarts.use([
         background: #ffffff;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
       }
-      .report-embed-card.hidden {
-        display: none;
-      }
-      .pbi-container {
-        width: 100%;
-        height: calc(100vh - 240px);
-        min-height: 560px;
-      }
     `,
   ],
 })
-export class PowerBiPageComponent implements OnInit, OnDestroy {
+export class PowerBiPageComponent implements OnInit {
   readonly store = inject(PortfolioStore);
   private readonly auth = inject(PowerBiAuthService);
-
-  private powerBiService = new pbi.service.Service(
-    pbi.factories.hpmFactory,
-    pbi.factories.wpmpFactory,
-    pbi.factories.routerFactory,
-  );
-
-  readonly embedContainer = viewChild<ElementRef<HTMLDivElement>>('embedContainer');
 
   readonly activeViewMode = signal<'directlake' | 'embed'>('directlake');
   readonly config = signal<PowerBiEmbedConfig | null>(null);
   readonly isConfigured = signal<boolean>(false);
   readonly isSignedIn = signal<boolean>(false);
   readonly userEmail = signal<string>('');
-  readonly isEmbedded = signal<boolean>(false);
+  readonly isBusy = signal(false);
+  readonly embedReport = signal<ReportEmbedDetails | null>(null);
+  readonly embedAccessToken = signal<string | null>(null);
   readonly embedError = signal<string | null>(null);
   readonly availableReports = signal<ReportEmbedDetails[]>([]);
   readonly selectedReportId = signal<string | null>(null);
@@ -932,20 +920,18 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
         }
         this.checkAuthAndEmbed();
       },
+      error: (error: unknown) => {
+        this.embedError.set(
+          error instanceof Error ? error.message : 'Unable to load Power BI configuration',
+        );
+      },
     });
-  }
-
-  ngOnDestroy(): void {
-    const el = this.embedContainer()?.nativeElement;
-    if (el) {
-      this.powerBiService.reset(el);
-    }
   }
 
   onViewModeChange(event: CustomEvent): void {
     const val = event.detail.value as 'directlake' | 'embed';
     this.activeViewMode.set(val);
-    if (val === 'embed' && this.isConfigured()) {
+    if (val === 'embed') {
       this.checkAuthAndEmbed();
     }
   }
@@ -959,9 +945,11 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
 
   async checkAuthAndEmbed(): Promise<void> {
     const cfg = this.config();
-    if (!cfg) return;
+    if (!cfg || this.isBusy()) return;
 
+    this.isBusy.set(true);
     try {
+      this.embedError.set(null);
       const account = await this.auth.getActiveAccount(cfg);
       if (account) {
         this.isSignedIn.set(true);
@@ -970,17 +958,20 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
         await this.discoverReportsAndEmbed(token);
       }
     } catch (err: unknown) {
-      this.isSignedIn.set(false);
       const error = err as { message?: string };
       this.embedError.set(error.message ?? 'Unable to restore the Power BI sign-in');
+    } finally {
+      this.isBusy.set(false);
     }
   }
 
   async onSignIn(): Promise<void> {
     const cfg = this.config();
-    if (!cfg) return;
+    if (!cfg || this.isBusy()) return;
 
+    this.isBusy.set(true);
     try {
+      this.embedError.set(null);
       const token = await this.auth.signIn(cfg);
       const account = await this.auth.getActiveAccount(cfg);
       if (account) {
@@ -991,55 +982,54 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
     } catch (err: unknown) {
       const e = err as { message?: string };
       this.embedError.set(e?.message ?? 'Sign-in failed');
+    } finally {
+      this.isBusy.set(false);
     }
   }
 
   async onSignOut(): Promise<void> {
     const cfg = this.config();
-    if (!cfg) return;
-    await this.auth.signOut(cfg);
-    this.isSignedIn.set(false);
-    this.userEmail.set('');
-    this.availableReports.set([]);
-    const el = this.embedContainer()?.nativeElement;
-    if (el) this.powerBiService.reset(el);
-    this.isEmbedded.set(false);
+    if (!cfg || this.isBusy()) return;
+    this.isBusy.set(true);
+    try {
+      await this.auth.signOut(cfg);
+      this.isSignedIn.set(false);
+      this.userEmail.set('');
+      this.availableReports.set([]);
+      this.embedReport.set(null);
+      this.embedAccessToken.set(null);
+      this.embedError.set(null);
+    } catch (error: unknown) {
+      this.embedError.set(error instanceof Error ? error.message : 'Sign-out failed');
+    } finally {
+      this.isBusy.set(false);
+    }
   }
 
   async onReportChange(reportId: string): Promise<void> {
-    this.selectedReportId.set(reportId);
-    this.isConfigured.set(true);
-    await this.loadAndEmbed();
+    if (this.isBusy()) return;
+    this.isBusy.set(true);
+    try {
+      this.selectedReportId.set(reportId);
+      this.isConfigured.set(true);
+      await this.loadAndEmbed();
+    } finally {
+      this.isBusy.set(false);
+    }
   }
 
   async loadAndEmbed(accessToken?: string): Promise<void> {
     const cfg = this.config();
-    const el = this.embedContainer()?.nativeElement;
     const reportId = this.selectedReportId();
-    if (!cfg || !el || !reportId) return;
+    if (!cfg || !reportId) return;
 
     try {
       this.embedError.set(null);
       const token = accessToken ?? await this.auth.acquireAccessToken(cfg);
       const knownReport = this.availableReports().find((report) => report.id === reportId);
       const report = knownReport ?? await this.auth.getReportEmbedDetails(cfg.workspaceId, reportId, token);
-      const embedConfig: pbi.models.IReportEmbedConfiguration = {
-        type: 'report',
-        id: report.id,
-        embedUrl: report.embedUrl,
-        accessToken: token,
-        tokenType: pbi.models.TokenType.Aad,
-        settings: {
-          panes: {
-            filters: { expanded: false, visible: true },
-            pageNavigation: { visible: true },
-          },
-        },
-      };
-
-      this.powerBiService.reset(el);
-      this.powerBiService.embed(el, embedConfig);
-      this.isEmbedded.set(true);
+      this.embedAccessToken.set(token);
+      this.embedReport.set({ ...report });
     } catch (err: unknown) {
       const e = err as { message?: string };
       this.embedError.set(e?.message ?? 'Failed to embed Power BI report');
@@ -1067,7 +1057,6 @@ export class PowerBiPageComponent implements OnInit, OnDestroy {
 
     this.selectedReportId.set(selected.id);
     this.isConfigured.set(true);
-    await new Promise<void>((resolve) => setTimeout(resolve));
     await this.loadAndEmbed(accessToken);
   }
 }
