@@ -1,0 +1,666 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.47.16.16243",
+      "templateHash": "11567355914198428059"
+    }
+  },
+  "parameters": {
+    "environmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Environment name. It is part of the unique token, so changing it creates a new set of resources."
+      }
+    },
+    "deployFoundryProject": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Create the Foundry project under the reused Foundry account."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "Tags applied to every created resource."
+      }
+    }
+  },
+  "variables": {
+    "$fxv#0": {
+      "schemaVersion": 2,
+      "description": "Nonsecret deployment contract for the PMO Portfolio Prioritization solution. Read by infra/bicep (loadJsonContent) and infra/terraform (jsondecode(file())). Holds identifiers and names only, never secrets. OneLake (the Fabric lakehouse) is the single data store for everything the UI and API show or write.",
+      "tenantId": "12a4b86b-e64c-43f9-af05-d9130a72dfd2",
+      "subscriptionId": "cf824570-a8ba-497a-a184-0a52f1830aa9",
+      "resourceGroup": "m365-myaacoub",
+      "location": "westus2",
+      "reuse": {
+        "description": "Existing shared resources. IaC references them as read-only and never modifies or deletes them.",
+        "fabricCapacity": {
+          "name": "caldovafabricmyaacoub",
+          "id": "37fcefa2-236a-47c0-a528-2c80137dfec0",
+          "location": "westus2"
+        },
+        "apim": {
+          "name": "caldova-apim-westus",
+          "resourceGroup": "m365-myaacoub",
+          "location": "westus"
+        },
+        "foundryAccount": {
+          "name": "foundry-myaacoub",
+          "resourceGroup": "m365-myaacoub",
+          "location": "westus"
+        },
+        "appServicePlan": {
+          "name": "caldova-tokenomics-api-plan",
+          "resourceGroup": "m365-myaacoub",
+          "location": "westus2",
+          "os": "linux"
+        },
+        "vnetIntegrationSubnetId": "/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.Network/virtualNetworks/caldova-dbx-vnet-westus2/subnets/genie-obo-integration",
+        "keyVaultPrivateEndpointSubnetId": "/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.Network/virtualNetworks/caldova-apim-westus-vnet/subnets/private-endpoints",
+        "privateDnsZones": {
+          "vault": {
+            "name": "privatelink.vaultcore.azure.net",
+            "resourceGroup": "m365-myaacoub"
+          }
+        }
+      },
+      "create": {
+        "description": "New resources created for this solution inside the shared resource group. Bicep names follow az{resourcePrefix}{uniqueToken}. Terraform names follow azurecaf CAF names built from baseName with no suffix.",
+        "baseName": "pmo-portfolio",
+        "nameLead": "az",
+        "logAnalytics": {
+          "resourcePrefix": "law",
+          "retentionDays": 30
+        },
+        "appInsights": {
+          "resourcePrefix": "ai"
+        },
+        "identity": {
+          "resourcePrefix": "mi"
+        },
+        "diagnostics": {
+          "resourcePrefix": "dg"
+        },
+        "keyVault": {
+          "resourcePrefix": "kv",
+          "secretName": "apim-subscription-key",
+          "secretsOfficerRoleId": "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+          "privateEndpoint": {
+            "resourcePrefix": "pe"
+          }
+        },
+        "foundryProject": {
+          "resourcePrefix": "fp",
+          "name": "pmo-portfolio",
+          "displayName": "PMO Portfolio Prioritization",
+          "description": "Foundry project for the PMO portfolio prioritization solution."
+        },
+        "apimApi": {
+          "resourcePrefix": "apm",
+          "productResourcePrefix": "prd",
+          "subscriptionResourcePrefix": "sub",
+          "name": "pmo-portfolio",
+          "displayName": "PMO Portfolio Prioritization API",
+          "path": "pmo",
+          "productName": "pmo-portfolio",
+          "productDisplayName": "PMO Portfolio Prioritization",
+          "subscriptionName": "pmo-ui",
+          "subscriptionDisplayName": "PMO Portfolio UI",
+          "openApiFile": "docs/api/openapi.json"
+        },
+        "apps": {
+          "ui": {
+            "resourcePrefix": "ui",
+            "runtimeStack": "PYTHON|3.12",
+            "startupCommand": "python -m uvicorn --app-dir server app.main:app --host 0.0.0.0 --port 8000",
+            "port": 8000,
+            "artifactFolder": "ui"
+          },
+          "api": {
+            "resourcePrefix": "api",
+            "runtimeStack": "PYTHON|3.12",
+            "startupCommand": "python -m uvicorn app.main:app --host 0.0.0.0 --port 8000",
+            "port": 8000,
+            "docsPath": "/docs",
+            "artifactFolder": "api"
+          }
+        }
+      },
+      "entra": {
+        "description": "Entra SPA app registration used by the UI for sign-in. The deploy script adds the hosted UI URL to its redirect URIs.",
+        "spaAppDisplayName": "PMO Portfolio Prioritization UI",
+        "clientId": "5b2b4e8a-53cf-4295-990d-71a34962aadb"
+      },
+      "deployment": {
+        "description": "Entry points for infra/scripts/deploy.ps1. Bicep and Terraform deploy the same resources from this one config. Deploy only one flavor per environment, because both claim the APIM API path.",
+        "name": "pmo-portfolio",
+        "bicepFile": "infra/bicep/main.bicep",
+        "bicepParameters": "infra/bicep/main.parameters.json",
+        "terraformDirectory": "infra/terraform",
+        "terraformVarFile": "main.tfvars.json",
+        "fabricWorkspaceRole": "Contributor"
+      },
+      "fabric": {
+        "description": "Fabric items are created by fabric/scripts (deploy scripts), not by IaC. The API identity needs Contributor on the workspace so it can read and write OneLake and run the pipeline.",
+        "workspaceName": "PMO-Portfolio-Prioritization",
+        "workspaceId": "39c02d65-d2cb-4355-9e77-cbf442d7fc8b",
+        "lakehouseName": "pmo_lakehouse",
+        "lakehouseId": "44a0e48d-ed47-4d30-8e1e-6db662ea9324"
+      }
+    },
+    "$fxv#1": "{\r\n  \"openapi\": \"3.1.0\",\r\n  \"info\": {\r\n    \"title\": \"PMO Portfolio Prioritization API\",\r\n    \"description\": \"Portfolio data, data entry, uploads, pipeline control, PMO decisions, and quick-add intake for the PMO Portfolio Prioritization solution. OneLake (the Fabric lakehouse) is the only data store.\",\r\n    \"version\": \"1.0.0\"\r\n  },\r\n  \"paths\": {\r\n    \"/v1/health\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"health\"\r\n        ],\r\n        \"summary\": \"Process status and lake data availability\",\r\n        \"operationId\": \"getHealth\",\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HealthResponse\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/options\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"options\"\r\n        ],\r\n        \"summary\": \"Data-entry contract: option lists, field rules, and upload rules\",\r\n        \"operationId\": \"getOptions\",\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/OptionsResponse\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/portfolio\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"portfolio\"\r\n        ],\r\n        \"summary\": \"Portfolio export (contract v2), unchanged\",\r\n        \"operationId\": \"getPortfolioExport\",\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {}\r\n              }\r\n            }\r\n          },\r\n          \"404\": {\r\n            \"description\": \"The export is missing. The problem names the OneLake path and the pipeline.\"\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/portfolios\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"portfolio\"\r\n        ],\r\n        \"summary\": \"Portfolios from the export plus pending entries\",\r\n        \"operationId\": \"listPortfolios\",\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/PortfolioList\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      },\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"portfolio\"\r\n        ],\r\n        \"summary\": \"Create a portfolio entry (pending until the pipeline runs)\",\r\n        \"operationId\": \"createPortfolio\",\r\n        \"requestBody\": {\r\n          \"required\": true,\r\n          \"content\": {\r\n            \"application/json\": {\r\n              \"schema\": {\r\n                \"type\": \"object\",\r\n                \"properties\": {\r\n                  \"key\": {\r\n                    \"type\": \"string\",\r\n                    \"minLength\": 3,\r\n                    \"maxLength\": 40,\r\n                    \"description\": \"Portfolio key\"\r\n                  },\r\n                  \"displayName\": {\r\n                    \"type\": \"string\",\r\n                    \"minLength\": 3,\r\n                    \"maxLength\": 80,\r\n                    \"description\": \"Portfolio name\"\r\n                  },\r\n                  \"code\": {\r\n                    \"type\": \"string\",\r\n                    \"minLength\": 2,\r\n                    \"maxLength\": 8,\r\n                    \"description\": \"Portfolio code\"\r\n                  },\r\n                  \"role\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"main\",\r\n                      \"coupled\"\r\n                    ],\r\n                    \"description\": \"Role\"\r\n                  },\r\n                  \"jiraProjectKey\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"string\",\r\n                        \"maxLength\": 10\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"JIRA project key\"\r\n                  },\r\n                  \"adoAreaRoot\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"string\",\r\n                        \"maxLength\": 20\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"ADO area root\"\r\n                  },\r\n                  \"programs\": {\r\n                    \"type\": \"array\",\r\n                    \"items\": {\r\n                      \"type\": \"object\",\r\n                      \"properties\": {\r\n                        \"key\": {\r\n                          \"type\": \"string\"\r\n                        },\r\n                        \"displayName\": {\r\n                          \"type\": \"string\"\r\n                        },\r\n                        \"code\": {\r\n                          \"type\": \"string\"\r\n                        }\r\n                      },\r\n                      \"required\": [\r\n                        \"key\",\r\n                        \"displayName\",\r\n                        \"code\"\r\n                      ],\r\n                      \"additionalProperties\": false\r\n                    },\r\n                    \"minItems\": 1,\r\n                    \"maxItems\": 10,\r\n                    \"description\": \"Programs\"\r\n                  }\r\n                },\r\n                \"additionalProperties\": false,\r\n                \"required\": [\r\n                  \"key\",\r\n                  \"displayName\",\r\n                  \"code\",\r\n                  \"role\",\r\n                  \"programs\"\r\n                ]\r\n              }\r\n            }\r\n          }\r\n        },\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/PortfolioView\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/projects\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"projects\"\r\n        ],\r\n        \"summary\": \"Processed and pending projects\",\r\n        \"operationId\": \"listProjects\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"portfolio\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"string\"\r\n                },\r\n                {\r\n                  \"type\": \"null\"\r\n                }\r\n              ],\r\n              \"description\": \"Portfolio key or code\",\r\n              \"title\": \"Portfolio\"\r\n            },\r\n            \"description\": \"Portfolio key or code\"\r\n          },\r\n          {\r\n            \"name\": \"role\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"string\"\r\n                },\r\n                {\r\n                  \"type\": \"null\"\r\n                }\r\n              ],\r\n              \"description\": \"main or coupled\",\r\n              \"title\": \"Role\"\r\n            },\r\n            \"description\": \"main or coupled\"\r\n          },\r\n          {\r\n            \"name\": \"confidence\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"string\"\r\n                },\r\n                {\r\n                  \"type\": \"null\"\r\n                }\r\n              ],\r\n              \"description\": \"High, Medium, or Low\",\r\n              \"title\": \"Confidence\"\r\n            },\r\n            \"description\": \"High, Medium, or Low\"\r\n          },\r\n          {\r\n            \"name\": \"q\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"string\"\r\n                },\r\n                {\r\n                  \"type\": \"null\"\r\n                }\r\n              ],\r\n              \"description\": \"Text match on ID, name, sponsor, or project manager\",\r\n              \"title\": \"Q\"\r\n            },\r\n            \"description\": \"Text match on ID, name, sponsor, or project manager\"\r\n          },\r\n          {\r\n            \"name\": \"page\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"type\": \"integer\",\r\n              \"minimum\": 1,\r\n              \"default\": 1,\r\n              \"title\": \"Page\"\r\n            }\r\n          },\r\n          {\r\n            \"name\": \"pageSize\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"integer\",\r\n                  \"minimum\": 1\r\n                },\r\n                {\r\n                  \"type\": \"null\"\r\n                }\r\n              ],\r\n              \"title\": \"Pagesize\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/Page_ProjectListItem_\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      },\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"projects\"\r\n        ],\r\n        \"summary\": \"Create a project entry, assign its GIS number, and start the pipeline\",\r\n        \"operationId\": \"createProject\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"runPipeline\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"type\": \"boolean\",\r\n              \"description\": \"Start the pipeline after the entry is written\",\r\n              \"default\": true,\r\n              \"title\": \"Runpipeline\"\r\n            },\r\n            \"description\": \"Start the pipeline after the entry is written\"\r\n          }\r\n        ],\r\n        \"requestBody\": {\r\n          \"required\": true,\r\n          \"content\": {\r\n            \"application/json\": {\r\n              \"schema\": {\r\n                \"type\": \"object\",\r\n                \"properties\": {\r\n                  \"projectName\": {\r\n                    \"type\": \"string\",\r\n                    \"minLength\": 3,\r\n                    \"maxLength\": 120,\r\n                    \"description\": \"Project name\"\r\n                  },\r\n                  \"portfolioKey\": {\r\n                    \"type\": \"string\",\r\n                    \"description\": \"Portfolio\"\r\n                  },\r\n                  \"programKey\": {\r\n                    \"type\": \"string\",\r\n                    \"description\": \"Program\"\r\n                  },\r\n                  \"businessUnit\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"Semiconductor Process Equipment\",\r\n                      \"Fab Operations\",\r\n                      \"Global Supply Chain\",\r\n                      \"Digital Transformation\",\r\n                      \"Finance and Controls\",\r\n                      \"Human Resources\",\r\n                      \"Information Security\",\r\n                      \"Manufacturing Engineering\",\r\n                      \"Customer Services\",\r\n                      \"Corporate IT\"\r\n                    ],\r\n                    \"description\": \"Business unit\"\r\n                  },\r\n                  \"site\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"Fremont\",\r\n                      \"Tualatin\",\r\n                      \"Singapore\",\r\n                      \"Penang\",\r\n                      \"Hsinchu\",\r\n                      \"Global Remote\"\r\n                    ],\r\n                    \"description\": \"Site\"\r\n                  },\r\n                  \"sponsorName\": {\r\n                    \"type\": \"string\",\r\n                    \"minLength\": 3,\r\n                    \"maxLength\": 80,\r\n                    \"description\": \"Executive sponsor\"\r\n                  },\r\n                  \"sponsorEmail\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"string\"\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"Sponsor email\"\r\n                  },\r\n                  \"projectManager\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"string\",\r\n                        \"maxLength\": 80\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"Project manager\"\r\n                  },\r\n                  \"projectStatus\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"Planning\",\r\n                      \"Active\",\r\n                      \"On Hold\",\r\n                      \"Backlog\"\r\n                    ],\r\n                    \"description\": \"Status\"\r\n                  },\r\n                  \"goLiveDate\": {\r\n                    \"type\": \"string\",\r\n                    \"format\": \"date\",\r\n                    \"description\": \"Go-live date\"\r\n                  },\r\n                  \"businessValue\": {\r\n                    \"type\": \"integer\",\r\n                    \"minimum\": 1.0,\r\n                    \"maximum\": 5.0,\r\n                    \"description\": \"Business value estimate (1 to 5)\"\r\n                  },\r\n                  \"userBase\": {\r\n                    \"type\": \"integer\",\r\n                    \"minimum\": 0.0,\r\n                    \"maximum\": 100000000.0,\r\n                    \"description\": \"User base (number of users)\"\r\n                  },\r\n                  \"estimatedAnnualBenefitUsd\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"number\",\r\n                        \"minimum\": 0.0,\r\n                        \"maximum\": 10000000000.0\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"Estimated annual benefit (USD)\"\r\n                  },\r\n                  \"sponsorLevel\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"Executive\",\r\n                      \"Director\",\r\n                      \"Manager\",\r\n                      \"Individual\"\r\n                    ],\r\n                    \"description\": \"Sponsor level\"\r\n                  },\r\n                  \"regulatorySecurity\": {\r\n                    \"type\": \"boolean\",\r\n                    \"description\": \"Regulatory or security driven\"\r\n                  },\r\n                  \"dtAlignment\": {\r\n                    \"type\": \"boolean\",\r\n                    \"description\": \"Digital transformation aligned\"\r\n                  },\r\n                  \"protectedProgram\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"boolean\"\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"Protected program\"\r\n                  },\r\n                  \"primarySkill\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"UC\",\r\n                      \"NET\",\r\n                      \"APP\",\r\n                      \"DATA\",\r\n                      \"CLOUD\",\r\n                      \"SEC\",\r\n                      \"INT\",\r\n                      \"PM\"\r\n                    ],\r\n                    \"description\": \"Primary skill\"\r\n                  },\r\n                  \"skillDemandFte\": {\r\n                    \"type\": \"number\",\r\n                    \"minimum\": 0.5,\r\n                    \"maximum\": 12.0,\r\n                    \"description\": \"Skill demand (FTE)\"\r\n                  },\r\n                  \"costEstimateUsd\": {\r\n                    \"type\": \"number\",\r\n                    \"minimum\": 10000.0,\r\n                    \"maximum\": 100000000.0,\r\n                    \"description\": \"Cost estimate (USD)\"\r\n                  },\r\n                  \"dependencies\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"array\",\r\n                        \"items\": {\r\n                          \"type\": \"object\",\r\n                          \"properties\": {\r\n                            \"projectId\": {\r\n                              \"type\": \"string\"\r\n                            },\r\n                            \"relationshipType\": {\r\n                              \"type\": \"string\",\r\n                              \"enum\": [\r\n                                \"FinishToStart\",\r\n                                \"StartToStart\",\r\n                                \"SharedResource\",\r\n                                \"DataDependency\",\r\n                                \"SecurityGate\"\r\n                              ]\r\n                            }\r\n                          },\r\n                          \"required\": [\r\n                            \"projectId\",\r\n                            \"relationshipType\"\r\n                          ],\r\n                          \"additionalProperties\": false\r\n                        },\r\n                        \"maxItems\": 10\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"Dependencies\"\r\n                  },\r\n                  \"riskRating\": {\r\n                    \"type\": \"string\",\r\n                    \"enum\": [\r\n                      \"Low\",\r\n                      \"Medium\",\r\n                      \"High\",\r\n                      \"Critical\"\r\n                    ],\r\n                    \"description\": \"Risk rating\"\r\n                  },\r\n                  \"effortPersonWeeks\": {\r\n                    \"type\": \"number\",\r\n                    \"minimum\": 1.0,\r\n                    \"maximum\": 2000.0,\r\n                    \"description\": \"Effort (person-weeks)\"\r\n                  },\r\n                  \"notes\": {\r\n                    \"anyOf\": [\r\n                      {\r\n                        \"type\": \"string\",\r\n                        \"maxLength\": 1000\r\n                      },\r\n                      {\r\n                        \"type\": \"null\"\r\n                      }\r\n                    ],\r\n                    \"description\": \"Notes\"\r\n                  }\r\n                },\r\n                \"additionalProperties\": false,\r\n                \"required\": [\r\n                  \"projectName\",\r\n                  \"portfolioKey\",\r\n                  \"programKey\",\r\n                  \"businessUnit\",\r\n                  \"site\",\r\n                  \"sponsorName\",\r\n                  \"projectStatus\",\r\n                  \"goLiveDate\",\r\n                  \"businessValue\",\r\n                  \"userBase\",\r\n                  \"sponsorLevel\",\r\n                  \"regulatorySecurity\",\r\n                  \"dtAlignment\",\r\n                  \"primarySkill\",\r\n                  \"skillDemandFte\",\r\n                  \"costEstimateUsd\",\r\n                  \"riskRating\",\r\n                  \"effortPersonWeeks\"\r\n                ]\r\n              }\r\n            }\r\n          }\r\n        },\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/ProjectCreated\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/projects/{projectId}\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"projects\"\r\n        ],\r\n        \"summary\": \"One processed or pending project\",\r\n        \"operationId\": \"getProject\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"projectId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Projectid\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/ProjectRecord\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/projects/{projectId}/uploads\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"projects\"\r\n        ],\r\n        \"summary\": \"Upload a source file for a project\",\r\n        \"operationId\": \"uploadProjectFile\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"projectId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Projectid\"\r\n            }\r\n          }\r\n        ],\r\n        \"requestBody\": {\r\n          \"required\": true,\r\n          \"content\": {\r\n            \"multipart/form-data\": {\r\n              \"schema\": {\r\n                \"$ref\": \"#/components/schemas/Body_uploadProjectFile\"\r\n              }\r\n            }\r\n          }\r\n        },\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/UploadMeta\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      },\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"projects\"\r\n        ],\r\n        \"summary\": \"Uploads recorded for a project, across all sources\",\r\n        \"operationId\": \"listProjectUploads\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"projectId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Projectid\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/UploadList\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/pipeline/runs\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"pipeline\"\r\n        ],\r\n        \"summary\": \"Start the Fabric data pipeline\",\r\n        \"operationId\": \"startPipelineRun\",\r\n        \"responses\": {\r\n          \"202\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/PipelineRunStarted\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/pipeline/runs/{runId}\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"pipeline\"\r\n        ],\r\n        \"summary\": \"Status of a pipeline run, read from Fabric\",\r\n        \"operationId\": \"getPipelineRun\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"runId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Runid\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/PipelineRunStatus\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/capacity/scenarios\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"capacity\"\r\n        ],\r\n        \"summary\": \"Capacity what-if scenarios (capacity_scenarios.json), unchanged\",\r\n        \"operationId\": \"getCapacityScenarios\",\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {}\r\n              }\r\n            }\r\n          },\r\n          \"404\": {\r\n            \"description\": \"The export is missing. The problem names the OneLake path and the pipeline.\"\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/decisions\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"decisions\"\r\n        ],\r\n        \"summary\": \"PMO decisions, newest first\",\r\n        \"operationId\": \"listDecisions\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"projectId\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"string\"\r\n                },\r\n                {\r\n                  \"type\": \"null\"\r\n                }\r\n              ],\r\n              \"description\": \"Only decisions for this project\",\r\n              \"title\": \"Projectid\"\r\n            },\r\n            \"description\": \"Only decisions for this project\"\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DecisionList\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      },\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"decisions\"\r\n        ],\r\n        \"summary\": \"Record a PMO decision for a project\",\r\n        \"operationId\": \"createDecision\",\r\n        \"requestBody\": {\r\n          \"required\": true,\r\n          \"content\": {\r\n            \"application/json\": {\r\n              \"schema\": {\r\n                \"$ref\": \"#/components/schemas/DecisionCreate\"\r\n              }\r\n            }\r\n          }\r\n        },\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DecisionView\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/templates/intake.xlsx\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"templates\"\r\n        ],\r\n        \"summary\": \"Intake workbook template (headers and dropdowns, no data rows)\",\r\n        \"operationId\": \"getIntakeTemplate\",\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {}\r\n              },\r\n              \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\": {}\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/intake/drafts\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"intake\"\r\n        ],\r\n        \"summary\": \"Start a quick-add draft\",\r\n        \"operationId\": \"createIntakeDraft\",\r\n        \"requestBody\": {\r\n          \"content\": {\r\n            \"application/json\": {\r\n              \"schema\": {\r\n                \"$ref\": \"#/components/schemas/DraftCreate\"\r\n              }\r\n            }\r\n          },\r\n          \"required\": true\r\n        },\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DraftView\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/intake/drafts/{draftId}/documents\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"intake\"\r\n        ],\r\n        \"summary\": \"Attach a supporting document to a draft\",\r\n        \"operationId\": \"addIntakeDocument\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"draftId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Draftid\"\r\n            }\r\n          }\r\n        ],\r\n        \"requestBody\": {\r\n          \"required\": true,\r\n          \"content\": {\r\n            \"multipart/form-data\": {\r\n              \"schema\": {\r\n                \"$ref\": \"#/components/schemas/Body_addIntakeDocument\"\r\n              }\r\n            }\r\n          }\r\n        },\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DraftDocument\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/intake/drafts/{draftId}\": {\r\n      \"get\": {\r\n        \"tags\": [\r\n          \"intake\"\r\n        ],\r\n        \"summary\": \"A draft with its fields and provenance\",\r\n        \"operationId\": \"getIntakeDraft\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"draftId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Draftid\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DraftView\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/intake/drafts/{draftId}/prefill\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"intake\"\r\n        ],\r\n        \"summary\": \"AI prefill of every project field with evidence\",\r\n        \"operationId\": \"prefillIntakeDraft\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"draftId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Draftid\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DraftView\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/intake/drafts/{draftId}/fields\": {\r\n      \"patch\": {\r\n        \"tags\": [\r\n          \"intake\"\r\n        ],\r\n        \"summary\": \"Human edits to prefilled fields\",\r\n        \"operationId\": \"editIntakeFields\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"draftId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Draftid\"\r\n            }\r\n          }\r\n        ],\r\n        \"requestBody\": {\r\n          \"required\": true,\r\n          \"content\": {\r\n            \"application/json\": {\r\n              \"schema\": {\r\n                \"type\": \"object\",\r\n                \"additionalProperties\": true,\r\n                \"title\": \"Body\"\r\n              }\r\n            }\r\n          }\r\n        },\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/DraftView\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/intake/drafts/{draftId}/submit\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"intake\"\r\n        ],\r\n        \"summary\": \"Create the project from the reviewed draft\",\r\n        \"operationId\": \"submitIntakeDraft\",\r\n        \"parameters\": [\r\n          {\r\n            \"name\": \"draftId\",\r\n            \"in\": \"path\",\r\n            \"required\": true,\r\n            \"schema\": {\r\n              \"type\": \"string\",\r\n              \"title\": \"Draftid\"\r\n            }\r\n          },\r\n          {\r\n            \"name\": \"runPipeline\",\r\n            \"in\": \"query\",\r\n            \"required\": false,\r\n            \"schema\": {\r\n              \"type\": \"boolean\",\r\n              \"default\": true,\r\n              \"title\": \"Runpipeline\"\r\n            }\r\n          }\r\n        ],\r\n        \"responses\": {\r\n          \"201\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/SubmitResult\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    \"/v1/agent/chat\": {\r\n      \"post\": {\r\n        \"tags\": [\r\n          \"agent\"\r\n        ],\r\n        \"summary\": \"Ask the Foundry agent using live OneLake evidence\",\r\n        \"operationId\": \"chatWithPortfolioAgent\",\r\n        \"requestBody\": {\r\n          \"content\": {\r\n            \"application/json\": {\r\n              \"schema\": {\r\n                \"$ref\": \"#/components/schemas/ChatRequest\"\r\n              }\r\n            }\r\n          },\r\n          \"required\": true\r\n        },\r\n        \"responses\": {\r\n          \"200\": {\r\n            \"description\": \"Successful Response\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/ChatResponse\"\r\n                }\r\n              }\r\n            }\r\n          },\r\n          \"422\": {\r\n            \"description\": \"Validation Error\",\r\n            \"content\": {\r\n              \"application/json\": {\r\n                \"schema\": {\r\n                  \"$ref\": \"#/components/schemas/HTTPValidationError\"\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  },\r\n  \"components\": {\r\n    \"schemas\": {\r\n      \"AgentProvenance\": {\r\n        \"properties\": {\r\n          \"provider\": {\r\n            \"type\": \"string\",\r\n            \"const\": \"azure-ai-foundry\",\r\n            \"title\": \"Provider\"\r\n          },\r\n          \"agentName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Agentname\"\r\n          },\r\n          \"agentVersion\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Agentversion\"\r\n          },\r\n          \"responseId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Responseid\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"provider\",\r\n          \"agentName\",\r\n          \"agentVersion\",\r\n          \"responseId\"\r\n        ],\r\n        \"title\": \"AgentProvenance\"\r\n      },\r\n      \"AgentTable\": {\r\n        \"properties\": {\r\n          \"title\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Title\"\r\n          },\r\n          \"headers\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"maxItems\": 20,\r\n            \"title\": \"Headers\"\r\n          },\r\n          \"rows\": {\r\n            \"items\": {\r\n              \"items\": {\r\n                \"type\": \"string\"\r\n              },\r\n              \"type\": \"array\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"maxItems\": 25,\r\n            \"title\": \"Rows\"\r\n          }\r\n        },\r\n        \"additionalProperties\": false,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"title\",\r\n          \"headers\",\r\n          \"rows\"\r\n        ],\r\n        \"title\": \"AgentTable\"\r\n      },\r\n      \"Body_addIntakeDocument\": {\r\n        \"properties\": {\r\n          \"file\": {\r\n            \"type\": \"string\",\r\n            \"contentMediaType\": \"application/octet-stream\",\r\n            \"title\": \"File\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"file\"\r\n        ],\r\n        \"title\": \"Body_addIntakeDocument\"\r\n      },\r\n      \"Body_uploadProjectFile\": {\r\n        \"properties\": {\r\n          \"sourceKey\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Sourcekey\"\r\n          },\r\n          \"file\": {\r\n            \"type\": \"string\",\r\n            \"contentMediaType\": \"application/octet-stream\",\r\n            \"title\": \"File\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"sourceKey\",\r\n          \"file\"\r\n        ],\r\n        \"title\": \"Body_uploadProjectFile\"\r\n      },\r\n      \"ChatRequest\": {\r\n        \"properties\": {\r\n          \"question\": {\r\n            \"type\": \"string\",\r\n            \"maxLength\": 4000,\r\n            \"minLength\": 1,\r\n            \"title\": \"Question\"\r\n          },\r\n          \"history\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/ChatTurn\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"maxItems\": 12,\r\n            \"title\": \"History\"\r\n          }\r\n        },\r\n        \"additionalProperties\": false,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"question\"\r\n        ],\r\n        \"title\": \"ChatRequest\"\r\n      },\r\n      \"ChatResponse\": {\r\n        \"properties\": {\r\n          \"text\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Text\"\r\n          },\r\n          \"tableData\": {\r\n            \"$ref\": \"#/components/schemas/AgentTable\"\r\n          },\r\n          \"sourceProjectIds\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Sourceprojectids\"\r\n          },\r\n          \"sourceRecordCount\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Sourcerecordcount\"\r\n          },\r\n          \"provenance\": {\r\n            \"$ref\": \"#/components/schemas/AgentProvenance\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"text\",\r\n          \"tableData\",\r\n          \"sourceProjectIds\",\r\n          \"sourceRecordCount\",\r\n          \"provenance\"\r\n        ],\r\n        \"title\": \"ChatResponse\"\r\n      },\r\n      \"ChatTurn\": {\r\n        \"properties\": {\r\n          \"role\": {\r\n            \"type\": \"string\",\r\n            \"enum\": [\r\n              \"user\",\r\n              \"assistant\"\r\n            ],\r\n            \"title\": \"Role\"\r\n          },\r\n          \"content\": {\r\n            \"type\": \"string\",\r\n            \"maxLength\": 12000,\r\n            \"minLength\": 1,\r\n            \"title\": \"Content\"\r\n          }\r\n        },\r\n        \"additionalProperties\": false,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"role\",\r\n          \"content\"\r\n        ],\r\n        \"title\": \"ChatTurn\"\r\n      },\r\n      \"DecisionCreate\": {\r\n        \"properties\": {\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"decision\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Decision\"\r\n          },\r\n          \"reason\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Reason\"\r\n          },\r\n          \"decidedBy\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Decidedby\"\r\n          }\r\n        },\r\n        \"additionalProperties\": false,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectId\",\r\n          \"decision\",\r\n          \"reason\"\r\n        ],\r\n        \"title\": \"DecisionCreate\"\r\n      },\r\n      \"DecisionList\": {\r\n        \"properties\": {\r\n          \"items\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/DecisionView\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Items\"\r\n          },\r\n          \"count\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Count\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"items\",\r\n          \"count\"\r\n        ],\r\n        \"title\": \"DecisionList\"\r\n      },\r\n      \"DecisionView\": {\r\n        \"properties\": {\r\n          \"decisionId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Decisionid\"\r\n          },\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"decision\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Decision\"\r\n          },\r\n          \"reason\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Reason\"\r\n          },\r\n          \"decidedBy\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Decidedby\"\r\n          },\r\n          \"recordedAtUtc\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Recordedatutc\"\r\n          },\r\n          \"oneLakePath\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Onelakepath\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"decisionId\",\r\n          \"projectId\",\r\n          \"decision\",\r\n          \"reason\",\r\n          \"recordedAtUtc\"\r\n        ],\r\n        \"title\": \"DecisionView\"\r\n      },\r\n      \"DraftCreate\": {\r\n        \"properties\": {\r\n          \"projectName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectname\"\r\n          },\r\n          \"description\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Description\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectName\",\r\n          \"description\"\r\n        ],\r\n        \"title\": \"DraftCreate\"\r\n      },\r\n      \"DraftDocument\": {\r\n        \"properties\": {\r\n          \"uploadId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Uploadid\"\r\n          },\r\n          \"fileName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Filename\"\r\n          },\r\n          \"sizeBytes\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Sizebytes\"\r\n          },\r\n          \"oneLakePath\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Onelakepath\"\r\n          },\r\n          \"uploadedAtUtc\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Uploadedatutc\"\r\n          },\r\n          \"textExtraction\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Textextraction\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"uploadId\",\r\n          \"fileName\",\r\n          \"sizeBytes\",\r\n          \"oneLakePath\",\r\n          \"uploadedAtUtc\",\r\n          \"textExtraction\"\r\n        ],\r\n        \"title\": \"DraftDocument\"\r\n      },\r\n      \"DraftView\": {\r\n        \"properties\": {\r\n          \"draftId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Draftid\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"projectName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectname\"\r\n          },\r\n          \"description\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Description\"\r\n          },\r\n          \"documents\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/DraftDocument\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Documents\"\r\n          },\r\n          \"fields\": {\r\n            \"additionalProperties\": true,\r\n            \"type\": \"object\",\r\n            \"title\": \"Fields\"\r\n          },\r\n          \"missingRequired\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Missingrequired\"\r\n          },\r\n          \"model\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"additionalProperties\": true,\r\n                \"type\": \"object\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Model\"\r\n          },\r\n          \"createdAtUtc\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Createdatutc\"\r\n          },\r\n          \"updatedAtUtc\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Updatedatutc\"\r\n          },\r\n          \"projectId\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Projectid\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"draftId\",\r\n          \"status\",\r\n          \"projectName\",\r\n          \"description\",\r\n          \"documents\",\r\n          \"fields\",\r\n          \"missingRequired\",\r\n          \"createdAtUtc\",\r\n          \"updatedAtUtc\"\r\n        ],\r\n        \"title\": \"DraftView\"\r\n      },\r\n      \"FieldRule\": {\r\n        \"properties\": {\r\n          \"key\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Key\"\r\n          },\r\n          \"label\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Label\"\r\n          },\r\n          \"type\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Type\"\r\n          },\r\n          \"required\": {\r\n            \"type\": \"boolean\",\r\n            \"title\": \"Required\",\r\n            \"default\": false\r\n          },\r\n          \"minLength\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"integer\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Minlength\"\r\n          },\r\n          \"maxLength\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"integer\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Maxlength\"\r\n          },\r\n          \"min\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"number\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Min\"\r\n          },\r\n          \"max\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"number\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Max\"\r\n          },\r\n          \"minDate\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Mindate\"\r\n          },\r\n          \"maxDate\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Maxdate\"\r\n          },\r\n          \"source\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Source\"\r\n          },\r\n          \"options\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"items\": {\r\n                  \"type\": \"string\"\r\n                },\r\n                \"type\": \"array\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Options\"\r\n          },\r\n          \"minItems\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"integer\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Minitems\"\r\n          },\r\n          \"maxItems\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"integer\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Maxitems\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"key\",\r\n          \"label\",\r\n          \"type\"\r\n        ],\r\n        \"title\": \"FieldRule\"\r\n      },\r\n      \"HTTPValidationError\": {\r\n        \"properties\": {\r\n          \"detail\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/ValidationError\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Detail\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"title\": \"HTTPValidationError\"\r\n      },\r\n      \"HealthLake\": {\r\n        \"properties\": {\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"portfolioExport\": {\r\n            \"$ref\": \"#/components/schemas/LakeFileStatus\"\r\n          },\r\n          \"capacityScenarios\": {\r\n            \"$ref\": \"#/components/schemas/LakeFileStatus\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"status\",\r\n          \"portfolioExport\",\r\n          \"capacityScenarios\"\r\n        ],\r\n        \"title\": \"HealthLake\"\r\n      },\r\n      \"HealthResponse\": {\r\n        \"properties\": {\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"title\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Title\"\r\n          },\r\n          \"version\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Version\"\r\n          },\r\n          \"checkedAtUtc\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Checkedatutc\"\r\n          },\r\n          \"lake\": {\r\n            \"$ref\": \"#/components/schemas/HealthLake\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"status\",\r\n          \"title\",\r\n          \"version\",\r\n          \"checkedAtUtc\",\r\n          \"lake\"\r\n        ],\r\n        \"title\": \"HealthResponse\"\r\n      },\r\n      \"LakeFileStatus\": {\r\n        \"properties\": {\r\n          \"path\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Path\"\r\n          },\r\n          \"available\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"boolean\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Available\"\r\n          },\r\n          \"reason\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Reason\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"path\"\r\n        ],\r\n        \"title\": \"LakeFileStatus\"\r\n      },\r\n      \"LakeFolders\": {\r\n        \"properties\": {\r\n          \"manualProjectsFolder\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Manualprojectsfolder\"\r\n          },\r\n          \"manualPortfoliosFolder\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Manualportfoliosfolder\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"manualProjectsFolder\",\r\n          \"manualPortfoliosFolder\"\r\n        ],\r\n        \"title\": \"LakeFolders\"\r\n      },\r\n      \"OptionLists\": {\r\n        \"properties\": {\r\n          \"businessUnits\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Businessunits\"\r\n          },\r\n          \"sites\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Sites\"\r\n          },\r\n          \"projectStatuses\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Projectstatuses\"\r\n          },\r\n          \"sponsorLevels\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Sponsorlevels\"\r\n          },\r\n          \"riskRatings\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Riskratings\"\r\n          },\r\n          \"skills\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/SkillOption\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Skills\"\r\n          },\r\n          \"relationshipTypes\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Relationshiptypes\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"businessUnits\",\r\n          \"sites\",\r\n          \"projectStatuses\",\r\n          \"sponsorLevels\",\r\n          \"riskRatings\",\r\n          \"skills\",\r\n          \"relationshipTypes\"\r\n        ],\r\n        \"title\": \"OptionLists\"\r\n      },\r\n      \"OptionsResponse\": {\r\n        \"properties\": {\r\n          \"schemaVersion\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Schemaversion\"\r\n          },\r\n          \"description\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Description\"\r\n          },\r\n          \"projectIdPattern\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectidpattern\"\r\n          },\r\n          \"projectIdPrefix\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectidprefix\"\r\n          },\r\n          \"projectIdDigits\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Projectiddigits\"\r\n          },\r\n          \"firstNewProjectNumber\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Firstnewprojectnumber\"\r\n          },\r\n          \"options\": {\r\n            \"$ref\": \"#/components/schemas/OptionLists\"\r\n          },\r\n          \"projectFields\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/FieldRule\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Projectfields\"\r\n          },\r\n          \"portfolioFields\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/FieldRule\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Portfoliofields\"\r\n          },\r\n          \"uploads\": {\r\n            \"$ref\": \"#/components/schemas/UploadContract\"\r\n          },\r\n          \"lake\": {\r\n            \"$ref\": \"#/components/schemas/LakeFolders\"\r\n          },\r\n          \"pipeline\": {\r\n            \"$ref\": \"#/components/schemas/PipelineContract\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"schemaVersion\",\r\n          \"description\",\r\n          \"projectIdPattern\",\r\n          \"projectIdPrefix\",\r\n          \"projectIdDigits\",\r\n          \"firstNewProjectNumber\",\r\n          \"options\",\r\n          \"projectFields\",\r\n          \"portfolioFields\",\r\n          \"uploads\",\r\n          \"lake\",\r\n          \"pipeline\"\r\n        ],\r\n        \"title\": \"OptionsResponse\",\r\n        \"description\": \"The data-entry contract as written in data-entry.json.\"\r\n      },\r\n      \"Page_ProjectListItem_\": {\r\n        \"properties\": {\r\n          \"items\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/ProjectListItem\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Items\"\r\n          },\r\n          \"page\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Page\"\r\n          },\r\n          \"pageSize\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Pagesize\"\r\n          },\r\n          \"totalItems\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Totalitems\"\r\n          },\r\n          \"totalPages\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Totalpages\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"items\",\r\n          \"page\",\r\n          \"pageSize\",\r\n          \"totalItems\",\r\n          \"totalPages\"\r\n        ],\r\n        \"title\": \"Page[ProjectListItem]\"\r\n      },\r\n      \"PipelineContract\": {\r\n        \"properties\": {\r\n          \"displayName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Displayname\"\r\n          },\r\n          \"folderKey\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Folderkey\"\r\n          },\r\n          \"notebookRunOrder\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Notebookrunorder\"\r\n          },\r\n          \"jobType\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Jobtype\"\r\n          },\r\n          \"pollSeconds\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Pollseconds\"\r\n          },\r\n          \"maxWaitMinutes\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Maxwaitminutes\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"displayName\",\r\n          \"folderKey\",\r\n          \"notebookRunOrder\",\r\n          \"jobType\",\r\n          \"pollSeconds\",\r\n          \"maxWaitMinutes\"\r\n        ],\r\n        \"title\": \"PipelineContract\"\r\n      },\r\n      \"PipelineRunStarted\": {\r\n        \"properties\": {\r\n          \"runId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Runid\"\r\n          },\r\n          \"jobInstanceId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Jobinstanceid\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"retryAfterSeconds\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"integer\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Retryafterseconds\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"runId\",\r\n          \"jobInstanceId\",\r\n          \"status\"\r\n        ],\r\n        \"title\": \"PipelineRunStarted\"\r\n      },\r\n      \"PipelineRunStatus\": {\r\n        \"properties\": {\r\n          \"runId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Runid\"\r\n          },\r\n          \"jobInstanceId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Jobinstanceid\"\r\n          },\r\n          \"status\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Status\"\r\n          },\r\n          \"startTimeUtc\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Starttimeutc\"\r\n          },\r\n          \"endTimeUtc\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Endtimeutc\"\r\n          },\r\n          \"failureReason\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"additionalProperties\": true,\r\n                \"type\": \"object\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Failurereason\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"runId\",\r\n          \"jobInstanceId\"\r\n        ],\r\n        \"title\": \"PipelineRunStatus\"\r\n      },\r\n      \"PortfolioList\": {\r\n        \"properties\": {\r\n          \"items\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/PortfolioView\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Items\"\r\n          },\r\n          \"count\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Count\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"items\",\r\n          \"count\"\r\n        ],\r\n        \"title\": \"PortfolioList\"\r\n      },\r\n      \"PortfolioProgram\": {\r\n        \"properties\": {\r\n          \"key\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Key\"\r\n          },\r\n          \"displayName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Displayname\"\r\n          },\r\n          \"code\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Code\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"key\",\r\n          \"displayName\",\r\n          \"code\"\r\n        ],\r\n        \"title\": \"PortfolioProgram\"\r\n      },\r\n      \"PortfolioView\": {\r\n        \"properties\": {\r\n          \"key\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Key\"\r\n          },\r\n          \"displayName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Displayname\"\r\n          },\r\n          \"code\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Code\"\r\n          },\r\n          \"role\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Role\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"jiraProjectKey\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Jiraprojectkey\"\r\n          },\r\n          \"adoAreaRoot\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Adoarearoot\"\r\n          },\r\n          \"projectCount\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"integer\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Projectcount\"\r\n          },\r\n          \"programs\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/PortfolioProgram\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Programs\",\r\n            \"default\": []\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"key\",\r\n          \"displayName\",\r\n          \"code\",\r\n          \"role\",\r\n          \"status\"\r\n        ],\r\n        \"title\": \"PortfolioView\"\r\n      },\r\n      \"ProjectCreated\": {\r\n        \"properties\": {\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"pipelineRunId\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Pipelinerunid\"\r\n          },\r\n          \"warnings\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Warnings\",\r\n            \"default\": []\r\n          },\r\n          \"entry\": {\r\n            \"additionalProperties\": true,\r\n            \"type\": \"object\",\r\n            \"title\": \"Entry\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectId\",\r\n          \"status\",\r\n          \"entry\"\r\n        ],\r\n        \"title\": \"ProjectCreated\"\r\n      },\r\n      \"ProjectListItem\": {\r\n        \"properties\": {\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"projectName\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Projectname\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"portfolioKey\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Portfoliokey\"\r\n          },\r\n          \"portfolioCode\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Portfoliocode\"\r\n          },\r\n          \"portfolio\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Portfolio\"\r\n          },\r\n          \"portfolioRole\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Portfoliorole\"\r\n          },\r\n          \"program\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Program\"\r\n          },\r\n          \"businessUnit\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Businessunit\"\r\n          },\r\n          \"site\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Site\"\r\n          },\r\n          \"sponsor\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Sponsor\"\r\n          },\r\n          \"projectManager\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Projectmanager\"\r\n          },\r\n          \"projectStatus\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Projectstatus\"\r\n          },\r\n          \"goLiveDate\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Golivedate\"\r\n          },\r\n          \"primarySkill\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Primaryskill\"\r\n          },\r\n          \"riskRating\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Riskrating\"\r\n          },\r\n          \"confidenceLevel\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Confidencelevel\"\r\n          },\r\n          \"confidenceScore\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"number\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Confidencescore\"\r\n          },\r\n          \"finalTier\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Finaltier\"\r\n          },\r\n          \"priorityScore\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"number\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Priorityscore\"\r\n          },\r\n          \"recommendedAction\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Recommendedaction\"\r\n          },\r\n          \"cluster\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Cluster\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectId\",\r\n          \"status\"\r\n        ],\r\n        \"title\": \"ProjectListItem\"\r\n      },\r\n      \"ProjectRecord\": {\r\n        \"properties\": {\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectId\",\r\n          \"status\"\r\n        ],\r\n        \"title\": \"ProjectRecord\"\r\n      },\r\n      \"SkillOption\": {\r\n        \"properties\": {\r\n          \"key\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Key\"\r\n          },\r\n          \"displayName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Displayname\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"key\",\r\n          \"displayName\"\r\n        ],\r\n        \"title\": \"SkillOption\"\r\n      },\r\n      \"SubmitResult\": {\r\n        \"properties\": {\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"status\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Status\"\r\n          },\r\n          \"pipelineRunId\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Pipelinerunid\"\r\n          },\r\n          \"warnings\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Warnings\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectId\",\r\n          \"status\",\r\n          \"pipelineRunId\",\r\n          \"warnings\"\r\n        ],\r\n        \"title\": \"SubmitResult\"\r\n      },\r\n      \"UploadAcceptance\": {\r\n        \"properties\": {\r\n          \"extensions\": {\r\n            \"items\": {\r\n              \"type\": \"string\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Extensions\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"extensions\"\r\n        ],\r\n        \"title\": \"UploadAcceptance\"\r\n      },\r\n      \"UploadContract\": {\r\n        \"properties\": {\r\n          \"maxFilesPerSourcePerProject\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Maxfilespersourceperproject\"\r\n          },\r\n          \"maxFileBytes\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Maxfilebytes\"\r\n          },\r\n          \"oneLakeFolderTemplate\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Onelakefoldertemplate\"\r\n          },\r\n          \"fileNameTemplate\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Filenametemplate\"\r\n          },\r\n          \"acceptedBySource\": {\r\n            \"additionalProperties\": {\r\n              \"$ref\": \"#/components/schemas/UploadAcceptance\"\r\n            },\r\n            \"type\": \"object\",\r\n            \"title\": \"Acceptedbysource\"\r\n          }\r\n        },\r\n        \"additionalProperties\": true,\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"maxFilesPerSourcePerProject\",\r\n          \"maxFileBytes\",\r\n          \"oneLakeFolderTemplate\",\r\n          \"fileNameTemplate\",\r\n          \"acceptedBySource\"\r\n        ],\r\n        \"title\": \"UploadContract\"\r\n      },\r\n      \"UploadList\": {\r\n        \"properties\": {\r\n          \"projectId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Projectid\"\r\n          },\r\n          \"items\": {\r\n            \"items\": {\r\n              \"$ref\": \"#/components/schemas/UploadMeta\"\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Items\"\r\n          },\r\n          \"count\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Count\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"projectId\",\r\n          \"items\",\r\n          \"count\"\r\n        ],\r\n        \"title\": \"UploadList\"\r\n      },\r\n      \"UploadMeta\": {\r\n        \"properties\": {\r\n          \"uploadId\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Uploadid\"\r\n          },\r\n          \"sourceKey\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Sourcekey\"\r\n          },\r\n          \"fileName\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Filename\"\r\n          },\r\n          \"sizeBytes\": {\r\n            \"type\": \"integer\",\r\n            \"title\": \"Sizebytes\"\r\n          },\r\n          \"oneLakePath\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Onelakepath\"\r\n          },\r\n          \"uploadedAt\": {\r\n            \"anyOf\": [\r\n              {\r\n                \"type\": \"string\"\r\n              },\r\n              {\r\n                \"type\": \"null\"\r\n              }\r\n            ],\r\n            \"title\": \"Uploadedat\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"uploadId\",\r\n          \"sourceKey\",\r\n          \"fileName\",\r\n          \"sizeBytes\",\r\n          \"oneLakePath\"\r\n        ],\r\n        \"title\": \"UploadMeta\"\r\n      },\r\n      \"ValidationError\": {\r\n        \"properties\": {\r\n          \"loc\": {\r\n            \"items\": {\r\n              \"anyOf\": [\r\n                {\r\n                  \"type\": \"string\"\r\n                },\r\n                {\r\n                  \"type\": \"integer\"\r\n                }\r\n              ]\r\n            },\r\n            \"type\": \"array\",\r\n            \"title\": \"Location\"\r\n          },\r\n          \"msg\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Message\"\r\n          },\r\n          \"type\": {\r\n            \"type\": \"string\",\r\n            \"title\": \"Error Type\"\r\n          },\r\n          \"input\": {\r\n            \"title\": \"Input\"\r\n          },\r\n          \"ctx\": {\r\n            \"type\": \"object\",\r\n            \"title\": \"Context\"\r\n          }\r\n        },\r\n        \"type\": \"object\",\r\n        \"required\": [\r\n          \"loc\",\r\n          \"msg\",\r\n          \"type\"\r\n        ],\r\n        \"title\": \"ValidationError\"\r\n      }\r\n    }\r\n  },\r\n  \"tags\": [\r\n    {\r\n      \"name\": \"health\",\r\n      \"description\": \"Process status and lake data availability.\"\r\n    },\r\n    {\r\n      \"name\": \"options\",\r\n      \"description\": \"Data-entry contract. Forms are built from this response.\"\r\n    },\r\n    {\r\n      \"name\": \"portfolio\",\r\n      \"description\": \"Portfolio export and portfolio entries.\"\r\n    },\r\n    {\r\n      \"name\": \"projects\",\r\n      \"description\": \"Projects, project entries, and project uploads.\"\r\n    },\r\n    {\r\n      \"name\": \"pipeline\",\r\n      \"description\": \"Start and monitor the Fabric data pipeline.\"\r\n    },\r\n    {\r\n      \"name\": \"capacity\",\r\n      \"description\": \"Capacity what-if scenarios.\"\r\n    },\r\n    {\r\n      \"name\": \"decisions\",\r\n      \"description\": \"PMO decisions per project.\"\r\n    },\r\n    {\r\n      \"name\": \"templates\",\r\n      \"description\": \"Intake workbook template with no data rows.\"\r\n    },\r\n    {\r\n      \"name\": \"intake\",\r\n      \"description\": \"Quick add: drafts, documents, AI prefill, review, and submit.\"\r\n    },\r\n    {\r\n      \"name\": \"agent\",\r\n      \"description\": \"Foundry portfolio agent chat grounded in server-read OneLake data.\"\r\n    }\r\n  ]\r\n}\r\n",
+    "cfg": "[variables('$fxv#0')]",
+    "location": "[variables('cfg').location]",
+    "create": "[variables('cfg').create]",
+    "lead": "[variables('create').nameLead]",
+    "token": "[uniqueString(subscription().id, resourceGroup().id, variables('location'), parameters('environmentName'))]",
+    "logAnalyticsName": "[format('{0}{1}{2}', variables('lead'), variables('create').logAnalytics.resourcePrefix, variables('token'))]",
+    "appInsightsName": "[format('{0}{1}{2}', variables('lead'), variables('create').appInsights.resourcePrefix, variables('token'))]",
+    "keyVaultName": "[format('{0}{1}{2}', variables('lead'), variables('create').keyVault.resourcePrefix, variables('token'))]",
+    "identityName": "[format('{0}{1}{2}', variables('lead'), variables('create').identity.resourcePrefix, variables('token'))]",
+    "diagnosticsName": "[format('{0}{1}{2}', variables('lead'), variables('create').diagnostics.resourcePrefix, variables('token'))]",
+    "uiAppName": "[format('{0}{1}{2}', variables('lead'), variables('create').apps.ui.resourcePrefix, variables('token'))]",
+    "apiAppName": "[format('{0}{1}{2}', variables('lead'), variables('create').apps.api.resourcePrefix, variables('token'))]",
+    "foundryProjectName": "[format('{0}{1}{2}', variables('lead'), variables('create').foundryProject.resourcePrefix, variables('token'))]",
+    "apimApiName": "[format('{0}{1}{2}', variables('lead'), variables('create').apimApi.resourcePrefix, variables('token'))]",
+    "apimProductName": "[format('{0}{1}{2}', variables('lead'), variables('create').apimApi.productResourcePrefix, variables('token'))]",
+    "apimSubscriptionName": "[format('{0}{1}{2}', variables('lead'), variables('create').apimApi.subscriptionResourcePrefix, variables('token'))]",
+    "keyVaultPrivateEndpointName": "[format('{0}{1}{2}', variables('lead'), variables('create').keyVault.privateEndpoint.resourcePrefix, variables('token'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[variables('identityName')]",
+      "location": "[variables('location')]",
+      "tags": "[parameters('tags')]"
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('logAnalyticsName')]",
+      "location": "[variables('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": "[variables('create').logAnalytics.retentionDays]",
+        "publicNetworkAccessForIngestion": "Enabled",
+        "publicNetworkAccessForQuery": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('appInsightsName')]",
+      "location": "[variables('location')]",
+      "kind": "web",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]",
+        "publicNetworkAccessForIngestion": "Enabled",
+        "publicNetworkAccessForQuery": "Enabled"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[variables('keyVaultName')]",
+      "location": "[variables('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "tenantId": "[variables('cfg').tenantId]",
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 7,
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), variables('create').keyVault.secretsOfficerRoleId)]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('create').keyVault.secretsOfficerRoleId)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products",
+      "apiVersion": "2024-05-01",
+      "name": "[format('{0}/{1}', variables('cfg').reuse.apim.name, variables('apimProductName'))]",
+      "properties": {
+        "displayName": "[variables('create').apimApi.productDisplayName]",
+        "description": "PMO portfolio prioritization data, scores, and recommendations.",
+        "state": "published",
+        "subscriptionRequired": true,
+        "approvalRequired": false
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2024-05-01",
+      "name": "[format('{0}/{1}', variables('cfg').reuse.apim.name, variables('apimApiName'))]",
+      "properties": {
+        "displayName": "[variables('create').apimApi.displayName]",
+        "path": "[variables('create').apimApi.path]",
+        "format": "openapi+json",
+        "value": "[variables('$fxv#1')]",
+        "serviceUrl": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', variables('apiAppName')), '2024-04-01').defaultHostName)]",
+        "protocols": [
+          "https"
+        ],
+        "subscriptionRequired": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('apiAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "apiVersion": "2024-05-01",
+      "name": "[format('{0}/{1}/{2}', variables('cfg').reuse.apim.name, variables('apimProductName'), variables('apimApiName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('cfg').reuse.apim.name, variables('apimApiName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/products', variables('cfg').reuse.apim.name, variables('apimProductName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/subscriptions",
+      "apiVersion": "2024-05-01",
+      "name": "[format('{0}/{1}', variables('cfg').reuse.apim.name, variables('apimSubscriptionName'))]",
+      "properties": {
+        "displayName": "[variables('create').apimApi.subscriptionDisplayName]",
+        "scope": "[resourceId('Microsoft.ApiManagement/service/products', variables('cfg').reuse.apim.name, variables('apimProductName'))]",
+        "state": "active"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/products', variables('cfg').reuse.apim.name, variables('apimProductName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/{1}', variables('keyVaultName'), variables('create').keyVault.secretName)]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "value": "[listSecrets(resourceId('Microsoft.ApiManagement/service/subscriptions', variables('cfg').reuse.apim.name, variables('apimSubscriptionName')), '2024-05-01').primaryKey]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/subscriptions', variables('cfg').reuse.apim.name, variables('apimSubscriptionName'))]",
+        "[extensionResourceId(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), variables('create').keyVault.secretsOfficerRoleId))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2024-04-01",
+      "name": "[variables('uiAppName')]",
+      "location": "[variables('location')]",
+      "kind": "app,linux",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')))]": {}
+        }
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('cfg').reuse.appServicePlan.name)]",
+        "httpsOnly": true,
+        "keyVaultReferenceIdentity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "[variables('create').apps.ui.runtimeStack]",
+          "appCommandLine": "[variables('create').apps.ui.startupCommand]",
+          "alwaysOn": true,
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "http20Enabled": true,
+          "cors": {
+            "allowedOrigins": [
+              "[reference(resourceId('Microsoft.ApiManagement/service', variables('cfg').reuse.apim.name), '2024-05-01').gatewayUrl]"
+            ]
+          },
+          "appSettings": [
+            {
+              "name": "AZURE_CLIENT_ID",
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').clientId]"
+            },
+            {
+              "name": "PORT",
+              "value": "[string(variables('create').apps.ui.port)]"
+            },
+            {
+              "name": "WEBSITES_PORT",
+              "value": "[string(variables('create').apps.ui.port)]"
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "ENABLE_ORYX_BUILD",
+              "value": "true"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "APIM_BASE_URL",
+              "value": "[format('{0}/{1}', reference(resourceId('Microsoft.ApiManagement/service', variables('cfg').reuse.apim.name), '2024-05-01').gatewayUrl, variables('create').apimApi.path)]"
+            },
+            {
+              "name": "APIM_SUBSCRIPTION_KEY",
+              "value": "[format('@Microsoft.KeyVault(SecretUri={0}secrets/{1})', reference(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), '2023-07-01').vaultUri, variables('create').keyVault.secretName)]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]",
+        "[extensionResourceId(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), variables('create').keyVault.secretsOfficerRoleId))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('create').keyVault.secretName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2024-04-01",
+      "name": "[variables('apiAppName')]",
+      "location": "[variables('location')]",
+      "kind": "app,linux",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')))]": {}
+        }
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('cfg').reuse.appServicePlan.name)]",
+        "httpsOnly": true,
+        "keyVaultReferenceIdentity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "[variables('create').apps.api.runtimeStack]",
+          "appCommandLine": "[variables('create').apps.api.startupCommand]",
+          "alwaysOn": true,
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "http20Enabled": true,
+          "cors": {
+            "allowedOrigins": [
+              "[reference(resourceId('Microsoft.ApiManagement/service', variables('cfg').reuse.apim.name), '2024-05-01').gatewayUrl]",
+              "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', variables('uiAppName')), '2024-04-01').defaultHostName)]"
+            ]
+          },
+          "appSettings": [
+            {
+              "name": "AZURE_CLIENT_ID",
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').clientId]"
+            },
+            {
+              "name": "PORT",
+              "value": "[string(variables('create').apps.api.port)]"
+            },
+            {
+              "name": "WEBSITES_PORT",
+              "value": "[string(variables('create').apps.api.port)]"
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "ENABLE_ORYX_BUILD",
+              "value": "true"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ConnectionString]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]",
+        "[extensionResourceId(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), variables('create').keyVault.secretsOfficerRoleId))]",
+        "[resourceId('Microsoft.Web/sites', variables('uiAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.Web/sites', variables('uiAppName'))]",
+      "name": "[variables('diagnosticsName')]",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]",
+        "logs": [
+          {
+            "category": "AppServiceHTTPLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServiceConsoleLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServiceAppLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServicePlatformLogs",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]",
+        "[resourceId('Microsoft.Web/sites', variables('uiAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.Web/sites', variables('apiAppName'))]",
+      "name": "[variables('diagnosticsName')]",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]",
+        "logs": [
+          {
+            "category": "AppServiceHTTPLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServiceConsoleLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServiceAppLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServicePlatformLogs",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('apiAppName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('deployFoundryProject')]",
+      "type": "Microsoft.CognitiveServices/accounts/projects",
+      "apiVersion": "2025-06-01",
+      "name": "[format('{0}/{1}', variables('cfg').reuse.foundryAccount.name, variables('foundryProjectName'))]",
+      "location": "[variables('cfg').reuse.foundryAccount.location]",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "displayName": "[variables('create').foundryProject.displayName]",
+        "description": "[variables('create').foundryProject.description]"
+      }
+    },
+    {
+      "condition": "[parameters('deployFoundryProject')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('cfg').reuse.foundryAccount.name, variables('foundryProjectName'))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts/projects', variables('cfg').reuse.foundryAccount.name, variables('foundryProjectName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '142bfaed-a13f-4c2d-bed2-6db62c4a1009')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '142bfaed-a13f-4c2d-bed2-6db62c4a1009')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('cfg').reuse.foundryAccount.name, variables('foundryProjectName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2023-11-01",
+      "name": "[variables('keyVaultPrivateEndpointName')]",
+      "location": "[variables('cfg').reuse.apim.location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "subnet": {
+          "id": "[variables('cfg').reuse.keyVaultPrivateEndpointSubnetId]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('keyVaultName')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+              "groupIds": [
+                "vault"
+              ]
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', variables('keyVaultPrivateEndpointName'), 'default')]",
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "vault",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('cfg').reuse.privateDnsZones.vault.name)]"
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', variables('keyVaultPrivateEndpointName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites/networkConfig",
+      "apiVersion": "2024-04-01",
+      "name": "[format('{0}/{1}', variables('uiAppName'), 'virtualNetwork')]",
+      "properties": {
+        "subnetResourceId": "[variables('cfg').reuse.vnetIntegrationSubnetId]",
+        "swiftSupported": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('uiAppName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "uiUrl": {
+      "type": "string",
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', variables('uiAppName')), '2024-04-01').defaultHostName)]"
+    },
+    "apiUrl": {
+      "type": "string",
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', variables('apiAppName')), '2024-04-01').defaultHostName)]"
+    },
+    "apiSwaggerUrl": {
+      "type": "string",
+      "value": "[format('https://{0}{1}', reference(resourceId('Microsoft.Web/sites', variables('apiAppName')), '2024-04-01').defaultHostName, variables('create').apps.api.docsPath)]"
+    },
+    "apimApiBaseUrl": {
+      "type": "string",
+      "value": "[format('{0}/{1}', reference(resourceId('Microsoft.ApiManagement/service', variables('cfg').reuse.apim.name), '2024-05-01').gatewayUrl, variables('create').apimApi.path)]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[variables('keyVaultName')]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), '2023-07-01').vaultUri]"
+    },
+    "identityClientId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').clientId]"
+    },
+    "identityPrincipalId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').principalId]"
+    },
+    "appInsightsName": {
+      "type": "string",
+      "value": "[variables('appInsightsName')]"
+    },
+    "uiAppName": {
+      "type": "string",
+      "value": "[variables('uiAppName')]"
+    },
+    "apiAppName": {
+      "type": "string",
+      "value": "[variables('apiAppName')]"
+    },
+    "foundryProjectName": {
+      "type": "string",
+      "value": "[if(parameters('deployFoundryProject'), variables('foundryProjectName'), '')]"
+    }
+  }
+}

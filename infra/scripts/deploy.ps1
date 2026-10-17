@@ -162,6 +162,17 @@ function Publish-Apps($outputs) {
         Invoke-Checked "API zip" { & $Python -m zipfile -c $apiZip @((Get-ChildItem -Path $apiStage).FullName) }
         Invoke-Checked "API deploy" { az webapp deploy --resource-group $resourceGroup --name $outputs.api_app_name --src-path $apiZip --type zip --clean true --restart true --async true }
         Wait-ForDeployment $outputs.api_app_name
+        Invoke-Checked "Portfolio agent APIM operation" {
+            $apis = az apim api list --resource-group $cfg.reuse.apim.resourceGroup `
+                --service-name $cfg.reuse.apim.name --output json | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) { throw "Unable to resolve the existing PMO APIM API." }
+            $matches = @($apis | Where-Object path -EQ $cfg.create.apimApi.path)
+            if ($matches.Count -ne 1) { throw "Expected one APIM API for path $($cfg.create.apimApi.path)." }
+            az apim api operation create --resource-group $cfg.reuse.apim.resourceGroup `
+                --service-name $cfg.reuse.apim.name --api-id $matches[0].name `
+                --operation-id chatWithPortfolioAgent --method POST --url-template "/v1/agent/chat" `
+                --display-name "Ask the Foundry portfolio agent" --output none
+        }
     }
     if ($publishUi) {
         $uiZip = Join-Path $stage "pmo-ui.zip"

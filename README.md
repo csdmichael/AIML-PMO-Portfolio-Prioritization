@@ -298,11 +298,54 @@ Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a
 | API through APIM | https://caldova-apim-westus.azure-api.net/pmo | Needs the `Ocp-Apim-Subscription-Key` header. The gateway is private (public access is disabled), so the UI host reaches it over VNet integration and adds the key from Key Vault. |
 | Fabric workspace | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b | `PMO-Portfolio-Prioritization`. The ML Notebooks folder holds notebooks 01 and 02. |
 | Lakehouse | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b/lakehouses/44a0e48d-ed47-4d30-8e1e-6db662ea9324 | `pmo_lakehouse`. OneLake is the only data store. |
-| Foundry project | https://portal.azure.com/#resource/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub/projects/azfpttlyg2gcvfsso/overview | Project created by IaC. The AI prefill calls the `gpt-5.4-mini` deployment directly. No Foundry agent exists yet. |
+| Foundry project | https://portal.azure.com/#resource/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub/projects/azfpttlyg2gcvfsso/overview | Hosts `pmo-portfolio-copilot:1` using `gpt-5.4-mini`. Chat goes through the UI proxy, APIM, and the API to the Foundry Responses API. Intake prefill remains a separate direct model call. |
 | Key Vault | azkvttlyg2gcvfsso | Holds the APIM subscription key as `apim-subscription-key`. |
 | Application Insights | azaittlyg2gcvfsso | Telemetry for both App Services. |
 
 ## 14. Infrastructure as code (Bicep and Terraform)
+
+### Portfolio Copilot: real Foundry agent
+
+Chat uses `POST /api/v1/agent/chat` on the UI host. Its server-side proxy adds
+the APIM subscription key and forwards to `/pmo/v1/agent/chat`; the API reads
+`Files/exports/portfolio.json` from OneLake and invokes the versioned Foundry
+agent using its managed identity. No chat answers are generated locally and no
+sample-data fallback is used. A missing export, unavailable Foundry service,
+invalid response, or missing permission produces an explicit error.
+
+[api/config/portfolio-agent.json](api/config/portfolio-agent.json) holds the
+nonsecret project endpoint, pinned agent version, model, and agent instructions.
+To recreate the agent in a new, authorized project, update that config and run
+[infra/scripts/create-portfolio-agent.ps1](infra/scripts/create-portfolio-agent.ps1).
+The script refuses to overwrite an existing agent. Agent creation requires a
+Foundry authoring role; invocation requires the API identity's project-scoped
+**Foundry Project Runtime User** role. Grant that role at the project scope
+before publishing to a new environment; the production API identity already has
+it. Do not grant account-wide authoring permissions to the runtime identity.
+
+Publish the API and UI with `infra/scripts/deploy.ps1 -Mode publish`. API publish
+adds only the `chatWithPortfolioAgent` APIM operation to the existing PMO API;
+it does not apply the infrastructure template. The generated OpenAPI document
+also includes the operation for fresh infrastructure deployments.
+
+Each successful answer displays its Foundry agent/version, response ID, and
+source project IDs. Conversation history is bounded to the latest 12 turns;
+each request grounds the answer again in the server-side snapshot. Upstream
+response storage is disabled. Recommendations still require human approval.
+Real Foundry inference is distinct from data provenance: if the Fabric pipeline
+was fed generated demo data, agent answers remain grounded in that demo data.
+
+Run the opt-in deployed-path regression check from `api/`:
+
+```powershell
+$env:PMO_RUN_INTEGRATION = "1"
+$env:PMO_AGENT_TEST_BASE_URL = "https://azuittlyg2gcvfsso.azurewebsites.net"
+uv run pytest -q tests/test_agent_live.py
+```
+
+This makes a real billable inference request through the UI proxy and APIM and
+compares the returned project IDs, ordering, and scores with the live OneLake
+export. No mocked network responses are used in this opt-in test.
 
 [infra/bicep/main.bicep](infra/bicep/main.bicep) and [infra/terraform/](infra/terraform/) deploy the same resources. Both read [infra/config/pmo-deployment.json](infra/config/pmo-deployment.json), which holds names, reused resources, and endpoints, and no secrets.
 

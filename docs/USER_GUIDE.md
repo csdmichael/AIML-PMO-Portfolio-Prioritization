@@ -160,7 +160,7 @@ The **AI Portfolio Copilot** is accessible from any screen via the Floating Acti
 
 ### Copilot Features:
 - **Pulsing FAB**: High-visibility floating button with gradient styling and "Ask AI Agent" indicator.
-- **Pre-Saved Sample Prompts**: Clickable chips for instant insights:
+- **Pre-Saved Prompts**: Clickable chips that send real requests to the Foundry agent:
   - 💡 *Top 5 Must-Do-Now Projects*
   - 📊 *Budget by Business Unit*
   - 👥 *Skills Capacity Deficits*
@@ -173,6 +173,17 @@ The **AI Portfolio Copilot** is accessible from any screen via the Floating Acti
   - 📄 **Word (.docx)**
   - 📊 **Excel (.xlsx)**
   - 📑 **PowerPoint (.pptx)**
+- **Verifiable Responses**: Successful answers show the Foundry agent name,
+  version, response ID, and source project IDs. The agent uses a server-read
+  OneLake portfolio snapshot through APIM, not browser-generated answers.
+- **Explicit Errors**: If the snapshot is missing or the agent is unavailable,
+  the drawer shows an error instead of substituting demo results. Retry after
+  the upstream issue is resolved.
+
+Responses depend on the evidence present in the snapshot. Missing SHAP,
+dependency, or capacity evidence is reported as unavailable. The agent does not
+approve decisions or change project records. Charts and exports are available
+when the answer includes a data table.
 
 ---
 

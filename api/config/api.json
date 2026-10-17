@@ -17,7 +17,8 @@
       { "name": "capacity", "description": "Capacity what-if scenarios." },
       { "name": "decisions", "description": "PMO decisions per project." },
       { "name": "templates", "description": "Intake workbook template with no data rows." },
-      { "name": "intake", "description": "Quick add: drafts, documents, AI prefill, review, and submit." }
+      { "name": "intake", "description": "Quick add: drafts, documents, AI prefill, review, and submit." },
+      { "name": "agent", "description": "Foundry portfolio agent chat grounded in server-read OneLake data." }
     ]
   },
   "hosting": {

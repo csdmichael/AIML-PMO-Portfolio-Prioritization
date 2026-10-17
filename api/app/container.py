@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from app.auth import CredentialProvider
+from app.agent import FoundryAgentClient, load_agent_settings
 from app.cache import TtlCache
 from app.catalog import Catalog
 from app.config import AppConfig, get_config
@@ -30,6 +31,7 @@ class Services:
     portfolios: PortfolioService
     decisions: DecisionService
     pipeline: PipelineService
+    agent: FoundryAgentClient
 
 
 def build_services(config: AppConfig | None = None, credentials: CredentialProvider | None = None) -> Services:
@@ -100,4 +102,5 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         portfolios=portfolios,
         decisions=decisions,
         pipeline=pipeline,
+        agent=FoundryAgentClient(load_agent_settings(), credentials),
     )

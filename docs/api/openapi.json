@@ -1265,10 +1265,115 @@
           }
         }
       }
+    },
+    "/v1/agent/chat": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Ask the Foundry agent using live OneLake evidence",
+        "operationId": "chatWithPortfolioAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AgentProvenance": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "azure-ai-foundry",
+            "title": "Provider"
+          },
+          "agentName": {
+            "type": "string",
+            "title": "Agentname"
+          },
+          "agentVersion": {
+            "type": "string",
+            "title": "Agentversion"
+          },
+          "responseId": {
+            "type": "string",
+            "title": "Responseid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "agentName",
+          "agentVersion",
+          "responseId"
+        ],
+        "title": "AgentProvenance"
+      },
+      "AgentTable": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "headers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Headers"
+          },
+          "rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Rows"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "headers",
+          "rows"
+        ],
+        "title": "AgentTable"
+      },
       "Body_addIntakeDocument": {
         "properties": {
           "file": {
@@ -1301,6 +1406,89 @@
           "file"
         ],
         "title": "Body_uploadProjectFile"
+      },
+      "ChatRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Question"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatTurn"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "History"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "tableData": {
+            "$ref": "#/components/schemas/AgentTable"
+          },
+          "sourceProjectIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sourceprojectids"
+          },
+          "sourceRecordCount": {
+            "type": "integer",
+            "title": "Sourcerecordcount"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/AgentProvenance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "tableData",
+          "sourceProjectIds",
+          "sourceRecordCount",
+          "provenance"
+        ],
+        "title": "ChatResponse"
+      },
+      "ChatTurn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 12000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatTurn"
       },
       "DecisionCreate": {
         "properties": {
@@ -2803,6 +2991,10 @@
     {
       "name": "intake",
       "description": "Quick add: drafts, documents, AI prefill, review, and submit."
+    },
+    {
+      "name": "agent",
+      "description": "Foundry portfolio agent chat grounded in server-read OneLake data."
     }
   ]
 }
