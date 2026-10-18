@@ -162,7 +162,7 @@ function Publish-Apps($outputs) {
     if ($publishApi) {
         $apiZip = Join-Path $stage "pmo-api.zip"
         Invoke-Checked "API zip" { & $Python -m zipfile -c $apiZip @((Get-ChildItem -Path $apiStage).FullName) }
-        Invoke-Checked "API deploy" { az webapp deploy --resource-group $resourceGroup --name $outputs.api_app_name --src-path $apiZip --type zip --clean true --restart true --async true }
+        Invoke-Checked "API deploy" { az webapp deploy --resource-group $resourceGroup --name $outputs.api_app_name --src-path $apiZip --type zip --clean true --restart true --async true --track-status false }
         Wait-ForDeployment $outputs.api_app_name
         Invoke-Checked "Portfolio agent APIM operation" {
             $apis = az apim api list --resource-group $cfg.reuse.apim.resourceGroup `
@@ -179,7 +179,7 @@ function Publish-Apps($outputs) {
     if ($publishUi) {
         $uiZip = Join-Path $stage "pmo-ui.zip"
         Invoke-Checked "UI zip" { & $Python -m zipfile -c $uiZip @((Get-ChildItem -Path $uiStage).FullName) }
-        Invoke-Checked "UI deploy" { az webapp deploy --resource-group $resourceGroup --name $outputs.ui_app_name --src-path $uiZip --type zip --clean true --restart true --async true }
+        Invoke-Checked "UI deploy" { az webapp deploy --resource-group $resourceGroup --name $outputs.ui_app_name --src-path $uiZip --type zip --clean true --restart true --async true --track-status false }
         Wait-ForDeployment $outputs.ui_app_name
     }
 
