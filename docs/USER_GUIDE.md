@@ -199,6 +199,20 @@ These are illustrative explanations, not live outputs. Example confidence,
 model consensus, and write-back are not implementation guarantees. See
 [the architecture guide](ARCHITECTURE.md) for actual ML roles and deployment boundaries.
 
+### Project field reference
+
+Open **Documentation → Project Fields**, immediately after Architecture. The
+table loads every field from the current intake contract, including data type,
+mandatory/optional status, allowed values and limits, an explanation and example.
+Search by label, canonical key, or description.
+
+Policy gates appear first, followed by model fields ordered by observed exported
+absolute SHAP attribution, then required/optional context fields. Percentages
+describe the share of available exported attribution, not a fixed contribution
+to priority score or a causal effect. If live attribution is unavailable, the
+page states that explicitly and does not invent percentages. The project ID and
+pipeline outputs are generated, not additional inputs.
+
 ---
 
 *AI-Powered PMO Portfolio Prioritization — Document generated October 2026*

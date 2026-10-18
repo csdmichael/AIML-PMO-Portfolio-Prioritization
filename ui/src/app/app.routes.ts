@@ -60,6 +60,11 @@ export const routes: Routes = [
           import('./pages/docs/architecture/docs-architecture.page').then((m) => m.DocsArchitecturePageComponent),
       },
       {
+        path: 'project-fields',
+        loadComponent: () =>
+          import('./pages/docs/project-fields/docs-project-fields.page').then((m) => m.DocsProjectFieldsPageComponent),
+      },
+      {
         path: 'algorithms',
         loadComponent: () =>
           import('./pages/docs/algorithms/docs-algorithms.page').then((m) => m.DocsAlgorithmsPageComponent),

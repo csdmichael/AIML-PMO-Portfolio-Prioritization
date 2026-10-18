@@ -58,7 +58,9 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
     selected = [
         p for p in projects
         if (not query.projectIds or p["projectId"] in query.projectIds)
-        and (not query.tier or p.get("finalTier") == query.tier)
+        and (not query.tier or p.get("finalTier") == (
+            "Candidate to deprioritize" if query.tier == "Deprioritize" else query.tier
+        ))
         and (not query.businessUnit or p.get("businessUnit") == query.businessUnit)
     ]
     if query.kind == "projects":

@@ -43,6 +43,12 @@ Rules are deterministic and Planview write-back is not implemented.
 See [the architecture guide](docs/ARCHITECTURE.md) for the implemented notebook
 flow, governed Foundry tool sequence, and private-enterprise deployment gates.
 
+The UI's **Documentation → Project Fields** page (immediately after Architecture)
+lists every intake field with type, mandatory/optional status, permitted values,
+limits, description and example. Model signals are ordered using available
+exported absolute SHAP shares; policy gates are identified separately.
+These percentages are measured attribution shares, not fixed priority-score weights.
+
 The solution follows the five-layer architecture from the proposal. Evidence flows forward: each ranked project keeps a link back to the source rows that produced its signals (`silver.signal_provenance`).
 
 | Layer | What it covers | How this repo implements it |

@@ -126,6 +126,7 @@ function Publish-Apps($outputs) {
     $publishApi = $Component -ne "ui"
 
     if ($publishUi) {
+        [IO.File]::WriteAllText((Join-Path $uiStage "runtime.txt"), "python-$($cfg.create.apps.ui.runtimeStack.Split('|')[1])`n")
         if (-not (Test-Path (Join-Path $repoRoot "ui/www/index.html"))) {
             Invoke-Checked "UI build" {
                 Push-Location (Join-Path $repoRoot "ui")
@@ -147,6 +148,7 @@ function Publish-Apps($outputs) {
     }
 
     if ($publishApi) {
+        [IO.File]::WriteAllText((Join-Path $apiStage "runtime.txt"), "python-$($cfg.create.apps.api.runtimeStack.Split('|')[1])`n")
         Copy-Item -Recurse -Force (Join-Path $repoRoot "api/app") (Join-Path $apiStage "app")
         Copy-Item -Recurse -Force (Join-Path $repoRoot "api/config") (Join-Path $apiStage "config")
         Invoke-Checked "API requirements export" {

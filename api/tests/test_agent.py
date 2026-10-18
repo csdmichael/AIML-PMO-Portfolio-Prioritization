@@ -185,6 +185,14 @@ def test_deterministic_budget_aggregation():
     assert result["sourceProjectIds"] == ["GIS-0001", "GIS-0002"]
 
 
+def test_deprioritize_tool_value_matches_canonical_export_tier():
+    snapshot = {"projects": [
+        {"projectId": "GIS-0001", "priorityScore": 5, "costEstimateUsd": 100, "finalTier": "Candidate to deprioritize"},
+    ]}
+    query = PortfolioQuery.model_validate({**QUERY, "tier": "Deprioritize"})
+    assert query_portfolio(snapshot, query)["sourceProjectIds"] == ["GIS-0001"]
+
+
 def test_capacity_and_query_limits():
     query = PortfolioQuery.model_validate({**QUERY, "kind": "capacity", "tier": ""})
     assert query_portfolio(SNAPSHOT, query)["records"] == SNAPSHOT["capacityBySkill"]

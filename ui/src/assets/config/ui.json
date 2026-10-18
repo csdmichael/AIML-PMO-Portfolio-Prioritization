@@ -32,6 +32,7 @@
       "isCategory": true,
       "children": [
         { "id": "docs-architecture", "label": "Architecture & Steps", "icon": "git-network-outline", "route": "/docs/architecture" },
+        { "id": "docs-project-fields", "label": "Project Fields", "icon": "list-outline", "route": "/docs/project-fields" },
         { "id": "docs-algorithms", "label": "ML Algorithms", "icon": "hardware-chip-outline", "route": "/docs/algorithms" },
         { "id": "docs-ai-prefill-confidence", "label": "AI Prefill & Confidence", "icon": "sparkles-outline", "route": "/docs/ai-prefill-confidence" },
         { "id": "docs-data-pipeline", "label": "Data Pipeline & Sources", "icon": "layers-outline", "route": "/docs/data-pipeline" },
