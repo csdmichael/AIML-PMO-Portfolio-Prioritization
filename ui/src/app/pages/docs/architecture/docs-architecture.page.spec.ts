@@ -13,6 +13,11 @@ describe('DocsArchitecturePageComponent', () => {
     const component = fixture.componentInstance;
     expect(component).toBeTruthy();
     expect(component.steps.length).toBe(7);
+    fixture.detectChanges();
+    const images: NodeListOf<HTMLImageElement> = fixture.nativeElement.querySelectorAll('app-ml-flow-diagrams img');
+    expect(images.length).toBe(2);
+    expect(images[0].getAttribute('src')).toBe('assets/images/pmo-end-to-end-ml.png');
+    expect(images[1].alt).toContain('LightGBM');
   });
 
   it('should switch layer focus filter', async () => {

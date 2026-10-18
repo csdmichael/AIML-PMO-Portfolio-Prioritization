@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MlFlowDiagramsComponent } from '../../../components/ml-flow-diagrams/ml-flow-diagrams.component';
 import {
   IonContent,
   IonCard,
@@ -30,6 +31,7 @@ interface ArchStep {
   imports: [
     CommonModule,
     RouterModule,
+    MlFlowDiagramsComponent,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -50,9 +52,26 @@ interface ArchStep {
         </div>
         <h1 class="page-title">System Architecture & End-to-End Pipeline Steps</h1>
         <p class="page-subtitle">
-          Complete technical architecture of the AI-powered PMO Portfolio Prioritization platform uniting 11 enterprise data sources in Microsoft Fabric OneLake, applying LightGBM + SHAP and business rules, and delivering sub-second analytics to executives.
+          Portfolio data flows through Microsoft Fabric OneLake, LightGBM, calibration, SHAP, and deterministic rules. Foundry queries approved persisted evidence through governed APIM tools; people approve decisions.
         </p>
       </div>
+
+      <app-ml-flow-diagrams />
+
+      <ion-card class="docs-card">
+        <ion-card-header><ion-card-title>Governed Foundry-to-Fabric query path</ion-card-title></ion-card-header>
+        <ion-card-content>
+          <p>UI → application APIM API → backend orchestrator → Foundry agent.</p>
+          <p>Foundry function request → backend validation → private APIM tool API →
+            workload-authenticated query endpoint → approved OneLake export → bounded tool result → Foundry answer.</p>
+          <p>Dedicated workload identity; JWT audience, issuer, caller, and role checks at APIM and
+            the query endpoint; no arbitrary SQL, URLs, writes, or browser-supplied evidence.
+            At most 25 rows per query and four tool calls per answer.</p>
+          <p>This is a custom read-only Fabric query adapter, not a native Fabric data agent or MCP server.
+            End-user RLS is not implemented. Private Fabric/Foundry connectivity must be verified
+            for the target deployment; a private APIM alone does not make the entire application private.</p>
+        </ion-card-content>
+      </ion-card>
 
       <!-- Quick Nav Jump Bar -->
       <div class="nav-jump-chips">

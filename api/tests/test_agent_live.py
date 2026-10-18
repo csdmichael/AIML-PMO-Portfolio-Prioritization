@@ -32,6 +32,9 @@ def test_deployed_chat_matches_onelake_priority_order():
         assert answer["provenance"]["provider"] == "azure-ai-foundry"
         assert answer["provenance"]["responseId"].startswith("resp_")
         assert answer["provenance"]["agentName"] == "pmo-portfolio-copilot"
+        assert answer["provenance"]["agentVersion"] == "2"
+        assert answer["provenance"]["groundingSource"] == "fabric-onelake-via-apim"
+        assert answer["provenance"]["queryIds"]
         expected_ids = [project["projectId"] for project in expected]
         assert set(answer["sourceProjectIds"]) == set(expected_ids)
         assert answer["sourceRecordCount"] == len(expected_ids)

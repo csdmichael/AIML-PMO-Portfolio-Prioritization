@@ -175,7 +175,8 @@ The **AI Portfolio Copilot** is accessible from any screen via the Floating Acti
   - 📑 **PowerPoint (.pptx)**
 - **Verifiable Responses**: Successful answers show the Foundry agent name,
   version, response ID, and source project IDs. The agent uses a server-read
-  OneLake portfolio snapshot through APIM, not browser-generated answers.
+  read-only OneLake query tools through APIM, not browser-generated answers or
+  a full portfolio snapshot in the prompt. Query IDs identify the retrieval.
 - **Explicit Errors**: If the snapshot is missing or the agent is unavailable,
   the drawer shows an error instead of substituting demo results. Retry after
   the upstream issue is resolved.
@@ -184,6 +185,19 @@ Responses depend on the evidence present in the snapshot. Missing SHAP,
 dependency, or capacity evidence is reported as unavailable. The agent does not
 approve decisions or change project records. Charts and exports are available
 when the answer includes a data table.
+
+### ML flow diagrams
+
+The **Documentation → Architecture** and **Documentation → Algorithms** screens
+include both diagrams with full-resolution links:
+
+![End-to-end ML project walkthrough](images/End-to-end%20project%20flow%20-%20ML%20Algos.png)
+
+![ML algorithm decision flow](images/ML-Algos-Flow.png)
+
+These are illustrative explanations, not live outputs. Example confidence,
+model consensus, and write-back are not implementation guarantees. See
+[the architecture guide](ARCHITECTURE.md) for actual ML roles and deployment boundaries.
 
 ---
 

@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { MlFlowDiagramsComponent } from '../../../components/ml-flow-diagrams/ml-flow-diagrams.component';
 import {
   IonContent,
   IonCard,
@@ -54,6 +55,7 @@ interface AlgoItem {
     CommonModule,
     FormsModule,
     RouterModule,
+    MlFlowDiagramsComponent,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -77,6 +79,8 @@ interface AlgoItem {
           Comprehensive specification of the 8 predictive, calibrated, explainable, and generative algorithms powering PMO Portfolio Prioritization. Each algorithm features complete feature mappings, output schemas, and verified execution examples.
         </p>
       </div>
+
+      <app-ml-flow-diagrams />
 
       <!-- Controls Row: Search, Category Filter, Expand/Collapse All -->
       <div class="toolbar-box">

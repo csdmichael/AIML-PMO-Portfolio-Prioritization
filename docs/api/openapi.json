@@ -1306,6 +1306,61 @@
           }
         }
       }
+    },
+    "/v1/agent/tools/query": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Read-only bounded Fabric portfolio query",
+        "operationId": "queryFabricPortfolio",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Queryfabricportfolio"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1328,6 +1383,18 @@
           "responseId": {
             "type": "string",
             "title": "Responseid"
+          },
+          "groundingSource": {
+            "type": "string",
+            "const": "fabric-onelake-via-apim",
+            "title": "Groundingsource"
+          },
+          "queryIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Queryids"
           }
         },
         "type": "object",
@@ -1335,7 +1402,9 @@
           "provider",
           "agentName",
           "agentVersion",
-          "responseId"
+          "responseId",
+          "groundingSource",
+          "queryIds"
         ],
         "title": "AgentProvenance"
       },
@@ -2357,6 +2426,64 @@
           "code"
         ],
         "title": "PortfolioProgram"
+      },
+      "PortfolioQuery": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "projects",
+              "budgetByBusinessUnit",
+              "capacity"
+            ],
+            "title": "Kind"
+          },
+          "projectIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Projectids"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "",
+              "Must-do-now",
+              "Proceed",
+              "Can wait",
+              "Deprioritize"
+            ],
+            "title": "Tier"
+          },
+          "businessUnit": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Businessunit"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 25.0,
+            "minimum": 1.0,
+            "title": "Limit"
+          },
+          "includeDetails": {
+            "type": "boolean",
+            "title": "Includedetails"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "projectIds",
+          "tier",
+          "businessUnit",
+          "limit",
+          "includeDetails"
+        ],
+        "title": "PortfolioQuery"
       },
       "PortfolioView": {
         "properties": {

@@ -74,7 +74,7 @@ echarts.use([
           [name]="agent.isOpen() ? 'close-outline' : 'sparkles'"
           class="fab-icon"
         ></ion-icon>
-        <span class="fab-label" *ngIf="!agent.isOpen()">Ask AI Agent</span>
+        @if (!agent.isOpen()) { <span class="fab-label">Ask AI Agent</span> }
       </button>
     </div>
 
@@ -96,7 +96,7 @@ echarts.use([
             <div class="header-titles">
               <h3 class="copilot-title">PMO Portfolio Copilot</h3>
               <span class="copilot-subtitle">
-                <span class="status-dot"></span> Microsoft Fabric & Foundry AI • OneLake Live
+                Microsoft Foundry • Governed Fabric query tools
               </span>
             </div>
           </div>
@@ -128,6 +128,7 @@ echarts.use([
             @for (sp of agent.samplePrompts; track sp.id) {
               <button
                 class="prompt-chip"
+                [disabled]="agent.isThinking()"
                 (click)="onPromptClick(sp.prompt)"
                 [title]="sp.prompt"
               >
@@ -165,6 +166,15 @@ echarts.use([
                 <div class="agent-narrative">
                   {{ msg.text }}
                 </div>
+                @if (msg.provenance; as provenance) {
+                  <div class="agent-provenance">
+                    <p>Foundry {{ provenance.agentName }}:{{ provenance.agentVersion }}</p>
+                    <p>Response: {{ provenance.responseId }}</p>
+                    <p>Grounding: {{ provenance.groundingSource }}</p>
+                    <p>Queries: {{ provenance.queryIds.join(', ') }}</p>
+                    <p>Sources: {{ msg.sourceProjectIds?.join(', ') || 'No project-specific citations' }}</p>
+                  </div>
+                }
 
                 <!-- Structured Response Controls Toolbar -->
                 @if (msg.tableData && msg.tableData.rows.length > 0) {
@@ -312,9 +322,12 @@ echarts.use([
                 <ion-spinner name="crescent" color="primary"></ion-spinner>
               </div>
               <span class="thinking-text"
-                >Querying OneLake Gold Delta tables & evaluating rules...</span
+                >Requesting authorized Fabric evidence through APIM...</span
               >
             </div>
+          }
+          @if (agent.error()) {
+            <p class="agent-error" role="alert">{{ agent.error() }}</p>
           }
         </div>
 
@@ -337,6 +350,7 @@ echarts.use([
               placeholder="Ask Copilot about priorities, SHAP, capacity, rules..."
               [disabled]="agent.isThinking()"
               autocomplete="off"
+              maxlength="4000"
             />
             <button
               type="submit"
@@ -348,7 +362,7 @@ echarts.use([
             </button>
           </form>
           <div class="footer-hint">
-            Direct Lake OneLake connection active • Exportable to Word, Excel & PowerPoint
+            Read-only evidence • Human review required • Export tables to Word, Excel & PowerPoint
           </div>
         </div>
       </div>
@@ -356,6 +370,8 @@ echarts.use([
   `,
   styles: [
     `
+      .agent-provenance { font-size: 0.7rem; overflow-wrap: anywhere; color: #605e5c; }
+      .agent-error { padding: 12px; border: 1px solid #a4262c; color: #a4262c; }
       /* Floating Action Button (FAB) */
       .copilot-fab-container {
         position: fixed;
@@ -998,16 +1014,16 @@ export class AgentFabComponent {
     this.isMaximized.update((v) => !v);
   }
 
-  onPromptClick(prompt: string): void {
-    this.agent.askQuestion(prompt);
+  async onPromptClick(prompt: string): Promise<void> {
+    await this.agent.askQuestion(prompt);
     this.scrollToBottom();
   }
 
-  onSubmitInput(): void {
+  async onSubmitInput(): Promise<void> {
     if (!this.userInput || !this.userInput.trim()) return;
     const q = this.userInput.trim();
     this.userInput = '';
-    this.agent.askQuestion(q);
+    await this.agent.askQuestion(q);
     this.scrollToBottom();
   }
 

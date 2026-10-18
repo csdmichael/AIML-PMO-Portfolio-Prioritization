@@ -1,9 +1,13 @@
 """Builds the shared services once per process: Azure credentials, OneLake and Fabric clients, and domain services."""
 
 from dataclasses import dataclass
+import os
+
+from azure.identity import ManagedIdentityCredential
 
 from app.auth import CredentialProvider
 from app.agent import FoundryAgentClient, load_agent_settings
+from app.agent_tools import ApimPortfolioTool, ToolTokenVerifier
 from app.cache import TtlCache
 from app.catalog import Catalog
 from app.config import AppConfig, get_config
@@ -14,7 +18,15 @@ from app.onelake import OneLakeClient
 from app.pipeline import PipelineService
 from app.portfolios import PortfolioService
 from app.projects import ProjectService
+from app.problems import ProblemError
 from app.store import EntryStore, ExportReader
+
+
+def _tool_credential() -> ManagedIdentityCredential:
+    client_id = os.environ.get("PMO_TOOL_CLIENT_ID")
+    if not client_id:
+        raise ProblemError(503, "The dedicated Fabric tool identity is not configured.", slug="service-unavailable")
+    return ManagedIdentityCredential(client_id=client_id)
 
 
 @dataclass
@@ -32,6 +44,7 @@ class Services:
     decisions: DecisionService
     pipeline: PipelineService
     agent: FoundryAgentClient
+    tool_tokens: ToolTokenVerifier
 
 
 def build_services(config: AppConfig | None = None, credentials: CredentialProvider | None = None) -> Services:
@@ -102,5 +115,9 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         portfolios=portfolios,
         decisions=decisions,
         pipeline=pipeline,
-        agent=FoundryAgentClient(load_agent_settings(), credentials),
+        agent=FoundryAgentClient(
+            load_agent_settings(), credentials,
+            ApimPortfolioTool(CredentialProvider(_tool_credential)),
+        ),
+        tool_tokens=ToolTokenVerifier(),
     )

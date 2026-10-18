@@ -23,6 +23,52 @@ This comprehensive deployment guide explains the Azure architecture, the Microso
 
 ## 1. Architecture Overview & Azure Services Used
 
+The supplied [end-to-end ML walkthrough](images/End-to-end%20project%20flow%20-%20ML%20Algos.png)
+and [ML decision flow](images/ML-Algos-Flow.png) are embedded in the README and the
+Architecture/Algorithms UI screens. See [the architecture guide](ARCHITECTURE.md)
+for actual notebook behavior, illustrative-image caveats, and private deployment gates.
+
+### Governed Foundry tool activation
+
+Chat uses the pinned agent in [portfolio-agent.json](../api/config/portfolio-agent.json).
+Foundry requests a read-only function; the backend executes it through private
+APIM against the approved OneLake export. This is not a native Fabric data
+agent/MCP server, does not accept arbitrary SQL, and does not implement per-user RLS.
+
+After approval for identity/network changes, preview then activate the scoped
+configuration (replace the app name for another environment):
+
+```powershell
+.\infra\scripts\configure-agent-tools.ps1 -ApiAppName azapittlyg2gcvfsso
+.\infra\scripts\configure-agent-tools.ps1 -ApiAppName azapittlyg2gcvfsso -Apply
+.\infra\scripts\create-portfolio-agent.ps1 -CreateNextVersion
+.\infra\scripts\deploy.ps1 -Mode publish
+```
+
+The configuration script creates a dedicated single-tenant Entra API audience,
+`Portfolio.Query` app role, dedicated caller managed identity, separate APIM tool
+API, and API outbound VNet integration. It preserves existing runtime identities
+and public-access settings. Directory propagation can require a short wait;
+rerunning is supported and mismatched existing app definitions are rejected.
+
+The backend needs `PMO_TOOL_URL`, `PMO_TOOL_AUDIENCE` (application client ID),
+`PMO_TOOL_TENANT_ID`, `PMO_TOOL_CALLER_OBJECT_ID`, and `PMO_TOOL_CLIENT_ID`.
+These are nonsecret settings, not tokens. The script sets them server-side.
+Both APIM and the backend validate workload JWTs. Missing configuration fails
+closed. Do not place tokens or tool credentials in SPA configuration.
+
+The deployment account needs application-registration/app-role-assignment
+permissions in Entra, and permission to configure the existing App Service,
+managed identity and APIM API. No broad Fabric role is granted to the new caller.
+The existing backend identity still requires OneLake access and the project-scoped
+Foundry runtime role.
+
+Full enterprise isolation additionally requires approved private endpoints,
+DNS/routing and public-access-denial tests for Fabric and Foundry. The scoped
+script does not create those endpoints or claim that the existing public UI/API
+has become private. Do not apply the full infrastructure template merely to
+activate tools; review drift first.
+
 The solution implements a transparent, human-in-the-loop prioritization platform integrating 11 enterprise data sources into **Microsoft Fabric**, utilizing **LightGBM + SHAP** machine learning, and exposing insights through a device-optimized **Ionic Angular UI** and **Direct Lake Power BI**.
 
 ```

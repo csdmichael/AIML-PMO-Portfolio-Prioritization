@@ -1,6 +1,6 @@
 # Azure Deployment Plan
 
-> **Status:** Ready for Validation
+> **Status:** Validated
 
 Generated: 2026-10-14T13:52:00-07:00
 
@@ -8,7 +8,7 @@ Generated: 2026-10-14T13:52:00-07:00
 
 ## 1. Project Overview
 
-**Goal:** Publish real portfolio agent chat: UI -> UI proxy -> existing APIM -> API -> Foundry `pmo-portfolio-copilot:1`, grounded in server-read OneLake records. Remove browser-generated answers.
+**Goal:** Publish `pmo-portfolio-copilot:2` with backend-mediated read-only Fabric queries through private APIM, not full-snapshot prompting. Publish both supplied ML diagrams in README, architecture documentation, and UI screens.
 
 **Path:** Modify Existing
 
@@ -20,7 +20,7 @@ Generated: 2026-10-14T13:52:00-07:00
 |-----------|-------|
 | Classification | Production |
 | Scale | Existing deployment |
-| Budget | No infrastructure change |
+| Budget | Existing compute; one dedicated managed identity and Entra tool application; no SKU increase |
 | Subscription | `ME-Caldova37587778-myaacoub-1` (`cf824570-a8ba-497a-a184-0a52f1830aa9`) |
 | Location | `westus2` |
 
@@ -40,7 +40,7 @@ Generated: 2026-10-14T13:52:00-07:00
 
 **Selected:** AZCLI
 
-**Rationale:** Reuse App Service ZIP publish for API and UI. Add only one APIM operation for `/v1/agent/chat` to the existing PMO API. No full infrastructure deployment.
+**Rationale:** Reuse App Service ZIP publish for API and UI. Add chat operation and separate workload-authenticated `pmo-tools` API on existing private APIM. User explicitly approved dedicated identity configuration and API VNet integration on 2026-10-17. Use scoped `configure-agent-tools.ps1`; no full infrastructure apply or public-access changes.
 
 ---
 
@@ -66,11 +66,13 @@ Generated: 2026-10-14T13:52:00-07:00
 
 ## 6. Provisioning Limit Checklist
 
-This is a code-only deployment to an existing App Service. No Azure resources, plans, instances, public IPs, or quotas will be created or increased.
+This scoped rollout adds one dedicated managed identity, one Entra API application/service principal/app role, and one APIM tool API/operation. API outbound VNet integration uses the existing approved subnet. No public-access settings, capacity SKUs, or unrelated resources are changed. Complete Fabric/Foundry private networking and user-specific authorization remain separate enterprise deployment gates.
 
 | Resource Type | Number to Deploy | Total After Deployment | Limit/Quota | Notes |
 |---------------|------------------|------------------------|-------------|-------|
-| New Azure resources | 0 | Unchanged | Not applicable | Existing App Service ZIP deployment only |
+| Dedicated managed identity | 1 | Existing plus one | No compute quota | Tool caller only |
+| Entra application / service principal | 1 each | One tool audience | Directory policy applies | One app role |
+| APIM API / operation | 1 each | Existing gateway plus one | Existing StandardV2 | No scale change |
 
 **Status:** All resource limits unchanged.
 
@@ -95,9 +97,12 @@ This is a code-only deployment to an existing App Service. No Azure resources, p
 - [x] Update plan status to `Ready for Validation`
 - [x] Run Azure validation and record proof
 - [x] All validation checks pass
-  - [ ] Core validation: Azure CLI, authentication, production UI build, existing App Service target, Bicep validation/what-if
+  - [x] Core validation: Azure CLI, authentication, production UI build, existing App Service target, Bicep validation/what-if
   - [x] Docker build: not applicable; Python App Service ZIPs
-  - [ ] Azure Policy validation: existing resources and one APIM operation only
+  - [x] Azure Policy validation: existing resources plus scoped tool identity/APIM API/VNet integration
+  - [x] Scoped activation preview: dedicated tool identity/app role, APIM JWT policy, API outbound VNet integration; APIM public access must remain disabled
+  - [x] Static permission review: dedicated tool caller only has Portfolio.Query on the tool API audience; adapter retains existing OneLake identity; Foundry runtime role remains project-scoped
+  - [x] Changed UI surfaces lint clean; production build succeeds. Full UI lint has unrelated pre-existing no-output-native violation in edit-project-modal.component.ts
 - [x] Publish UI only with `infra/scripts/deploy.ps1 -Mode publish -Component ui`
 - [x] Verify `https://azuittlyg2gcvfsso.azurewebsites.net/healthz`
 - [x] Verify `https://azuittlyg2gcvfsso.azurewebsites.net/assets/auth-callback.html`
@@ -107,11 +112,21 @@ This is a code-only deployment to an existing App Service. No Azure resources, p
 
 ## 8. Validation Proof
 
+- 2026-10-17 activation: Foundry `pmo-portfolio-copilot:2` created with `query_portfolio`. Dedicated tool identity/client `2d0fb01a-1389-442f-965d-7d7b91fa4660`, Entra audience `3fb9b744-0f16-48c7-a602-2d8dc5aadc87`, app role, APIM tool API and API VNet integration configured. Existing runtime identity preserved; APIM public access remains Disabled. Recovered bounded directory propagation delay and Azure CLI XML/BOM response handling; deployment script handles both.
+- 2026-10-17 version2 release: 47 API tests passed, one opt-in live test skipped; 11 focused UI tests passed; changed UI surfaces lint clean; production build passed. Full UI lint has one unrelated existing `no-output-native` error in `edit-project-modal.component.ts`, not changed in this release.
+- 2026-10-17 version2 release: core Azure helper OVERALL PASS; current what-if 16 create, 35 modify, 34 delete. Full infrastructure application remains prohibited. Scoped activation preview passed; gateway public access is Disabled. Resource-group policy assignments empty; subscription policies cover Defender database protections, outside these changes.
 - 2026-10-17 agent release: Azure CLI identity `admin@caldova37587778.onmicrosoft.com` verified in the approved subscription/tenant. Created and read back `pmo-portfolio-copilot:1` (prompt agent, existing `gpt-5.4-mini` deployment).
 - 2026-10-17 agent release: `validate-deployment.ps1` passed all five checks. What-if reported infrastructure drift (17 create, 35 modify, 34 delete); no full infrastructure apply is permitted.
 - 2026-10-17 agent release: 32 backend tests and 18 UI-proxy tests passed. A real backend invocation against OneLake and Foundry returned HTTP 200 in 4.9 seconds; top-five table IDs/order matched server-read source records.
 - 2026-10-17 agent release: User approved resuming existing F2 Fabric capacity. It is Active, unchanged SKU. Approved PMO pipeline run `c90b582a-077a-4bab-97fa-dda1f4dc0e42` completed and produced a 100-project export at `2026-10-17T18:42:14Z`, verified through the production UI proxy/APIM.
 - 2026-10-17 agent release: Runtime identity's existing project-scoped Foundry Project Runtime User assignment verified. API App Service Running, no resource-group policy assignments.
+
+## Role Assignment Verification
+
+- Status: Verified (static scope review).
+- Existing backend identity retains OneLake permissions and project-scoped Foundry Project Runtime User.
+- New dedicated caller identity is attached to the API only. Its sole new application permission is `Portfolio.Query` on the dedicated Entra tool API service principal; it gets no Fabric or subscription-wide role.
+- `configure-agent-tools.ps1` grants the app role and sets `appRoleAssignmentRequired`. Both APIM and query adapter validate issuer/audience/caller/role. No client secrets are created.
 - 2026-10-17: `validate-deployment.ps1 -Scope group -ResourceGroup m365-myaacoub -Template infra\bicep\main.bicep -Parameters infra\bicep\main.parameters.json` returned OVERALL: PASS (CLI, authentication, Bicep compilation, validation, what-if).
 - 2026-10-17: What-if still reports 16 create, 35 modify, 33 delete. Infrastructure deployment is explicitly excluded; only `deploy.ps1 -Mode publish -Component ui` is authorized.
 - 2026-10-17: `npm run build` passed; targeted Power BI unit tests passed (18 tests); ESLint passed for changed TypeScript.
