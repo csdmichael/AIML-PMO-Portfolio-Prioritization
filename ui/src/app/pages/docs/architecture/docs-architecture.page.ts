@@ -11,6 +11,9 @@ import {
   IonCardContent,
   IonIcon,
   IonBadge,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
 } from '@ionic/angular';
 
 interface ArchStep {
@@ -40,6 +43,9 @@ interface ArchStep {
     IonCardContent,
     IonIcon,
     IonBadge,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -56,32 +62,19 @@ interface ArchStep {
         </p>
       </div>
 
-      <app-ml-flow-diagrams />
+      <ion-segment class="architecture-tabs" aria-label="Architecture documentation sections"
+        [scrollable]="true" [selectOnFocus]="true" [value]="activeTab()"
+        (ionChange)="selectTab($event.detail.value)">
+        @for (tab of tabs; track tab.id) {
+          <ion-segment-button [value]="tab.id" [id]="'arch-tab-' + tab.id"
+            [attr.aria-controls]="'arch-panel-' + tab.id">
+            <ion-label>{{ tab.label }}</ion-label>
+          </ion-segment-button>
+        }
+      </ion-segment>
 
-      <ion-card class="docs-card">
-        <ion-card-header><ion-card-title>Governed Foundry-to-Fabric query path</ion-card-title></ion-card-header>
-        <ion-card-content>
-          <p>UI → application APIM API → backend orchestrator → Foundry agent.</p>
-          <p>Foundry function request → backend validation → private APIM tool API →
-            workload-authenticated query endpoint → approved OneLake export → bounded tool result → Foundry answer.</p>
-          <p>Dedicated workload identity; JWT audience, issuer, caller, and role checks at APIM and
-            the query endpoint; no arbitrary SQL, URLs, writes, or browser-supplied evidence.
-            At most 25 rows per query and four tool calls per answer.</p>
-          <p>This is a custom read-only Fabric query adapter, not a native Fabric data agent or MCP server.
-            End-user RLS is not implemented. Private Fabric/Foundry connectivity must be verified
-            for the target deployment; a private APIM alone does not make the entire application private.</p>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Quick Nav Jump Bar -->
-      <div class="nav-jump-chips">
-        <span class="jump-label">Quick Jump:</span>
-        <a href="#arch-diagram" class="jump-chip">Architecture Diagram</a>
-        <a href="#pipeline-steps" class="jump-chip">7 Pipeline Steps</a>
-        <a href="#azure-services" class="jump-chip">Azure Services Inventory</a>
-        <a href="#medallion-layers" class="jump-chip">Medallion OneLake Layers</a>
-      </div>
-
+      <section id="arch-panel-solution" role="tabpanel" aria-labelledby="arch-tab-solution"
+        tabindex="0" [hidden]="activeTab() !== 'solution'">
       <!-- Architecture Diagram Section -->
       <ion-card class="docs-card" id="arch-diagram">
         <ion-card-header>
@@ -283,6 +276,29 @@ interface ArchStep {
         </ion-card-content>
       </ion-card>
 
+      <ion-card class="docs-card">
+        <ion-card-header><ion-card-title>Governed Foundry-to-Fabric query path</ion-card-title></ion-card-header>
+        <ion-card-content>
+          <p>UI → application APIM API → backend orchestrator → Foundry agent.</p>
+          <p>Foundry function request → backend validation → private APIM tool API →
+            workload-authenticated query endpoint → approved OneLake export → bounded tool result → Foundry answer.</p>
+          <p>Dedicated workload identity; JWT audience, issuer, caller, and role checks at APIM and
+            the query endpoint; no arbitrary SQL, URLs, writes, or browser-supplied evidence.
+            At most 25 rows per query and four tool calls per answer.</p>
+          <p>This is a custom read-only Fabric query adapter, not a native Fabric data agent or MCP server.
+            End-user RLS is not implemented. Private Fabric/Foundry connectivity must be verified
+            for the target deployment; a private APIM alone does not make the entire application private.</p>
+        </ion-card-content>
+      </ion-card>
+      </section>
+
+      <section id="arch-panel-ml" role="tabpanel" aria-labelledby="arch-tab-ml"
+        tabindex="0" [hidden]="activeTab() !== 'ml'">
+        <app-ml-flow-diagrams />
+      </section>
+
+      <section id="arch-panel-pipeline" role="tabpanel" aria-labelledby="arch-tab-pipeline"
+        tabindex="0" [hidden]="activeTab() !== 'pipeline'">
       <!-- Step-by-Step Architecture Explanation -->
       <div class="section-title-wrap" id="pipeline-steps">
         <h2 class="section-title">Step-by-Step Architecture Pipeline</h2>
@@ -355,6 +371,10 @@ interface ArchStep {
         }
       </div>
 
+      </section>
+
+      <section id="arch-panel-onelake" role="tabpanel" aria-labelledby="arch-tab-onelake"
+        tabindex="0" [hidden]="activeTab() !== 'onelake'">
       <!-- Medallion Lakehouse Storage Specs -->
       <ion-card class="docs-card" id="medallion-layers">
         <ion-card-header>
@@ -443,6 +463,10 @@ interface ArchStep {
         </ion-card-content>
       </ion-card>
 
+      </section>
+
+      <section id="arch-panel-services" role="tabpanel" aria-labelledby="arch-tab-services"
+        tabindex="0" [hidden]="activeTab() !== 'services'">
       <!-- Azure Services & Infrastructure Inventory -->
       <ion-card class="docs-card" id="azure-services">
         <ion-card-header>
@@ -508,10 +532,25 @@ interface ArchStep {
           </div>
         </ion-card-content>
       </ion-card>
+      </section>
     </ion-content>
   `,
   styles: [
     `
+      .architecture-tabs {
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--pmo-border, #ddd);
+      }
+      .architecture-tabs ion-segment-button {
+        text-transform: none;
+        min-width: max-content;
+        --padding-start: 16px;
+        --padding-end: 16px;
+      }
+      [role="tabpanel"]:focus-visible {
+        outline: 2px solid var(--ion-color-primary, #0078d4);
+        outline-offset: 4px;
+      }
       .docs-content {
         --background: var(--pmo-bg, #f4f6f8);
         color: var(--pmo-text, #1a1a1a);
@@ -954,7 +993,21 @@ interface ArchStep {
   ],
 })
 export class DocsArchitecturePageComponent {
+  readonly tabs = [
+    { id: 'solution', label: 'Solution Architecture' },
+    { id: 'ml', label: 'ML Algos' },
+    { id: 'pipeline', label: 'Pipeline Steps' },
+    { id: 'onelake', label: 'OneLake Layers' },
+    { id: 'services', label: 'Services & Security' },
+  ] as const;
+  readonly activeTab = signal<typeof this.tabs[number]['id']>('solution');
   readonly selectedLayer = signal<string>('all');
+
+  selectTab(value: unknown): void {
+    const tab = this.tabs.find(tab => tab.id === value);
+    if (!tab) throw new Error('Unknown architecture documentation tab.');
+    this.activeTab.set(tab.id);
+  }
 
   readonly steps: ArchStep[] = [
     {

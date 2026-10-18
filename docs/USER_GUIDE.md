@@ -188,6 +188,12 @@ when the answer includes a data table.
 
 ### ML flow diagrams
 
+The **Architecture & Steps** page opens on **Solution Architecture**, with the
+architecture diagram, layer descriptions and governed Foundry query path.
+Its second tab, **ML Algos**, contains both ML flow diagrams. **Pipeline Steps**,
+**OneLake Layers**, and **Services & Security** keep the detailed reference
+sections separate. The tab bar scrolls horizontally on narrow screens.
+
 The **Documentation → Architecture** and **Documentation → Algorithms** screens
 include both diagrams with full-resolution links:
 
