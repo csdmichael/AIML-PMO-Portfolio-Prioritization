@@ -21,12 +21,21 @@
     { "id": "prioritization", "label": "Prioritization", "icon": "funnel-outline", "route": "/prioritization" },
     { "id": "hierarchy", "label": "Hierarchy", "icon": "git-network-outline", "route": "/hierarchy" },
     { "id": "powerbi", "label": "Power BI dashboards", "icon": "analytics-outline", "route": "/powerbi" },
-    { "id": "quick-add", "label": "Quick add", "icon": "sparkles-outline", "route": "/quick-add" },
     { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },
     { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" },
-      { "id": "lifecycle", "label": "Lifecycle & Import", "icon": "file-tray-stacked-outline", "route": "/lifecycle" },
-      {
-        "id": "documentation",
+    {
+      "id": "admin",
+      "label": "Admin",
+      "icon": "settings-outline",
+      "isCategory": true,
+      "children": [
+        { "id": "admin-settings", "label": "System Settings", "icon": "settings-outline", "route": "/admin/settings" },
+        { "id": "admin-priority-weights", "label": "Priority Weights", "icon": "options-outline", "route": "/admin/priority-weights" },
+        { "id": "admin-lookups", "label": "Dropdown Lookups", "icon": "list-outline", "route": "/admin/lookups" }
+      ]
+    },
+    {
+      "id": "documentation",
       "label": "Documentation",
       "icon": "book-outline",
       "isCategory": true,

@@ -131,6 +131,12 @@
       "transform": "none"
     },
     {
+      "name": "user_base",
+      "label": "Impacted users base",
+      "source": "user_base",
+      "transform": "log10"
+    },
+    {
       "name": "skill_demand",
       "label": "Skill / phase demand",
       "source": "skill_demand",

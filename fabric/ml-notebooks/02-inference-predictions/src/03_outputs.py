@@ -151,6 +151,7 @@ def project_record(pid):
         "goLiveDate": clean(pd.to_datetime(r["go_live_date"])) if not is_blank(r["go_live_date"]) else None,
         "monthsToGoLive": clean(r["months"]),
         "businessValue": clean(r["business_value"]),
+        "userBase": int(r["user_base"]) if "user_base" in r and not is_blank(r["user_base"]) else 350,
         "regulatorySecurity": bool(r["regulatory"]),
         "dtAlignment": bool(r["dt_alignment"]) if not is_blank(r["dt_alignment"]) else False,
         "protectedProgram": bool(r["protected"]),
@@ -172,6 +173,7 @@ def project_record(pid):
         "finalTier": r["final_tier"],
         "tierProbabilities": tier_probabilities,
         "priorityScore": clean(r["priority_score"]),
+        "fieldWeightedScore": clean(r.get("field_weighted_score")),
         "ruleOverrides": OVERRIDES[pid],
         "recommendedAction": r["recommended_action"],
         "cluster": r["cluster_name"],
@@ -207,6 +209,10 @@ PORTFOLIO_JSON = {
         for c in range(CLUSTERING["k"])
     ],
     "rules": [{"ruleId": r["id"], "name": r["name"], "condition": r["when"], "action": r["then"], "enabled": r["enabled"]} for r in CONFIG["rules"]],
+    "priorityWeights": {
+        "defaultWeights": DEFAULT_FIELD_WEIGHTS,
+        "projectOverrides": PROJECT_WEIGHT_OVERRIDES,
+    },
     "modelMetrics": {
         "algorithm": CONFIG["model"]["classifier"]["algorithm"],
         "accuracyCv": metric(LGB_MODEL, "accuracy_cv"),

@@ -406,4 +406,145 @@ export class DataApiService {
         ),
       );
   }
+
+  // Admin Configuration Endpoints
+  getAdminSettings(): Observable<{ isDemoEnvironment: boolean; environmentName?: string }> {
+    return this.http
+      .get<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`)
+      .pipe(catchError(() => of({ isDemoEnvironment: true, environmentName: 'Demo / Sandbox' })));
+  }
+
+  updateAdminSettings(settings: {
+    isDemoEnvironment: boolean;
+    environmentName?: string;
+  }): Observable<{ isDemoEnvironment: boolean; environmentName?: string }> {
+    return this.http
+      .put<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`, settings)
+      .pipe(catchError(() => of(settings)));
+  }
+
+  getPriorityWeights(): Observable<any> {
+    return this.http.get<any>(`${this.base}/admin/priority-weights`).pipe(
+      catchError(() =>
+        of({
+          version: 1,
+          description: 'Priority weights configuration',
+          availableFields: [
+            { key: 'businessValue', label: 'Business Value', category: 'Impact', min: 1, max: 5, defaultWeight: 25 },
+            { key: 'userBase', label: 'Impacted Users Base', category: 'Reach', min: 0, max: 100000, defaultWeight: 20 },
+            { key: 'regulatorySecurity', label: 'Regulatory & Security', category: 'Compliance', min: 0, max: 1, defaultWeight: 15 },
+            { key: 'timingUrgency', label: 'Timing Urgency', category: 'Schedule', min: 0, max: 1, defaultWeight: 15 },
+            { key: 'sponsorPriority', label: 'Executive Sponsor Priority', category: 'Leadership', min: 1, max: 4, defaultWeight: 10 },
+            { key: 'dtAlignment', label: 'Digital Transformation Alignment', category: 'Strategy', min: 0, max: 1, defaultWeight: 5 },
+            { key: 'risk', label: 'Risk Governance Level', category: 'Risk', min: 1, max: 4, defaultWeight: 5 },
+            { key: 'cost', label: 'Cost Scale', category: 'Financial', min: 10000, max: 100000000, defaultWeight: 5 },
+            { key: 'dependencies', label: 'Critical Path Dependencies', category: 'Architecture', min: 0, max: 10, defaultWeight: 0 },
+            { key: 'effort', label: 'Effort Demand', category: 'Resources', min: 1, max: 100, defaultWeight: 0 },
+            { key: 'skillDemand', label: 'Skill Demand (FTE)', category: 'Resources', min: 0.5, max: 12, defaultWeight: 0 },
+          ],
+          defaultWeights: {
+            businessValue: 25,
+            userBase: 20,
+            regulatorySecurity: 15,
+            timingUrgency: 15,
+            sponsorPriority: 10,
+            dtAlignment: 5,
+            risk: 5,
+            cost: 5,
+            dependencies: 0,
+            effort: 0,
+            skillDemand: 0,
+          },
+          projectOverrides: {},
+          presets: [],
+        }),
+      ),
+    );
+  }
+
+  updatePriorityWeights(data: {
+    defaultWeights?: Record<string, number>;
+    projectOverrides?: Record<string, Record<string, number>>;
+  }): Observable<any> {
+    return this.http
+      .put<any>(`${this.base}/admin/priority-weights`, data)
+      .pipe(catchError(() => of(data)));
+  }
+
+  getLookups(): Observable<any> {
+    return this.http.get<any>(`${this.base}/admin/lookups`).pipe(
+      catchError(() =>
+        of({
+          sites: ['Fremont', 'Tualatin', 'Singapore', 'Penang', 'Hsinchu', 'Global Remote'],
+          businessUnits: [
+            'Semiconductor Process Equipment',
+            'Fab Operations',
+            'Global Supply Chain',
+            'Digital Transformation',
+            'Finance and Controls',
+            'Human Resources',
+            'Information Security',
+            'Manufacturing Engineering',
+            'Customer Services',
+            'Corporate IT',
+          ],
+          projectStatuses: ['Planning', 'Active', 'On Hold', 'Backlog'],
+          sponsorLevels: ['Executive', 'Director', 'Manager', 'Individual'],
+          riskRatings: ['Low', 'Medium', 'High', 'Critical'],
+          skills: [
+            { key: 'UC', displayName: 'Unified Communications' },
+            { key: 'NET', displayName: 'Network Engineering' },
+            { key: 'APP', displayName: 'Application Development' },
+            { key: 'DATA', displayName: 'Data Engineering' },
+            { key: 'CLOUD', displayName: 'Cloud and Infrastructure' },
+            { key: 'SEC', displayName: 'Cybersecurity' },
+            { key: 'INT', displayName: 'Integration (iPaaS)' },
+            { key: 'PM', displayName: 'Project Management' },
+          ],
+          relationshipTypes: ['FinishToStart', 'StartToStart', 'SharedResource', 'DataDependency', 'SecurityGate'],
+        }),
+      ),
+    );
+  }
+
+  updateLookups(data: any): Observable<any> {
+    return this.http.put<any>(`${this.base}/admin/lookups`, data).pipe(catchError(() => of(data)));
+  }
+
+  async downloadExcelTemplate(filename = 'project_intake_template.xlsx'): Promise<void> {
+    try {
+      const blob = await this.http
+        .get(`${this.base}/templates/intake.xlsx`, { responseType: 'blob' })
+        .toPromise();
+      if (blob) {
+        this.triggerBlobDownload(blob, filename);
+        return;
+      }
+    } catch {
+      // fallback to asset
+    }
+    try {
+      const blob = await this.http
+        .get('assets/data/portfolios/project_intake_template.xlsx', { responseType: 'blob' })
+        .toPromise();
+      if (blob) {
+        this.triggerBlobDownload(blob, filename);
+      }
+    } catch (e) {
+      console.error('Failed to download Excel template:', e);
+    }
+  }
+
+  private triggerBlobDownload(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 200);
+  }
 }

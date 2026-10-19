@@ -14,10 +14,10 @@ from app.container import Services, build_services
 from app.contracts import FieldRule, static_option_values
 from app.onelake import LakeConflict, LakeError, LakeUnavailable
 from app.problems import ProblemError, problem_response, register_problem_handlers
-from app.routes import agent, agent_tools, capacity, decisions, health, intake, options, pipeline, portfolio, projects, templates, uploads
+from app.routes import admin, agent, agent_tools, capacity, decisions, health, intake, options, pipeline, portfolio, projects, templates, uploads
 from app.schemas import body_schema
 
-_VERSIONED_MODULES = (options, portfolio, projects, uploads, pipeline, capacity, decisions, templates, intake, agent, agent_tools)
+_VERSIONED_MODULES = (options, portfolio, projects, uploads, pipeline, capacity, decisions, templates, intake, agent, agent_tools, admin)
 
 
 def _register_upstream_handlers(app: FastAPI, type_base: str) -> None:

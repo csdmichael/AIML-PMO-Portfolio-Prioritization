@@ -73,16 +73,24 @@ import {
   playOutline,
   radioOutline,
   refreshOutline,
+  saveOutline,
   serverOutline,
+  settingsOutline,
   shieldCheckmarkOutline,
   sparkles,
   sparklesOutline,
   trashOutline,
   trendingUpOutline,
   warningOutline,
+  optionsOutline,
+  listOutline,
 } from 'ionicons/icons';
 
 addIcons({
+  optionsOutline,
+  listOutline,
+  saveOutline,
+  settingsOutline,
   addCircleOutline,
   addOutline,
   albumsOutline,
@@ -173,7 +181,7 @@ export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   readonly store = inject(PortfolioStore);
   readonly navigationCollapsed = signal(false);
-  readonly expandedCategories = signal<Record<string, boolean>>({ documentation: true });
+  readonly expandedCategories = signal<Record<string, boolean>>({});
 
   ngOnInit(): void {
     this.titleService.setTitle('PMO Portfolio Prioritization');
@@ -183,6 +191,9 @@ export class AppComponent implements OnInit {
       .subscribe((event) => {
         if (event.urlAfterRedirects.includes('/docs')) {
           this.expandedCategories.update((cats) => ({ ...cats, documentation: true }));
+        }
+        if (event.urlAfterRedirects.includes('/admin')) {
+          this.expandedCategories.update((cats) => ({ ...cats, admin: true }));
         }
       });
   }

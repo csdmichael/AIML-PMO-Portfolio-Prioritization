@@ -54,6 +54,7 @@ export interface Project {
   goLiveDate: string; // YYYY-MM-DD
   monthsToGoLive: number;
   businessValue: number; // 1-5
+  userBase?: number; // count of impacted users
   regulatorySecurity: boolean;
   dtAlignment: boolean;
   protectedProgram: boolean;
@@ -75,6 +76,7 @@ export interface Project {
   finalTier: PriorityTier;
   tierProbabilities: TierProbabilities;
   priorityScore: number; // 0-100
+  fieldWeightedScore?: number; // 0-100 computed from configured field weights
   ruleOverrides: string[];
   recommendedAction: RecommendedAction;
   cluster: string;

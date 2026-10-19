@@ -1,0 +1,5 @@
+{
+  "isDemoEnvironment": true,
+  "environmentName": "Demo / Sandbox",
+  "description": "Controls whether demo actions like sample dataset loading and clearing portfolio data are permitted."
+}

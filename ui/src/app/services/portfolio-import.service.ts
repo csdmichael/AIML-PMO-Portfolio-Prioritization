@@ -87,13 +87,30 @@ export class PortfolioImportService {
 
   readonly sampleFiles = SAMPLE_PORTFOLIO_FILES;
 
-  downloadProjectTemplate(): void {
-    const link = document.createElement('a');
-    link.href = 'assets/data/portfolios/project_intake_template.xlsx';
-    link.download = 'project_intake_template.xlsx';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  async downloadProjectTemplate(): Promise<void> {
+    try {
+      const blob = await firstValueFrom(
+        this.http.get('assets/data/portfolios/project_intake_template.xlsx', { responseType: 'blob' }),
+      );
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'project_intake_template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 200);
+    } catch {
+      // Fallback
+      const link = document.createElement('a');
+      link.href = 'assets/data/portfolios/project_intake_template.xlsx';
+      link.download = 'project_intake_template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }
 
   async fetchAndParseSample(filename: string): Promise<{ portfolio: string; projects: Project[] }> {

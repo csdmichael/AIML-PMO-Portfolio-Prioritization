@@ -18,8 +18,8 @@ export const routes: Routes = [
   },
   {
     path: 'quick-add',
-    loadComponent: () =>
-      import('./pages/quick-add/quick-add.page').then((m) => m.QuickAddPageComponent),
+    redirectTo: 'data-entry',
+    pathMatch: 'full',
   },
   {
     path: 'data-entry',
@@ -38,8 +38,35 @@ export const routes: Routes = [
   },
   {
     path: 'lifecycle',
-    loadComponent: () =>
-      import('./pages/lifecycle/lifecycle.page').then((m) => m.LifecyclePageComponent),
+    redirectTo: 'data-entry',
+    pathMatch: 'full',
+  },
+  {
+    path: 'admin',
+    children: [
+      {
+        path: '',
+        redirectTo: 'settings',
+        pathMatch: 'full',
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/admin/settings/settings.page').then((m) => m.SettingsPageComponent),
+      },
+      {
+        path: 'priority-weights',
+        loadComponent: () =>
+          import('./pages/admin/priority-weights/priority-weights.page').then(
+            (m) => m.PriorityWeightsPageComponent
+          ),
+      },
+      {
+        path: 'lookups',
+        loadComponent: () =>
+          import('./pages/admin/lookups/lookups.page').then((m) => m.LookupsPageComponent),
+      },
+    ],
   },
   {
     path: 'projects/:projectId',

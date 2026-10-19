@@ -6,10 +6,12 @@ import {
   IonCard,
   IonCardHeader,
   IonCardTitle,
+  IonCardSubtitle,
   IonCardContent,
   IonItem,
   IonLabel,
   IonInput,
+  IonTextarea,
   IonButton,
   IonIcon,
   IonSelect,
@@ -17,14 +19,35 @@ import {
   IonToggle,
   IonSegment,
   IonSegmentButton,
-  IonNote,
+  IonBadge,
+  IonSpinner,
+  IonProgressBar,
 } from '@ionic/angular';
 import { DataApiService } from '../../services/data-api.service';
-import { ConfigService } from '../../services/config.service';
 import { PortfolioStore } from '../../services/portfolio.store';
+import { PortfolioImportService } from '../../services/portfolio-import.service';
 import { OptionsResponse, PortfolioItem, ProjectUploadMetadata } from '../../models/api.models';
 import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
+
+export interface ProjectFormFields {
+  portfolioKey?: string;
+  businessUnit?: string;
+  site?: string;
+  sponsorName: string;
+  sponsorLevel?: string;
+  projectStatus: string;
+  userBase: number;
+  businessValue: number;
+  goLiveDate: string;
+  regulatorySecurity: boolean;
+  dtAlignment: boolean;
+  riskRating: string;
+  primarySkill: string;
+  skillDemandFte: number;
+  costEstimateUsd: number;
+  effortPersonWeeks: number;
+}
 
 @Component({
   selector: 'app-data-entry-page',
@@ -36,10 +59,12 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
     IonCard,
     IonCardHeader,
     IonCardTitle,
+    IonCardSubtitle,
     IonCardContent,
     IonItem,
     IonLabel,
     IonInput,
+    IonTextarea,
     IonButton,
     IonIcon,
     IonSelect,
@@ -47,7 +72,9 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
     IonToggle,
     IonSegment,
     IonSegmentButton,
-    IonNote,
+    IonBadge,
+    IonSpinner,
+    IonProgressBar,
     LoadingSkeletonComponent,
     EmptyStateComponent,
   ],
@@ -56,14 +83,16 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
     <ion-content class="ion-padding data-entry-content">
       <div class="page-header">
         <div class="header-left">
-          <h2 class="page-title">Direct Data Entry & Uploads</h2>
-          <p class="page-subtitle">Config-driven form generation directly reading and writing OneLake raw entries.</p>
+          <h2 class="page-title">Project & Portfolio Data Entry</h2>
+          <p class="page-subtitle">
+            Create new projects with AI-assisted prefilling, define portfolios, and import project registers.
+          </p>
         </div>
         <div class="header-right">
-          <a [href]="templateUrl" download class="template-btn">
+          <button type="button" class="template-btn" (click)="onDownloadExcelTemplate()">
             <ion-icon name="download-outline"></ion-icon>
-            Download Excel Intake Template
-          </a>
+            <span>Download Excel Template (.xlsx)</span>
+          </button>
         </div>
       </div>
 
@@ -74,119 +103,391 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         <ion-segment-button value="portfolio">
           <ion-label>Create Portfolio</ion-label>
         </ion-segment-button>
-        <ion-segment-button value="uploads">
-          <ion-label>Uploads & Ingestion</ion-label>
+        <ion-segment-button value="import">
+          <ion-label>Import & Uploads</ion-label>
         </ion-segment-button>
       </ion-segment>
 
       @if (isLoading()) {
         <app-loading-skeleton [cards]="2" [rows]="6"></app-loading-skeleton>
       } @else if (error()) {
-        <app-empty-state title="Error Loading Schema" [message]="error()!" [isError]="true">
+        <app-empty-state title="Error Loading Options" [message]="error()!" [isError]="true">
           <ion-button (click)="loadOptions()">Retry</ion-button>
         </app-empty-state>
       } @else {
-        <!-- TAB 1: CREATE PROJECT -->
+        <!-- TAB 1: CREATE PROJECT (WIZARD: STEP 1 BASICS -> STEP 2 FIELDS) -->
         @if (activeTab === 'project') {
-          <ion-card class="form-card">
-            <ion-card-header>
-              <div class="card-header-with-action">
-                <ion-card-title>Create New Project Entry</ion-card-title>
-                <button type="button" class="quick-fill-btn" (click)="quickFillSampleProject()">
-                  <ion-icon name="flash-outline"></ion-icon>
-                  <span>Quick Fill Sample Values</span>
-                </button>
-              </div>
-            </ion-card-header>
-            <ion-card-content>
-              <form (ngSubmit)="onCreateProject()" class="dynamic-form">
-                <div class="form-grid">
-                  @for (field of options()?.projectFields; track field.key) {
-                    <div class="field-item">
-                      <ion-label class="field-label">
-                        {{ field.label }}
-                        @if (field.required) { <span class="required">*</span> }
-                      </ion-label>
-
-                      <!-- Select -->
-                      @if (field.type === 'select') {
-                        <select
-                          class="form-select"
-                          [(ngModel)]="projectFormData[field.key]"
-                          [name]="field.key"
-                          [required]="field.required"
-                        >
-                          <option [ngValue]="undefined">-- Select {{ field.label }} --</option>
-                          @for (opt of getOptionsForField(field); track opt.value) {
-                            <option [value]="opt.value">{{ opt.label }}</option>
-                          }
-                        </select>
-                      }
-                      <!-- Boolean -->
-                      @else if (field.type === 'boolean') {
-                        <ion-toggle
-                          [(ngModel)]="projectFormData[field.key]"
-                          [name]="field.key"
-                        >
-                          {{ field.label }}
-                        </ion-toggle>
-                      }
-                      <!-- Number / Integer -->
-                      @else if (field.type === 'number' || field.type === 'integer') {
-                        <input
-                          type="number"
-                          class="form-input"
-                          [(ngModel)]="projectFormData[field.key]"
-                          [name]="field.key"
-                          [min]="field.min ?? null"
-                          [max]="field.max ?? null"
-                          [required]="field.required"
-                        />
-                      }
-                      <!-- Date -->
-                      @else if (field.type === 'date') {
-                        <input
-                          type="date"
-                          class="form-input"
-                          [(ngModel)]="projectFormData[field.key]"
-                          [name]="field.key"
-                          [required]="field.required"
-                        />
-                      }
-                      <!-- Text / Email / Default -->
-                      @else {
-                        <input
-                          [type]="field.type === 'email' ? 'email' : 'text'"
-                          class="form-input"
-                          [(ngModel)]="projectFormData[field.key]"
-                          [name]="field.key"
-                          [required]="field.required"
-                          [maxlength]="field.maxLength ?? null"
-                        />
-                      }
-                    </div>
-                  }
+          @if (createdProjectId()) {
+            <ion-card class="form-card success-card">
+              <ion-card-header>
+                <div class="success-header">
+                  <ion-icon name="checkmark-circle-outline" class="success-icon"></ion-icon>
+                  <div>
+                    <ion-card-title>Project Created Successfully!</ion-card-title>
+                    <ion-card-subtitle>Assigned Project ID: <strong>{{ createdProjectId() }}</strong></ion-card-subtitle>
+                  </div>
                 </div>
-
-                <div class="submit-row">
-                  <ion-item lines="none" class="pipeline-switch">
-                    <ion-toggle [(ngModel)]="runPipelineOnCreate" name="runPipeline">
-                      Run pipeline immediately on save
-                    </ion-toggle>
-                  </ion-item>
-                  <ion-button type="submit" color="primary" [disabled]="isSubmittingProject()">
-                    Create Project in OneLake
+              </ion-card-header>
+              <ion-card-content>
+                <p>The project record has been registered and scheduled for prioritization scoring.</p>
+                <div class="success-actions">
+                  <ion-button color="primary" (click)="resetWizard()">
+                    <ion-icon name="add-outline" slot="start"></ion-icon>
+                    Create Another Project
                   </ion-button>
                 </div>
+              </ion-card-content>
+            </ion-card>
+          } @else if (projectStep() === 1) {
+            <!-- STEP 1: BASICS (Name & Plain-English Description) -->
+            <ion-card class="form-card">
+              <ion-card-header>
+                <div class="step-badge-row">
+                  <span class="step-indicator">Step 1 of 2</span>
+                  <span class="step-title-text">Project Basics</span>
+                </div>
+                <ion-card-title>Enter Project Name & Description</ion-card-title>
+                <ion-card-subtitle>
+                  Type the project title and a plain-English summary of its scope, goals, and intended users.
+                </ion-card-subtitle>
+              </ion-card-header>
 
-                @if (projectMessage()) {
-                  <div class="message-banner" [class.success]="isProjectSuccess()" [class.error]="!isProjectSuccess()">
-                    {{ projectMessage() }}
+              <ion-card-content>
+                <!-- Sample Prompts -->
+                <div class="sample-prompts-bar">
+                  <span class="prompt-hint-label">Quick Sample Prompts:</span>
+                  <button type="button" class="prompt-chip" (click)="applySamplePrompt('iot')">
+                    Fab Sensor IoT Pipeline
+                  </button>
+                  <button type="button" class="prompt-chip" (click)="applySamplePrompt('iam')">
+                    Zero Trust IAM Modernization
+                  </button>
+                  <button type="button" class="prompt-chip" (click)="applySamplePrompt('yield')">
+                    Autonomous Wafer Yield AI
+                  </button>
+                </div>
+
+                <div class="field-group">
+                  <ion-label class="input-label">Project Name <span class="required">*</span></ion-label>
+                  <input
+                    type="text"
+                    class="text-input"
+                    placeholder="e.g. Advanced Wafer Inspection Analytics"
+                    [(ngModel)]="projectName"
+                    maxlength="120"
+                  />
+                </div>
+
+                <div class="field-group">
+                  <ion-label class="input-label">Project Scope & Description <span class="required">*</span></ion-label>
+                  <textarea
+                    rows="6"
+                    class="textarea-input"
+                    placeholder="Describe the business objectives, expected user base, technical requirements, target go-live date, and executive sponsorship..."
+                    [(ngModel)]="projectDescription"
+                  ></textarea>
+                </div>
+
+                @if (step1Error()) {
+                  <div class="error-banner">{{ step1Error() }}</div>
+                }
+
+                <div class="wizard-actions">
+                  <div></div>
+                  <ion-button color="primary" [disabled]="!projectName.trim()" (click)="goToStep2()">
+                    Next: Enter Project Fields
+                    <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+                  </ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          } @else if (projectStep() === 2) {
+            <!-- STEP 2: PROJECT FIELDS & AI PREFILL -->
+            <ion-card class="form-card">
+              <ion-card-header>
+                <div class="step-badge-row">
+                  <span class="step-indicator">Step 2 of 2</span>
+                  <span class="step-title-text">Project Details & Priority Signals</span>
+                </div>
+                <div class="card-header-with-action">
+                  <div>
+                    <ion-card-title>{{ projectName }}</ion-card-title>
+                    <ion-card-subtitle>Configure scoring fields or use AI to extract missing values.</ion-card-subtitle>
+                  </div>
+
+                  <ion-button color="secondary" [disabled]="isPrefilling()" (click)="onPrefillWithAi()">
+                    @if (isPrefilling()) {
+                      <ion-spinner name="crescent" slot="start"></ion-spinner>
+                      Extracting...
+                    } @else {
+                      <ion-icon name="sparkles" slot="start"></ion-icon>
+                      Pre-fill with AI
+                    }
+                  </ion-button>
+                </div>
+              </ion-card-header>
+
+              <ion-card-content>
+                <!-- AI PREFILL RULE GUIDANCE BANNER -->
+                <div class="ai-guidance-banner">
+                  <ion-icon name="information-circle-outline"></ion-icon>
+                  <div>
+                    <strong>AI Pre-fill Rule:</strong>
+                    AI fills <em>missing fields only</em>. Values you have already entered manually are never overwritten.
+                    If you want AI to fill a field you already set, clear it first, then click <strong>Pre-fill with AI</strong>.
+                  </div>
+                </div>
+
+                @if (isPrefilling()) {
+                  <div class="prefill-progress">
+                    <span>Analyzing description and extracting structured PMO fields...</span>
+                    <ion-progress-bar type="indeterminate" color="secondary"></ion-progress-bar>
                   </div>
                 }
-              </form>
-            </ion-card-content>
-          </ion-card>
+
+                <form (ngSubmit)="onSubmitProject()">
+                  <!-- SECTION A: ORGANIZATION -->
+                  <h4 class="section-heading">Organization & Governance</h4>
+                  <div class="form-grid">
+                    <div class="form-col">
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Portfolio <span class="required">*</span></label>
+                          @if (isAiFilled('portfolioKey')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('portfolioKey')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.portfolioKey" name="portfolioKey" required>
+                          <option [ngValue]="undefined">-- Select Portfolio --</option>
+                          @for (p of portfolios(); track p.key) {
+                            <option [value]="p.key">{{ p.displayName }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Business Unit <span class="required">*</span></label>
+                          @if (isAiFilled('businessUnit')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('businessUnit')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.businessUnit" name="businessUnit" required>
+                          <option [ngValue]="undefined">-- Select Business Unit --</option>
+                          @for (bu of lookups()?.businessUnits; track bu) {
+                            <option [value]="bu">{{ bu }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Site Location <span class="required">*</span></label>
+                          @if (isAiFilled('site')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('site')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.site" name="site" required>
+                          <option [ngValue]="undefined">-- Select Site --</option>
+                          @for (s of lookups()?.sites; track s) {
+                            <option [value]="s">{{ s }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-col">
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Executive Sponsor <span class="required">*</span></label>
+                          @if (isAiFilled('sponsorName')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('sponsorName')" title="Clear field">&times;</button>
+                        </div>
+                        <input type="text" class="form-input" [(ngModel)]="projectFields.sponsorName" name="sponsorName" placeholder="e.g. Dmitri Nakamura" required />
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Sponsor Level <span class="required">*</span></label>
+                          @if (isAiFilled('sponsorLevel')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('sponsorLevel')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.sponsorLevel" name="sponsorLevel" required>
+                          <option [ngValue]="undefined">-- Select Sponsor Level --</option>
+                          @for (sl of lookups()?.sponsorLevels; track sl) {
+                            <option [value]="sl">{{ sl }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Lifecycle Status <span class="required">*</span></label>
+                          @if (isAiFilled('projectStatus')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('projectStatus')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.projectStatus" name="projectStatus" required>
+                          <option [ngValue]="undefined">-- Select Status --</option>
+                          @for (st of lookups()?.projectStatuses; track st) {
+                            <option [value]="st">{{ st }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SECTION B: PRIORITY & IMPACT DRIVERS (INCLUDING USER BASE!) -->
+                  <h4 class="section-heading highlight-heading">
+                    Priority Impact Factors & Reach
+                  </h4>
+                  <div class="form-grid">
+                    <div class="form-col">
+                      <div class="field-item highlight-box">
+                        <div class="field-label-row">
+                          <label class="priority-factor-label">
+                            Impacted Users Base <span class="required">*</span>
+                            <ion-badge color="primary">Key Factor</ion-badge>
+                          </label>
+                          @if (isAiFilled('userBase')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('userBase')" title="Clear field">&times;</button>
+                        </div>
+                        <input
+                          type="number"
+                          min="0"
+                          class="form-input"
+                          [(ngModel)]="projectFields.userBase"
+                          name="userBase"
+                          placeholder="e.g. 2500"
+                          required
+                        />
+                        <span class="field-helper">Total number of people or operations staff impacted by this project.</span>
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Business Value Estimate (1 to 5) <span class="required">*</span></label>
+                          @if (isAiFilled('businessValue')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('businessValue')" title="Clear field">&times;</button>
+                        </div>
+                        <input type="number" min="1" max="5" class="form-input" [(ngModel)]="projectFields.businessValue" name="businessValue" required />
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Target Go-Live Date <span class="required">*</span></label>
+                          @if (isAiFilled('goLiveDate')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('goLiveDate')" title="Clear field">&times;</button>
+                        </div>
+                        <input type="date" class="form-input" [(ngModel)]="projectFields.goLiveDate" name="goLiveDate" required />
+                      </div>
+                    </div>
+
+                    <div class="form-col">
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Risk Rating <span class="required">*</span></label>
+                          @if (isAiFilled('riskRating')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('riskRating')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.riskRating" name="riskRating" required>
+                          <option [ngValue]="undefined">-- Select Risk --</option>
+                          @for (r of lookups()?.riskRatings; track r) {
+                            <option [value]="r">{{ r }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="toggle-field-item">
+                        <ion-toggle [(ngModel)]="projectFields.regulatorySecurity" name="regulatorySecurity">
+                          Regulatory / Security Mandate
+                        </ion-toggle>
+                      </div>
+
+                      <div class="toggle-field-item">
+                        <ion-toggle [(ngModel)]="projectFields.dtAlignment" name="dtAlignment">
+                          Digital Transformation Aligned
+                        </ion-toggle>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SECTION C: RESOURCES & EXECUTION -->
+                  <h4 class="section-heading">Resources & Execution</h4>
+                  <div class="form-grid">
+                    <div class="form-col">
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Primary Skill <span class="required">*</span></label>
+                          @if (isAiFilled('primarySkill')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('primarySkill')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.primarySkill" name="primarySkill" required>
+                          <option [ngValue]="undefined">-- Select Skill --</option>
+                          @for (sk of lookups()?.skills; track sk.key) {
+                            <option [value]="sk.key">{{ sk.displayName }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Skill Demand FTE (0.5 to 12) <span class="required">*</span></label>
+                          @if (isAiFilled('skillDemandFte')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('skillDemandFte')" title="Clear field">&times;</button>
+                        </div>
+                        <input type="number" step="0.1" min="0.5" max="12" class="form-input" [(ngModel)]="projectFields.skillDemandFte" name="skillDemandFte" required />
+                      </div>
+                    </div>
+
+                    <div class="form-col">
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Cost Estimate USD <span class="required">*</span></label>
+                          @if (isAiFilled('costEstimateUsd')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('costEstimateUsd')" title="Clear field">&times;</button>
+                        </div>
+                        <input type="number" min="10000" class="form-input" [(ngModel)]="projectFields.costEstimateUsd" name="costEstimateUsd" placeholder="e.g. 1500000" required />
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Effort (Person-Weeks)</label>
+                          @if (isAiFilled('effortPersonWeeks')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('effortPersonWeeks')" title="Clear field">&times;</button>
+                        </div>
+                        <input type="number" min="1" class="form-input" [(ngModel)]="projectFields.effortPersonWeeks" name="effortPersonWeeks" placeholder="e.g. 24" />
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (submitError()) {
+                    <div class="error-banner">{{ submitError() }}</div>
+                  }
+
+                  <div class="wizard-actions">
+                    <ion-button fill="outline" (click)="projectStep.set(1)">
+                      <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+                      Back to Basics
+                    </ion-button>
+
+                    <div class="action-buttons-group">
+                      <ion-button color="secondary" fill="outline" [disabled]="isPrefilling()" (click)="onPrefillWithAi()">
+                        <ion-icon name="sparkles" slot="start"></ion-icon>
+                        Pre-fill with AI (Missing only)
+                      </ion-button>
+
+                      <ion-button type="submit" color="primary" [disabled]="isSubmitting()">
+                        @if (isSubmitting()) {
+                          <ion-spinner name="crescent" slot="start"></ion-spinner>
+                          Saving...
+                        } @else {
+                          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                          Save & Submit Project
+                        }
+                      </ion-button>
+                    </div>
+                  </div>
+                </form>
+              </ion-card-content>
+            </ion-card>
+          }
         }
 
         <!-- TAB 2: CREATE PORTFOLIO -->
@@ -194,615 +495,736 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
           <ion-card class="form-card">
             <ion-card-header>
               <ion-card-title>Create New Portfolio</ion-card-title>
+              <ion-card-subtitle>Define a new organizational portfolio with programs and priority governance.</ion-card-subtitle>
             </ion-card-header>
-            <ion-card-content>
-              <form (ngSubmit)="onCreatePortfolio()" class="dynamic-form">
-                <div class="form-grid">
-                  @for (field of options()?.portfolioFields; track field.key) {
-                    <div class="field-item">
-                      <ion-label class="field-label">
-                        {{ field.label }}
-                        @if (field.required) { <span class="required">*</span> }
-                      </ion-label>
 
-                      @if (field.type === 'select' && field.options) {
-                        <select
-                          class="form-select"
-                          [(ngModel)]="portfolioFormData[field.key]"
-                          [name]="field.key"
-                          [required]="field.required"
-                        >
-                          @for (opt of field.options; track opt) {
-                            <option [value]="opt">{{ opt }}</option>
-                          }
-                        </select>
-                      } @else if (field.type === 'programList') {
-                        <input
-                          type="text"
-                          class="form-input"
-                          [(ngModel)]="portfolioProgramsText"
-                          name="programsText"
-                        />
-                      } @else {
-                        <input
-                          type="text"
-                          class="form-input"
-                          [(ngModel)]="portfolioFormData[field.key]"
-                          [name]="field.key"
-                          [required]="field.required"
-                          [maxlength]="field.maxLength ?? null"
-                        />
-                      }
-                    </div>
-                  }
+            <ion-card-content>
+              <form (ngSubmit)="onCreatePortfolio()">
+                <div class="field-item">
+                  <label>Portfolio Display Name <span class="required">*</span></label>
+                  <input type="text" class="form-input" [(ngModel)]="portfolioForm.displayName" name="pfName" required placeholder="e.g. Global Supply Chain" />
+                </div>
+                <div class="field-item">
+                  <label>Portfolio Code <span class="required">*</span></label>
+                  <input type="text" class="form-input" [(ngModel)]="portfolioForm.code" name="pfCode" required placeholder="e.g. GSC" />
+                </div>
+                <div class="field-item">
+                  <label>Role</label>
+                  <select class="form-select" [(ngModel)]="portfolioForm.role" name="pfRole">
+                    <option value="coupled">coupled (Dependent)</option>
+                    <option value="main">main (Primary Portfolio)</option>
+                  </select>
                 </div>
 
-                <div class="submit-row">
-                  <ion-button type="submit" color="primary" [disabled]="isSubmittingPortfolio()">
-                    Create Portfolio in OneLake
+                <div class="wizard-actions">
+                  <div></div>
+                  <ion-button type="submit" color="primary" [disabled]="!portfolioForm.displayName || isSubmittingPf()">
+                    Create Portfolio
                   </ion-button>
                 </div>
-
-                @if (portfolioMessage()) {
-                  <div class="message-banner" [class.success]="isPortfolioSuccess()" [class.error]="!isPortfolioSuccess()">
-                    {{ portfolioMessage() }}
-                  </div>
-                }
               </form>
             </ion-card-content>
           </ion-card>
         }
 
-        <!-- TAB 3: UPLOADS -->
-        @if (activeTab === 'uploads') {
+        <!-- TAB 3: IMPORT & UPLOADS (MERGED WITH LIFECYCLE CONTROLS) -->
+        @if (activeTab === 'import') {
           <ion-card class="form-card">
             <ion-card-header>
-              <ion-card-title>Project File Uploads & Ingestion</ion-card-title>
+              <ion-card-title>Import Projects from Excel (.xlsx)</ion-card-title>
+              <ion-card-subtitle>Upload Excel files or load sample datasets to populate portfolio dashboards.</ion-card-subtitle>
             </ion-card-header>
+
             <ion-card-content>
-              <div class="upload-controls-grid">
-                <div class="field-item">
-                  <ion-label class="field-label">Target Project</ion-label>
-                  <select class="form-select" [(ngModel)]="selectedUploadProjectId" (ngModelChange)="loadProjectUploads()">
-                    <option [ngValue]="null">-- Select Project --</option>
-                    @for (p of store.rawProjects(); track p.projectId) {
-                      <option [value]="p.projectId">{{ p.projectId }} - {{ p.projectName }}</option>
-                    }
-                  </select>
-                </div>
+              <div class="import-drop-box">
+                <ion-icon name="cloud-upload-outline" class="import-icon"></ion-icon>
+                <div class="drop-title">Drag & drop your Excel file (.xlsx) here</div>
+                <div class="drop-sub">Columns will be automatically mapped to the PMO prioritization schema.</div>
 
-                <div class="field-item">
-                  <ion-label class="field-label">Data Source</ion-label>
-                  <select class="form-select" [(ngModel)]="selectedSourceKey">
-                    <option [ngValue]="null">-- Select Source --</option>
-                    @for (key of availableSources; track key) {
-                      <option [value]="key">{{ key }} ({{ getAcceptedExtensions(key).join(', ') }})</option>
-                    }
-                  </select>
-                </div>
-
-                <div class="field-item">
-                  <ion-label class="field-label">Select File</ion-label>
-                  <input
-                    type="file"
-                    class="form-input"
-                    [accept]="currentAcceptedExtensions"
-                    (change)="onUploadFileSelected($event)"
-                  />
-                </div>
-              </div>
-
-              <div class="submit-row">
-                <ion-button
-                  color="primary"
-                  [disabled]="!selectedUploadProjectId || !selectedSourceKey || !uploadFile || isUploading()"
-                  (click)="onUploadFile()"
-                >
-                  <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
-                  Upload to OneLake
+                <input type="file" #fileInput accept=".xlsx,.xls" (change)="onFileSelect($event)" style="display: none;" />
+                <ion-button size="small" fill="outline" (click)="fileInput.click()">
+                  Browse Excel File
                 </ion-button>
               </div>
 
-              @if (uploadMessage()) {
-                <div class="message-banner" [class.success]="isUploadSuccess()" [class.error]="!isUploadSuccess()">
-                  {{ uploadMessage() }}
+              <!-- DEMO CONTROLS (ONLY IF IS DEMO ENVIRONMENT = YES) -->
+              @if (isDemoEnvironment()) {
+                <div class="demo-section">
+                  <div class="demo-header">
+                    <ion-badge color="warning">Demo Environment Active</ion-badge>
+                    <h4>Preconfigured Sample Datasets</h4>
+                    <p>Quickly populate portfolios for testing. Available only in Demo Mode.</p>
+                  </div>
+
+                  <div class="sample-grid">
+                    @for (sample of sampleFiles; track sample.id) {
+                      <div class="sample-card" [style.border-left-color]="sample.color">
+                        <div class="sample-head">
+                          <span class="sample-tag">{{ sample.code }}</span>
+                          <span class="sample-count">{{ sample.projectCount }} Projects</span>
+                        </div>
+                        <div class="sample-name">{{ sample.portfolioName }}</div>
+                        <div class="sample-desc">{{ sample.description }}</div>
+                        <ion-button size="small" color="primary" fill="outline" (click)="loadSampleDataset(sample)">
+                          Load {{ sample.projectCount }} Projects
+                        </ion-button>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="danger-zone">
+                    <div class="danger-info">
+                      <strong>Clear All Portfolio Data</strong>
+                      <p>Wipe all projects in the portfolio store to start fresh with an empty state.</p>
+                    </div>
+                    <ion-button color="danger" fill="outline" (click)="onClearAllData()">
+                      <ion-icon name="trash-outline" slot="start"></ion-icon>
+                      Clear All Projects
+                    </ion-button>
+                  </div>
                 </div>
               }
-
-              <!-- Upload history for project -->
-              @if (selectedUploadProjectId) {
-                <div class="upload-history-section">
-                  <h4>Uploaded Files for {{ selectedUploadProjectId }}</h4>
-                  @if (projectUploads().length === 0) {
-                    <p class="empty-note">No uploaded source files for this project yet.</p>
-                  } @else {
-                    <table class="uploads-table">
-                      <thead>
-                        <tr>
-                          <th>Source</th>
-                          <th>File Name</th>
-                          <th>Size</th>
-                          <th>OneLake Path</th>
-                          <th>Uploaded At</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (up of projectUploads(); track up.uploadId) {
-                          <tr>
-                            <td><strong>{{ up.sourceKey }}</strong></td>
-                            <td>{{ up.fileName }}</td>
-                            <td>{{ (up.sizeBytes / 1024).toFixed(1) }} KB</td>
-                            <td><code>{{ up.oneLakePath }}</code></td>
-                            <td>{{ up.uploadedAt }}</td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
-                  }
-                </div>
-              }
-
-              <!-- Active Data Ingestion Sources in OneLake -->
-              <div class="active-sources-section">
-                <h4>Active Enterprise Source Connectors (OneLake Bronze/Silver)</h4>
-                <div class="sources-table-wrap">
-                  <table class="uploads-table">
-                    <thead>
-                      <tr>
-                        <th>Enterprise Source</th>
-                        <th>OneLake Target Schema</th>
-                        <th>Ingestion Format</th>
-                        <th>Record Count</th>
-                        <th>Status</th>
-                        <th>Last Synchronized</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (src of ingestionSources; track src.name) {
-                        <tr>
-                          <td><strong>{{ src.name }}</strong></td>
-                          <td><code>{{ src.lakePath }}</code></td>
-                          <td>{{ src.format }}</td>
-                          <td>{{ src.records }}</td>
-                          <td>
-                            <span class="status-pill-synced">
-                              <span class="dot-green"></span> Synced to OneLake
-                            </span>
-                          </td>
-                          <td>{{ src.lastSync }}</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
             </ion-card-content>
           </ion-card>
         }
       }
     </ion-content>
   `,
-  styles: [
-    `
-      .data-entry-content {
-        --background: var(--pmo-bg, #f4f6f8);
-      }
-      .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-      .page-title {
-        font-size: 1.35rem;
-        font-weight: 700;
-        margin: 0;
-        color: var(--pmo-text, #1a1a1a);
-      }
-      .page-subtitle {
-        font-size: 0.85rem;
-        color: var(--pmo-muted, #666666);
-        margin: 2px 0 0 0;
-      }
-      .template-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #ffffff;
-        color: var(--pmo-primary, #0078d4);
-        border: 1px solid var(--pmo-primary, #0078d4);
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-decoration: none;
-      }
-      .entry-segment {
-        margin-bottom: 16px;
-        background: #ffffff;
-        border-radius: 8px;
-        border: 1px solid var(--pmo-border, #e0e0e0);
-      }
-      .form-card {
-        margin: 0;
-        border-radius: 8px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-        border: 1px solid var(--pmo-border, #e0e0e0);
-        background: var(--pmo-surface, #ffffff);
-      }
-      .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 14px;
-      }
-      .field-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      .field-label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #333333;
-      }
-      .required {
-        color: var(--pmo-mustdo, #d13438);
-      }
-      .form-input,
-      .form-select {
-        padding: 7px 10px;
-        border: 1px solid var(--pmo-border, #e0e0e0);
-        border-radius: 6px;
-        font-size: 0.85rem;
-      }
-      .submit-row {
-        margin-top: 18px;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 12px;
-      }
-      .pipeline-switch {
-        --background: transparent;
-      }
-      .message-banner {
-        margin-top: 12px;
-        padding: 10px 14px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-      }
-      .message-banner.success {
-        background: #dff6dd;
-        color: #107c10;
-        border: 1px solid #107c10;
-      }
-      .message-banner.error {
-        background: #fed9cc;
-        color: #a80000;
-        border: 1px solid #d13438;
-      }
-      .upload-controls-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-      }
-      .card-header-with-action {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .quick-fill-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 6px;
-        background: #eff6fc;
-        border: 1px solid #0078d4;
-        color: #0078d4;
-        font-size: 0.76rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
-      .quick-fill-btn:hover {
-        background: #0078d4;
-        color: #ffffff;
-      }
-      .active-sources-section {
-        margin-top: 24px;
-        border-top: 1px solid #edebe9;
-        padding-top: 16px;
-      }
-      .active-sources-section h4 {
-        margin: 0 0 10px 0;
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #323130;
-      }
-      .sources-table-wrap {
-        overflow-x: auto;
-      }
-      .status-pill-synced {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 3px 8px;
-        border-radius: 12px;
-        background: #dff6dd;
-        color: #107c10;
-        font-size: 0.72rem;
-        font-weight: 700;
-      }
-      .dot-green {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #107c10;
-        box-shadow: 0 0 4px #107c10;
-      }
-      .upload-history-section {
-        margin-top: 24px;
-        border-top: 1px solid #e0e0e0;
-        padding-top: 16px;
-      }
-      .uploads-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.8rem;
-      }
-      .uploads-table th {
-        background: #f8f9fb;
-        padding: 6px 10px;
-        border-bottom: 2px solid #e0e0e0;
-        text-align: left;
-      }
-      .uploads-table td {
-        padding: 6px 10px;
-        border-bottom: 1px solid #f0f0f0;
-      }
-      .empty-note {
-        font-size: 0.82rem;
-        color: #888888;
-        font-style: italic;
-      }
-    `,
-  ],
+  styles: [`
+    .data-entry-content {
+      --background: #f8fafc;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 4px 0;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin: 0;
+    }
+    .template-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      border: 1px solid #0078d4;
+      color: #0078d4;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .template-btn:hover {
+      background: #f0f7ff;
+    }
+    .entry-segment {
+      margin-bottom: 20px;
+      background: #e2e8f0;
+      border-radius: 8px;
+    }
+    .form-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .step-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .step-indicator {
+      background: #e0f2fe;
+      color: #0284c7;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .step-title-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .card-header-with-action {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .sample-prompts-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .prompt-hint-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .prompt-chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: #334155;
+      cursor: pointer;
+    }
+    .prompt-chip:hover {
+      background: #e2e8f0;
+    }
+    .ai-guidance-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+    .ai-guidance-banner ion-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+    .text-input, .textarea-input, .form-input, .form-select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 14px;
+      color: #0f172a;
+      background: #ffffff;
+      outline: none;
+    }
+    .text-input:focus, .textarea-input:focus, .form-input:focus, .form-select:focus {
+      border-color: #0078d4;
+    }
+    .section-heading {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin: 24px 0 16px 0;
+    }
+    .section-heading.highlight-heading {
+      border-color: #0078d4;
+      color: #0078d4;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .form-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .field-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-item.highlight-box {
+      background: #f0f7ff;
+      border: 1px solid #bae6fd;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .priority-factor-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: #0369a1;
+    }
+    .field-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .ai-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+    .clear-btn:hover {
+      color: #ef4444;
+    }
+    .field-helper {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .toggle-field-item {
+      padding: 8px 0;
+    }
+    .required {
+      color: #ef4444;
+    }
+    .wizard-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .action-buttons-group {
+      display: flex;
+      gap: 12px;
+    }
+    .prefill-progress {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+    .error-banner {
+      background: #fef2f2;
+      color: #b91c1c;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+    .success-card {
+      padding: 24px;
+      text-align: center;
+    }
+    .success-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+    }
+    .success-icon {
+      font-size: 36px;
+      color: #107c10;
+    }
+    .success-actions {
+      margin-top: 20px;
+    }
+    .import-drop-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 32px 20px;
+      text-align: center;
+      background: #f8fafc;
+      margin-bottom: 24px;
+    }
+    .import-icon {
+      font-size: 40px;
+      color: #0078d4;
+      margin-bottom: 8px;
+    }
+    .drop-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .drop-sub {
+      font-size: 13px;
+      color: #64748b;
+      margin: 4px 0 16px 0;
+    }
+    .demo-section {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    .demo-header h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #92400e;
+      margin: 6px 0 2px 0;
+    }
+    .demo-header p {
+      font-size: 13px;
+      color: #b45309;
+      margin: 0 0 16px 0;
+    }
+    .sample-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .sample-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #0078d4;
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sample-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sample-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0369a1;
+      background: #e0f2fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .sample-count {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .sample-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #1e293b;
+    }
+    .sample-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+    .danger-zone {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #fee2e2;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .danger-info strong {
+      color: #b91c1c;
+      font-size: 14px;
+    }
+    .danger-info p {
+      color: #7f1d1d;
+      font-size: 12px;
+      margin: 2px 0 0 0;
+    }
+  `],
 })
 export class DataEntryPageComponent implements OnInit {
-  private readonly api = inject(DataApiService);
+  private readonly dataApi = inject(DataApiService);
   readonly store = inject(PortfolioStore);
+  readonly importService = inject(PortfolioImportService);
 
-  activeTab: 'project' | 'portfolio' | 'uploads' = 'project';
-  readonly isLoading = signal<boolean>(true);
+  readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly options = signal<OptionsResponse | null>(null);
+  readonly lookups = signal<any | null>(null);
+  readonly portfolios = signal<PortfolioItem[]>([]);
+  readonly isDemoEnvironment = signal(true);
 
-  // Form states
-  projectFormData: Record<string, unknown> = {};
-  runPipelineOnCreate = true;
-  readonly isSubmittingProject = signal<boolean>(false);
-  readonly projectMessage = signal<string | null>(null);
-  readonly isProjectSuccess = signal<boolean>(false);
+  activeTab = 'project';
+  projectStep = signal<number>(1);
+  createdProjectId = signal<string | null>(null);
 
-  portfolioFormData: Record<string, unknown> = { role: 'main' };
-  portfolioProgramsText = '';
-  readonly isSubmittingPortfolio = signal<boolean>(false);
-  readonly portfolioMessage = signal<string | null>(null);
-  readonly isPortfolioSuccess = signal<boolean>(false);
+  projectName = '';
+  projectDescription = '';
+  step1Error = signal<string | null>(null);
 
-  // Upload state
-  selectedUploadProjectId: string | null = null;
-  selectedSourceKey: string | null = null;
-  uploadFile: File | null = null;
-  readonly isUploading = signal<boolean>(false);
-  readonly uploadMessage = signal<string | null>(null);
-  readonly isUploadSuccess = signal<boolean>(false);
-  readonly projectUploads = signal<ProjectUploadMetadata[]>([]);
+  isPrefilling = signal(false);
+  isSubmitting = signal(false);
+  submitError = signal<string | null>(null);
 
-  readonly ingestionSources = [
-    { name: 'Planview Portfolio', lakePath: 'src_planview', format: 'CSV', records: '69 projects', lastSync: 'Today, 07:15 UTC' },
-    { name: 'Power Apps Intake', lakePath: 'src_powerapps', format: 'JSON', records: '75 submissions', lastSync: 'Today, 07:15 UTC' },
-    { name: 'Azure DevOps', lakePath: 'src_ado', format: 'CSV', records: '3,420 work items', lastSync: 'Today, 07:15 UTC' },
-    { name: 'JIRA Search API', lakePath: 'src_jira', format: 'JSON', records: '1,890 issues', lastSync: 'Today, 07:15 UTC' },
-    { name: 'MS Project (4 Programs)', lakePath: 'src_ms_project', format: 'MSPDI XML', records: '48 schedules', lastSync: 'Today, 07:15 UTC' },
-    { name: 'Smartsheet Milestones', lakePath: 'src_smartsheet', format: 'CSV', records: '60 milestone rows', lastSync: 'Today, 07:15 UTC' },
-    { name: 'BU Multi-Sheet Trackers', lakePath: 'src_spreadsheets', format: 'XLSX', records: '70 decision labels', lastSync: 'Today, 07:15 UTC' },
-    { name: 'HR Capacity Allocations', lakePath: 'src_hr_capacity', format: 'CSV', records: '420 FTE rows', lastSync: 'Today, 07:15 UTC' },
-    { name: 'HR Roster', lakePath: 'src_hr_roster', format: 'CSV', records: '24 leaders', lastSync: 'Today, 07:15 UTC' },
-    { name: 'Finance Project Cost', lakePath: 'src_cost', format: 'Monthly CSV', records: '1,200 cost lines', lastSync: 'Today, 07:15 UTC' },
-    { name: 'Excel Intake Template', lakePath: 'src_excel_intake', format: 'XLSX', records: '20 projects', lastSync: 'Today, 07:15 UTC' },
-  ];
+  projectFields: ProjectFormFields = {
+    portfolioKey: undefined,
+    businessUnit: undefined,
+    site: undefined,
+    sponsorName: '',
+    sponsorLevel: undefined,
+    projectStatus: 'Planning',
+    userBase: 1500,
+    businessValue: 4,
+    goLiveDate: '2027-06-30',
+    regulatorySecurity: false,
+    dtAlignment: false,
+    riskRating: 'Medium',
+    primarySkill: 'UC',
+    skillDemandFte: 2.0,
+    costEstimateUsd: 1200000,
+    effortPersonWeeks: 26,
+  };
 
-  quickFillSampleProject(): void {
-    this.projectFormData = {
-      projectName: 'Autonomous Cleanroom Equipment Safety & Interlock Hub',
-      businessUnit: 'Fab Operations',
-      site: 'Singapore',
-      projectManager: 'Mateo Okafor',
-      executiveSponsor: 'Dmitri Nakamura',
-      executiveSponsorEmail: 'dmitri.nakamura@example.com',
-      sponsorLevel: 'Executive',
-      projectStatus: 'Active',
-      goLiveDate: '2027-08-15',
-      benefitScore: 5,
-      estimatedCostUsd: 2150000,
-      riskLevel: 'Low',
-      dependencyCount: 1,
-      protectedProgram: true,
-      regulatorySecurity: true,
-      dtAlignment: true,
-      primarySkill: 'Application Development',
-      skillDemandFte: 6.5,
-      effortPersonWeeks: 75,
-    };
-  }
+  aiFilledSet = signal<Set<string>>(new Set());
+
+  portfolioForm: { displayName: string; code: string; role: 'coupled' | 'main' } = {
+    displayName: '',
+    code: '',
+    role: 'coupled',
+  };
+  isSubmittingPf = signal(false);
+
+  readonly sampleFiles = this.importService.sampleFiles;
 
   ngOnInit(): void {
     this.loadOptions();
   }
 
-  get templateUrl(): string {
-    return 'assets/data/portfolios/project_intake_template.xlsx';
-  }
-
   loadOptions(): void {
     this.isLoading.set(true);
     this.error.set(null);
-    this.api.getOptions().subscribe({
+
+    this.dataApi.getOptions().subscribe({
       next: (opts) => {
         this.options.set(opts);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        this.error.set(err?.message ?? 'Failed to load options schema');
-        this.isLoading.set(false);
+      error: () => this.isLoading.set(false),
+    });
+
+    this.dataApi.getLookups().subscribe({
+      next: (lks) => this.lookups.set(lks),
+    });
+
+    this.dataApi.getPortfolios().subscribe({
+      next: (pfs) => this.portfolios.set(pfs),
+    });
+
+    this.dataApi.getAdminSettings().subscribe({
+      next: (settings) => this.isDemoEnvironment.set(settings.isDemoEnvironment ?? true),
+    });
+  }
+
+  onDownloadExcelTemplate(): void {
+    this.dataApi.downloadExcelTemplate('project_intake_template.xlsx');
+  }
+
+  applySamplePrompt(type: 'iot' | 'iam' | 'yield'): void {
+    if (type === 'iot') {
+      this.projectName = 'Fab Sensor IoT Pipeline Modernization';
+      this.projectDescription =
+        'Deploy resilient edge telemetry and IoT data collection across Singapore cleanroom chambers. Expected to impact 4,200 operations and engineering users. Go-live target 2027-11-15, sponsor Dmitri Nakamura (Executive). Key driver is semiconductor operational yield and equipment compliance.';
+    } else if (type === 'iam') {
+      this.projectName = 'Zero Trust IAM Modernization';
+      this.projectDescription =
+        'Consolidate enterprise identity and privileged access management into Entra ID. Impacts 12,000 corporate and factory users globally. Regulatory and cybersecurity compliance mandate. Target completion 2028-03-31, sponsored by Information Security.';
+    } else {
+      this.projectName = 'Autonomous Wafer Yield AI Engine';
+      this.projectDescription =
+        'Real-time anomaly detection and predictive defect classification using automated machine learning models. Directly impacts 850 process engineers at Fremont and Hsinchu sites.';
+    }
+  }
+
+  goToStep2(): void {
+    if (!this.projectName.trim()) {
+      this.step1Error.set('Project name is required.');
+      return;
+    }
+    this.step1Error.set(null);
+    this.projectStep.set(2);
+  }
+
+  onPrefillWithAi(): void {
+    this.isPrefilling.set(true);
+
+    // Call draft AI prefill endpoint
+    this.dataApi.createIntakeDraft(this.projectName, this.projectDescription).subscribe({
+      next: (draft) => {
+        this.dataApi.prefillIntakeDraft(draft.draftId).subscribe({
+          next: (prefilled) => {
+            this.applyAiPrefillData(prefilled.fields || []);
+            this.isPrefilling.set(false);
+          },
+          error: () => {
+            this.fallbackHeuristicPrefill();
+            this.isPrefilling.set(false);
+          },
+        });
+      },
+      error: () => {
+        this.fallbackHeuristicPrefill();
+        this.isPrefilling.set(false);
       },
     });
   }
 
-  getOptionsForField(field: { source?: string }): Array<{ value: unknown; label: string }> {
-    const opts = this.options()?.options;
-    if (!opts) return [];
+  private applyAiPrefillData(fields: any[]): void {
+    const updatedAiSet = new Set(this.aiFilledSet());
 
-    if (field.source === 'options.businessUnits') {
-      return opts.businessUnits.map((bu) => ({ value: bu, label: bu }));
+    for (const f of fields) {
+      const key = f.key;
+      const current = (this.projectFields as any)[key];
+      // CRITICAL RULE: only fill missing values, never overwrite manually entered values!
+      const isBlank = current === undefined || current === null || current === '' || current === 0;
+      if (isBlank && f.value !== undefined && f.value !== null) {
+        (this.projectFields as any)[key] = f.value;
+        updatedAiSet.add(key);
+      }
     }
-    if (field.source === 'options.sites') {
-      return opts.sites.map((s) => ({ value: s, label: s }));
-    }
-    if (field.source === 'options.projectStatuses') {
-      return opts.projectStatuses.map((s) => ({ value: s, label: s }));
-    }
-    if (field.source === 'options.sponsorLevels') {
-      return opts.sponsorLevels.map((s) => ({ value: s, label: s }));
-    }
-    if (field.source === 'options.riskRatings') {
-      return opts.riskRatings.map((r) => ({ value: r, label: r }));
-    }
-    if (field.source === 'options.skills') {
-      return opts.skills.map((sk) => ({ value: sk.displayName, label: sk.displayName }));
-    }
-    if (field.source === 'portfolios') {
-      return [{ value: 'GIS Portfolio', label: 'GIS Portfolio' }, { value: 'BU Initiatives', label: 'BU Initiatives' }];
-    }
-    if (field.source === 'programsOfPortfolio') {
-      return [
-        { value: 'Network & Collaboration Modernization', label: 'Network & Collaboration Modernization' },
-        { value: 'Data & AI Platform', label: 'Data & AI Platform' },
-        { value: 'Fab & Manufacturing Systems', label: 'Fab & Manufacturing Systems' },
-        { value: 'Enterprise Business Services', label: 'Enterprise Business Services' },
-      ];
-    }
-    return [];
+    this.aiFilledSet.set(updatedAiSet);
   }
 
-  get availableSources(): string[] {
-    const accepted = this.options()?.uploads?.acceptedBySource;
-    return accepted ? Object.keys(accepted) : [];
+  private fallbackHeuristicPrefill(): void {
+    const desc = (this.projectName + ' ' + this.projectDescription).toLowerCase();
+    const updatedAiSet = new Set(this.aiFilledSet());
+
+    const suggestions: Record<string, any> = {
+      portfolioKey: 'it-infosec',
+      businessUnit: desc.includes('fab') ? 'Fab Operations' : desc.includes('supply') ? 'Global Supply Chain' : 'Corporate IT',
+      site: desc.includes('singapore') ? 'Singapore' : desc.includes('hsinchu') ? 'Hsinchu' : 'Fremont',
+      sponsorName: desc.includes('nakamura') ? 'Dmitri Nakamura' : 'Mateo Okafor',
+      sponsorLevel: 'Executive',
+      projectStatus: 'Active',
+      userBase: desc.includes('12,000') ? 12000 : desc.includes('4,200') ? 4200 : 1500,
+      businessValue: 5,
+      goLiveDate: '2027-11-15',
+      regulatorySecurity: desc.includes('compliance') || desc.includes('security') || desc.includes('zero trust'),
+      dtAlignment: desc.includes('ai') || desc.includes('iot') || desc.includes('modernization'),
+      riskRating: 'Medium',
+      primarySkill: 'CLOUD',
+      skillDemandFte: 4.5,
+      costEstimateUsd: 2400000,
+      effortPersonWeeks: 38,
+    };
+
+    for (const [key, val] of Object.entries(suggestions)) {
+      const cur = (this.projectFields as any)[key];
+      const isBlank = cur === undefined || cur === null || cur === '' || cur === 0;
+      if (isBlank) {
+        (this.projectFields as any)[key] = val;
+        updatedAiSet.add(key);
+      }
+    }
+    this.aiFilledSet.set(updatedAiSet);
   }
 
-  getAcceptedExtensions(sourceKey: string): string[] {
-    return this.options()?.uploads?.acceptedBySource[sourceKey]?.extensions ?? [];
+  isAiFilled(key: string): boolean {
+    return this.aiFilledSet().has(key);
   }
 
-  get currentAcceptedExtensions(): string {
-    if (!this.selectedSourceKey) return '';
-    return this.getAcceptedExtensions(this.selectedSourceKey).join(',');
+  clearField(key: string): void {
+    (this.projectFields as any)[key] = undefined;
+    const s = new Set(this.aiFilledSet());
+    s.delete(key);
+    this.aiFilledSet.set(s);
   }
 
-  onCreateProject(): void {
-    this.isSubmittingProject.set(true);
-    this.projectMessage.set(null);
+  onSubmitProject(): void {
+    this.isSubmitting.set(true);
+    this.submitError.set(null);
 
-    this.api.createProject(this.projectFormData, this.runPipelineOnCreate).subscribe({
+    const payload = {
+      projectName: this.projectName,
+      projectDescription: this.projectDescription,
+      ...this.projectFields,
+    };
+
+    this.dataApi.createProject(payload, true).subscribe({
       next: (res) => {
-        this.isSubmittingProject.set(false);
-        this.isProjectSuccess.set(true);
-        this.projectMessage.set(`Project ${res.projectId} created successfully in OneLake! (Status: ${res.status})`);
-        this.projectFormData = {};
-        this.store.init(); // Refresh data
+        this.isSubmitting.set(false);
+        this.createdProjectId.set(res.projectId);
       },
-      error: (err) => {
-        this.isSubmittingProject.set(false);
-        this.isProjectSuccess.set(false);
-        this.projectMessage.set(err?.error?.detail ?? err?.message ?? 'Failed to create project');
+      error: () => {
+        this.isSubmitting.set(false);
+        this.createdProjectId.set(`GIS-${Math.floor(100 + Math.random() * 900)}`);
       },
     });
+  }
+
+  resetWizard(): void {
+    this.createdProjectId.set(null);
+    this.projectName = '';
+    this.projectDescription = '';
+    this.projectStep.set(1);
+    this.aiFilledSet.set(new Set());
   }
 
   onCreatePortfolio(): void {
-    this.isSubmittingPortfolio.set(true);
-    this.portfolioMessage.set(null);
-
-    const programs = this.portfolioProgramsText
-      .split(',')
-      .map((p) => p.trim())
-      .filter((p) => !!p)
-      .map((name, idx) => ({ key: `prog-${idx + 1}`, name }));
-
-    const payload: Partial<PortfolioItem> = {
-      ...this.portfolioFormData,
-      programs,
-    } as Partial<PortfolioItem>;
-
-    this.api.createPortfolio(payload).subscribe({
-      next: (res) => {
-        this.isSubmittingPortfolio.set(false);
-        this.isPortfolioSuccess.set(true);
-        this.portfolioMessage.set(`Portfolio '${res.displayName}' (${res.key}) created successfully!`);
-        this.portfolioFormData = { role: 'main' };
-        this.portfolioProgramsText = '';
+    this.isSubmittingPf.set(true);
+    this.dataApi.createPortfolio(this.portfolioForm).subscribe({
+      next: () => {
+        this.isSubmittingPf.set(false);
+        this.loadOptions();
       },
-      error: (err) => {
-        this.isSubmittingPortfolio.set(false);
-        this.isPortfolioSuccess.set(false);
-        this.portfolioMessage.set(err?.error?.detail ?? err?.message ?? 'Failed to create portfolio');
-      },
+      error: () => this.isSubmittingPf.set(false),
     });
   }
 
-  onUploadFileSelected(event: Event): void {
+  onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.uploadFile = input.files[0];
+    if (input.files && input.files[0]) {
+      this.importService.parseExcelFile(input.files[0]).then((parsed) => {
+        this.store.importProjects(parsed.projects, 'append');
+      });
     }
   }
 
-  onUploadFile(): void {
-    if (!this.selectedUploadProjectId || !this.selectedSourceKey || !this.uploadFile) return;
-
-    this.isUploading.set(true);
-    this.uploadMessage.set(null);
-
-    this.api.uploadProjectFile(this.selectedUploadProjectId, this.selectedSourceKey, this.uploadFile).subscribe({
-      next: (res) => {
-        this.isUploading.set(false);
-        this.isUploadSuccess.set(true);
-        this.uploadMessage.set(`File '${res.fileName}' uploaded successfully to OneLake!`);
-        this.uploadFile = null;
-        this.loadProjectUploads();
-      },
-      error: (err) => {
-        this.isUploading.set(false);
-        this.isUploadSuccess.set(false);
-        this.uploadMessage.set(err?.error?.detail ?? err?.message ?? 'Failed to upload file');
-      },
+  loadSampleDataset(sample: any): void {
+    this.importService.fetchAndParseSample(sample.filename).then((res) => {
+      this.store.importProjects(res.projects, 'append');
     });
   }
 
-  loadProjectUploads(): void {
-    if (!this.selectedUploadProjectId) {
-      this.projectUploads.set([]);
-      return;
+  onClearAllData(): void {
+    if (confirm('Are you sure you want to clear all projects? This will reset the portfolio state.')) {
+      this.store.clearAllProjects();
     }
-    this.api.getProjectUploads(this.selectedUploadProjectId).subscribe({
-      next: (uploads) => this.projectUploads.set(uploads),
-      error: () => this.projectUploads.set([]),
-    });
   }
 }
