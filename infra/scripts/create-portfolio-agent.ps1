@@ -17,12 +17,15 @@ if ($agents.data | Where-Object name -EQ $config.agentName) {
     if ([int]$config.agentVersion -ne ($latest + 1)) { throw "Pinned version must be the next immutable version after $latest." }
 }
 
-$toolJson = & uv run --frozen --project (Join-Path $repo "api") --directory (Join-Path $repo "api") python -c "import json; from app.agent_tools import tool_definition; print(json.dumps(tool_definition()))"
-if ($LASTEXITCODE -ne 0) { throw "Unable to load the API's shared read-only tool schema." }
-$tool = $toolJson | ConvertFrom-Json
+$tool = @{
+    type = "mcp"; server_label = $config.mcpServerLabel; server_url = $config.mcpServerUrl
+    project_connection_id = $config.mcpConnectionName
+    allowed_tools = @("query_portfolio")
+    require_approval = "never"
+}
 $body = @{
     definition = @{ kind = "prompt"; model = $config.model; instructions = $config.instructions; tools = @($tool) }
-    description = "Read-only Fabric OneLake queries executed by the private backend through APIM."
+    description = "Native read-only OneLake MCP retrieval through private APIM using the project managed identity."
 } | ConvertTo-Json -Depth 20
 $file = Join-Path ([IO.Path]::GetTempPath()) ("pmo-agent-" + [guid]::NewGuid().ToString() + ".json")
 try {

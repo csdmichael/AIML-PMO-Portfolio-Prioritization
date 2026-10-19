@@ -1,4 +1,4 @@
-"""Execute allowlisted Foundry function calls through the private APIM gateway."""
+"""Invoke native Foundry MCP retrieval and validate its OneLake evidence."""
 
 import json
 import logging
@@ -10,7 +10,7 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from app.auth import CredentialProvider
-from app.agent_tools import ApimPortfolioTool, PortfolioQuery, TOOL_NAME
+from app.agent_tools import PortfolioQuery, TOOL_NAME
 from app.problems import ProblemError
 
 logger = logging.getLogger("pmo.api.agent")
@@ -27,6 +27,9 @@ class AgentSettings(BaseModel):
     timeoutSeconds: float
     maxOutputTokens: int
     instructions: str
+    mcpServerLabel: str
+    mcpServerUrl: str
+    mcpConnectionName: str
 
 
 def load_agent_settings() -> AgentSettings:
@@ -55,53 +58,81 @@ class AgentAnswer(BaseModel):
 
 
 class FoundryAgentClient:
-    def __init__(self, settings: AgentSettings, credentials: CredentialProvider, tools: ApimPortfolioTool) -> None:
+    def __init__(self, settings: AgentSettings, credentials: CredentialProvider) -> None:
         self.settings = settings
         self.credentials = credentials
-        self.tools = tools
 
     def answer(self, question: str, history: list[dict[str, str]]) -> dict[str, Any]:
         deadline = time.monotonic() + self.settings.timeoutSeconds
         inputs: list[dict[str, Any]] = [*history, {"role": "user", "content": question}]
         evidence_ids: set[str] = set()
         query_ids: list[str] = []
-        for round_number in range(4):
-            result = self._invoke(inputs, deadline, require_tool=round_number == 0)
-            output = result.get("output")
-            if (
-                result.get("status") != "completed" or not isinstance(output, list)
-                or any(not isinstance(item, dict) for item in output)
-            ):
-                self._invalid_response()
-            calls = [item for item in output if item.get("type") == "function_call"]
-            if not calls:
-                if not query_ids:
-                    self._invalid_response()
-                return self._answer(result, evidence_ids, query_ids)
-            if round_number == 3 or len(query_ids) + len(calls) > 4:
-                raise ProblemError(502, "The agent exceeded its read-only tool budget.", slug="upstream-failure")
-            inputs.extend(output)
-            for call in calls:
-                try:
-                    if call.get("name") != TOOL_NAME or not isinstance(call.get("call_id"), str):
-                        raise ValueError("Tool is not allowlisted")
-                    query = PortfolioQuery.model_validate_json(call["arguments"])
-                except (ValueError, KeyError, TypeError, ValidationError) as error:
-                    logger.warning("Rejected invalid Foundry tool call (%s)", type(error).__name__)
-                    raise ProblemError(502, "The agent requested an invalid Fabric query.", slug="upstream-failure") from error
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise ProblemError(504, "The agent query timed out.", slug="upstream-timeout")
-                evidence = self.tools.execute(query, timeout=min(30, remaining))
-                evidence_ids.update(evidence["sourceProjectIds"])
-                query_ids.append(evidence["queryId"])
-                inputs.append({
-                    "type": "function_call_output", "call_id": call["call_id"],
-                    "output": json.dumps(evidence),
-                })
-        raise AssertionError("Agent tool loop must terminate")
+        result = self._invoke(inputs, deadline)
+        output = result.get("output")
+        if (
+            result.get("status") != "completed" or not isinstance(output, list)
+            or any(not isinstance(item, dict) for item in output)
+        ):
+            self._invalid_response()
+        calls = [item for item in output if item.get("type") == "mcp_call"]
+        if not 1 <= len(calls) <= 4 or any(
+            item.get("type") in ("function_call", "mcp_approval_request") for item in output
+        ):
+            self._invalid_response()
+        # The model may retry after a rejected query; only validated calls can ground the answer.
+        failure: ProblemError | None = None
+        for call in calls:
+            try:
+                evidence = self._evidence(call)
+            except ProblemError as error:
+                failure = error
+                continue
+            evidence_ids.update(evidence["sourceProjectIds"])
+            query_ids.append(evidence["queryId"])
+        if not query_ids:
+            raise failure or ProblemError(502, "The OneLake MCP tool returned no evidence.", slug="upstream-failure")
+        return self._answer(result, evidence_ids, query_ids)
 
-    def _invoke(self, inputs: list[dict[str, Any]], deadline: float, *, require_tool: bool) -> dict[str, Any]:
+    def _evidence(self, call: dict[str, Any]) -> dict[str, Any]:
+        try:
+            if (
+                call.get("name") != TOOL_NAME or call.get("server_label") != self.settings.mcpServerLabel
+                or call.get("status") != "completed" or call.get("error") is not None
+            ):
+                raise ValueError("MCP call failed or is not allowlisted")
+            arguments = json.loads(call["arguments"])
+            if not isinstance(arguments, dict):
+                raise ValueError("Invalid MCP arguments")
+            # APIM exposes the REST request body as one named MCP argument.
+            body = arguments.get("body", arguments.get("PortfolioQuery", arguments))
+            if isinstance(body, str):
+                body = json.loads(body)
+            query = PortfolioQuery.model_validate(body)
+            if not isinstance(call["output"], str) or len(call["output"].encode("utf-8")) > 128000:
+                raise ValueError("MCP evidence exceeds the transport size limit")
+            evidence = json.loads(call["output"])
+            if isinstance(evidence, dict) and "content" in evidence:
+                if evidence.get("isError") or len(evidence["content"]) != 1:
+                    raise ValueError("MCP returned an error or unexpected content")
+                evidence = json.loads(evidence["content"][0]["text"])
+            if (
+                not isinstance(evidence, dict) or evidence.get("source") != "fabric-onelake"
+                or evidence.get("kind") != query.kind
+                or not isinstance(evidence.get("queryId"), str) or not evidence["queryId"]
+                or not isinstance(evidence.get("records"), list) or len(evidence["records"]) > query.limit
+                or not isinstance(evidence.get("sourceProjectIds"), list)
+                or any(not isinstance(value, str) for value in evidence["sourceProjectIds"])
+            ):
+                raise ValueError("Invalid OneLake MCP evidence")
+            return evidence
+        except (ValueError, KeyError, TypeError, ValidationError) as error:
+            logger.error("Invalid OneLake MCP call or evidence (%s)", type(error).__name__)
+            raise ProblemError(
+                502, "The OneLake MCP tool failed or returned invalid evidence. Check APIM, the Fabric capacity and exports.",
+                slug="upstream-failure",
+            ) from error
+
+    def _invoke(self, inputs: list[dict[str, Any]], deadline: float) -> dict[str, Any]:
         settings = self.settings
         remaining = deadline - time.monotonic()
         if remaining <= 0:
@@ -111,7 +142,8 @@ class FoundryAgentClient:
             "input": inputs,
             "store": False,
             "max_output_tokens": settings.maxOutputTokens,
-            "tool_choice": {"type": "function", "name": TOOL_NAME} if require_tool else "auto",
+            "tool_choice": {"type": "mcp", "server_label": settings.mcpServerLabel, "name": TOOL_NAME},
+            "max_tool_calls": 4,
         }
         try:
             response = httpx.post(

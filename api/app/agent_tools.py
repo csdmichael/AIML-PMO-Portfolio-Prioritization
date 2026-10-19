@@ -7,11 +7,9 @@ import os
 from typing import Any, Literal
 from uuid import uuid4
 
-import httpx
 import jwt
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.auth import CredentialProvider
 from app.problems import ProblemError
 
 logger = logging.getLogger("pmo.api.agent.tools")
@@ -50,9 +48,16 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
     projects = snapshot["projects"]
     if any(not isinstance(p, dict) or not isinstance(p.get("projectId"), str) for p in projects):
         raise ProblemError(502, "The OneLake portfolio has invalid project records.", slug="upstream-failure")
-    if query.kind != "capacity" and any(
+    # A project ranking needs only scores; a budget rollup needs cost. A gap in an unused field is not fatal.
+    required = {"projects": ("priorityScore",), "budgetByBusinessUnit": ("costEstimateUsd",)}.get(query.kind, ())
+    scope = [
+        p for p in projects
+        if (not query.projectIds or p["projectId"] in query.projectIds)
+        and (not query.businessUnit or p.get("businessUnit") == query.businessUnit)
+    ]
+    if any(
         isinstance(p.get(field), bool) or not isinstance(p.get(field), (int, float)) or not math.isfinite(p[field])
-        for p in projects for field in ("priorityScore", "costEstimateUsd")
+        for p in scope for field in required
     ):
         raise ProblemError(502, "OneLake numeric evidence is invalid.", slug="upstream-failure")
     selected = [
@@ -115,6 +120,7 @@ class ToolTokenVerifier:
         self.tenant = os.environ.get("PMO_TOOL_TENANT_ID", "")
         self.audience = os.environ.get("PMO_TOOL_AUDIENCE", "")
         self.caller = os.environ.get("PMO_TOOL_CALLER_OBJECT_ID", "")
+        self.callers = {value.strip() for value in self.caller.split(",") if value.strip()}
         self.jwks = jwt.PyJWKClient(
             f"https://login.microsoftonline.com/{self.tenant}/discovery/v2.0/keys",
             timeout=10,
@@ -133,7 +139,11 @@ class ToolTokenVerifier:
                 issuer=f"https://login.microsoftonline.com/{self.tenant}/v2.0",
                 options={"require": ["exp", "iat", "aud", "iss", "tid", "oid"]},
             )
-            if claims["tid"] != self.tenant or claims["oid"] != self.caller or "Portfolio.Query" not in claims.get("roles", []):
+            if claims["tid"] != self.tenant or claims["oid"] not in self.callers or "Portfolio.Query" not in claims.get("roles", []):
+                logger.warning(
+                    "Tool caller rejected: oid=%s allowed=%s role_present=%s",
+                    claims["oid"], claims["oid"] in self.callers, "Portfolio.Query" in claims.get("roles", []),
+                )
                 raise jwt.InvalidTokenError("Caller lacks the tool permission")
         except jwt.PyJWKClientConnectionError as error:
             logger.error("Tool token signing keys unavailable")
@@ -141,39 +151,3 @@ class ToolTokenVerifier:
         except jwt.PyJWTError as error:
             logger.warning("Rejected Fabric tool workload token (%s)", type(error).__name__)
             raise ProblemError(403, "The workload is not authorized to query Fabric.", slug="forbidden") from error
-
-
-class ApimPortfolioTool:
-    def __init__(self, credentials: CredentialProvider) -> None:
-        self.credentials = credentials
-        self.url = os.environ.get("PMO_TOOL_URL", "")
-        self.audience = os.environ.get("PMO_TOOL_AUDIENCE", "")
-
-    def execute(self, query: PortfolioQuery, timeout: float) -> dict[str, Any]:
-        if not self.url.startswith("https://") or not self.audience:
-            raise ProblemError(503, "The private APIM Fabric query tool is not configured.", slug="service-unavailable")
-        try:
-            response = httpx.post(
-                self.url,
-                headers={"Authorization": f"Bearer {self.credentials.bearer_token(f'api://{self.audience}/.default')}"},
-                json=query.model_dump(), timeout=timeout, follow_redirects=False,
-            )
-            response.raise_for_status()
-            if len(response.content) > 64000:
-                raise ValueError("Fabric evidence exceeds the size limit")
-            result = response.json()
-            if (
-                not isinstance(result, dict) or result.get("source") != "fabric-onelake"
-                or not isinstance(result.get("records"), list) or len(result["records"]) > query.limit
-                or not isinstance(result.get("sourceProjectIds"), list)
-                or any(not isinstance(value, str) for value in result["sourceProjectIds"])
-                or not isinstance(result.get("queryId"), str)
-            ):
-                raise ValueError("Invalid Fabric query tool result")
-            return result
-        except httpx.TimeoutException as error:
-            logger.warning("APIM Fabric query timed out")
-            raise ProblemError(504, "The Fabric query tool timed out.", slug="upstream-timeout") from error
-        except (httpx.HTTPError, ValueError) as error:
-            logger.error("APIM Fabric query failed (%s)", type(error).__name__)
-            raise ProblemError(502, "The Fabric query tool failed. No sample data was substituted.", slug="upstream-failure") from error

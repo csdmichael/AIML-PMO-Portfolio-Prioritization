@@ -291,7 +291,7 @@ infra/scripts/               deploy.ps1: validate, plan, deploy infrastructure, 
 - **Ingestion.** Ingestion runs in PySpark inside notebook 01. Dataflow Gen2 or Data Factory pipelines are the production option for scheduled loads.
 - **Write-back.** Approved decisions are stored locally in the UI. Write-back to Planview or intake is a later step.
 - **Power BI.** The report and semantic model are planned and not built in this demo.
-- **Foundry agent.** Chat uses a versioned agent with backend-mediated read-only Fabric query tools. AI prefill remains a separate direct model call. Native Fabric data-agent/MCP integration and per-user RLS are not implemented.
+- **Foundry agent.** Chat uses a versioned agent with native read-only OneLake MCP retrieval through private APIM. AI prefill remains a separate direct model call. Fabric's general-purpose data-agent service and per-user RLS are not implemented.
 - **Terraform state.** Local state for now. Configure a remote backend before sharing a Terraform deployment.
 - **One IaC flavor per environment.** Bicep and Terraform both create the APIM API with path `pmo`, so deploy only one of them to an environment.
 - **Network.** The shared APIM and Key Vault disable public access. The UI App Service reaches both through VNet integration (`genie-obo-integration`) and private endpoints. The API App Service accepts public traffic. Restricting the API to APIM is a hardening step.
@@ -318,7 +318,7 @@ Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a
 | API through APIM | https://caldova-apim-westus.azure-api.net/pmo | Needs the `Ocp-Apim-Subscription-Key` header. The gateway is private (public access is disabled), so the UI host reaches it over VNet integration and adds the key from Key Vault. |
 | Fabric workspace | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b | `PMO-Portfolio-Prioritization`. The ML Notebooks folder holds notebooks 01 and 02. |
 | Lakehouse | https://app.fabric.microsoft.com/groups/39c02d65-d2cb-4355-9e77-cbf442d7fc8b/lakehouses/44a0e48d-ed47-4d30-8e1e-6db662ea9324 | `pmo_lakehouse`. OneLake is the only data store. |
-| Foundry project | https://portal.azure.com/#resource/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub/projects/azfpttlyg2gcvfsso/overview | Uses pinned `pmo-portfolio-copilot:2` with `gpt-5.4-mini` and backend-mediated Fabric query tools. Intake prefill remains a separate direct model call. |
+| Foundry project | https://portal.azure.com/#resource/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub-private/projects/pmo-portfolio/overview | Uses pinned `pmo-portfolio-copilot:1`, the existing `gpt-5.6-sol` deployment, and native OneLake MCP through private APIM. Intake prefill remains a separate direct model call. |
 | Key Vault | azkvttlyg2gcvfsso | Holds the APIM subscription key as `apim-subscription-key`. |
 | Application Insights | azaittlyg2gcvfsso | Telemetry for both App Services. |
 
@@ -328,9 +328,10 @@ Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a
 
 Chat uses `POST /api/v1/agent/chat` on the UI host. Its server-side proxy adds
 the APIM subscription key and forwards to `/pmo/v1/agent/chat`; the API invokes
-the versioned Foundry agent. The agent must request `query_portfolio`; the backend
-executes validated queries through the separate private APIM `pmo-tools` API with
-a dedicated workload identity. The adapter reads the approved OneLake portfolio
+the versioned Foundry agent. Foundry automatically executes `query_portfolio`
+through the private APIM `pmo-onelake/mcp` endpoint using its project managed
+identity. APIM exposes only the bounded `pmo-tools` REST query as an MCP tool.
+The adapter reads the approved OneLake portfolio
 export and returns bounded, projected evidence, not the complete snapshot.
 No chat answers are generated locally and no
 sample-data fallback is used. A missing export, unavailable Foundry service,
@@ -347,13 +348,23 @@ Foundry authoring role; invocation requires the API identity's project-scoped
 before publishing to a new environment; the production API identity already has
 it. Do not grant account-wide authoring permissions to the runtime identity.
 
-Configure the tool path first with
+Provision the dedicated project with [agent-project.bicep](infra/bicep/agent-project.bicep)
+on the existing VNet-injected Foundry account; it does not modify shared account
+networking. Configure the tool path with
 [configure-agent-tools.ps1](infra/scripts/configure-agent-tools.ps1) (preview
 without `-Apply`, activate only with identity/network approval). It creates a
-dedicated Entra audience and `Portfolio.Query` app role, dedicated caller identity,
-API VNet integration, and separate APIM API with mandatory JWT policies.
-Backend token validation prevents direct-backend bypass. It does not enable
-public access or create a native Fabric data agent/MCP server.
+dedicated Entra audience and `Portfolio.Query` app role, explicitly authorizes the
+PMO project identity, and creates the REST/MCP APIs and keyless Foundry connection.
+Pass `-FoundryProjectResourceId` to identify the approved project.
+Backend token validation prevents direct-backend bypass. APIM remains private;
+Foundry must have outbound VNet injection, not merely an inbound private endpoint.
+This is a solution-specific OneLake MCP tool, not Fabric's general-purpose MCP
+service. Exact rankings and totals use deterministic queries rather than AI Search.
+
+The Fabric capacity must be active and `PMO Full Pipeline` must have produced
+`Files/exports/portfolio.json`. A paused capacity can make existing files appear
+unavailable. Resume it only with billing approval. Pausing it after verification
+means live retrieval is unavailable until it is resumed again.
 
 Publish the API and UI with `infra/scripts/deploy.ps1 -Mode publish`. API publish
 adds only the `chatWithPortfolioAgent` APIM operation to the existing PMO API;

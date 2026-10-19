@@ -31,28 +31,34 @@ for actual notebook behavior, illustrative-image caveats, and private deployment
 ### Governed Foundry tool activation
 
 Chat uses the pinned agent in [portfolio-agent.json](../api/config/portfolio-agent.json).
-Foundry requests a read-only function; the backend executes it through private
-APIM against the approved OneLake export. This is not a native Fabric data
-agent/MCP server, does not accept arbitrary SQL, and does not implement per-user RLS.
+Foundry automatically executes the read-only `query_portfolio` MCP tool through
+private APIM against the approved OneLake export. No manual function output is
+needed in the playground. This solution-specific MCP server does not expose
+Fabric's general-purpose data-agent service, arbitrary SQL, or per-user RLS.
 
 After approval for identity/network changes, preview then activate the scoped
 configuration (replace the app name for another environment):
 
 ```powershell
-.\infra\scripts\configure-agent-tools.ps1 -ApiAppName azapittlyg2gcvfsso
-.\infra\scripts\configure-agent-tools.ps1 -ApiAppName azapittlyg2gcvfsso -Apply
-.\infra\scripts\create-portfolio-agent.ps1 -CreateNextVersion
-.\infra\scripts\deploy.ps1 -Mode publish
+az deployment group what-if -g m365-myaacoub --template-file .\infra\bicep\agent-project.bicep
+az deployment group create -g m365-myaacoub -n pmo-private-agent --template-file .\infra\bicep\agent-project.bicep
+$projectId = "/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub-private/projects/pmo-portfolio"
+.\infra\scripts\configure-agent-tools.ps1 -ApiAppName azapittlyg2gcvfsso -FoundryProjectResourceId $projectId
+.\infra\scripts\configure-agent-tools.ps1 -ApiAppName azapittlyg2gcvfsso -FoundryProjectResourceId $projectId -Apply
+.\infra\scripts\create-portfolio-agent.ps1
+.\infra\scripts\deploy.ps1 -Mode publish -Component api
 ```
 
 The configuration script creates a dedicated single-tenant Entra API audience,
-`Portfolio.Query` app role, dedicated caller managed identity, separate APIM tool
-API, and API outbound VNet integration. It preserves existing runtime identities
+`Portfolio.Query` app role, explicitly allowed caller identities, separate APIM
+REST/MCP APIs, a keyless `ProjectManagedIdentity` Foundry connection, and API
+outbound VNet integration. It preserves existing runtime identities
 and public-access settings. Directory propagation can require a short wait;
 rerunning is supported and mismatched existing app definitions are rejected.
 
-The backend needs `PMO_TOOL_URL`, `PMO_TOOL_AUDIENCE` (application client ID),
-`PMO_TOOL_TENANT_ID`, `PMO_TOOL_CALLER_OBJECT_ID`, and `PMO_TOOL_CLIENT_ID`.
+The backend needs `PMO_TOOL_AUDIENCE` (application client ID),
+`PMO_TOOL_TENANT_ID`, and `PMO_TOOL_CALLER_OBJECT_ID` (comma-separated explicit
+workload object IDs, including the PMO project identity).
 These are nonsecret settings, not tokens. The script sets them server-side.
 Both APIM and the backend validate workload JWTs. Missing configuration fails
 closed. Do not place tokens or tool credentials in SPA configuration.
@@ -61,7 +67,13 @@ The deployment account needs application-registration/app-role-assignment
 permissions in Entra, and permission to configure the existing App Service,
 managed identity and APIM API. No broad Fabric role is granted to the new caller.
 The existing backend identity still requires OneLake access and the project-scoped
-Foundry runtime role.
+Foundry runtime role. The dedicated project uses the already VNet-injected
+`foundry-myaacoub-private` account and its existing `gpt-5.6-sol` model deployment.
+Keep the old public-account agent for rollback; it is not used by the updated API.
+
+The Fabric capacity must be running. If exports are missing, run `PMO Full Pipeline`
+and verify `/v1/health` and `/v1/portfolio` before testing chat. Capacity resume
+incurs charges; pausing it again disables live retrieval even if files exist.
 
 Full enterprise isolation additionally requires approved private endpoints,
 DNS/routing and public-access-denial tests for Fabric and Foundry. The scoped

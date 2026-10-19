@@ -32,6 +32,15 @@ def test_valid_workload(identity):
     verifier.verify("Bearer " + jwt.encode(claims, key, algorithm="RS256"))
 
 
+def test_explicitly_allowed_project_managed_identity(identity, monkeypatch):
+    _, key, claims = identity
+    monkeypatch.setenv("PMO_TOOL_CALLER_OBJECT_ID", "test-caller,project-caller")
+    verifier = ToolTokenVerifier()
+    verifier.jwks = Mock()
+    verifier.jwks.get_signing_key_from_jwt.return_value = SimpleNamespace(key=key.public_key())
+    verifier.verify("Bearer " + jwt.encode({**claims, "oid": "project-caller"}, key, algorithm="RS256"))
+
+
 @pytest.mark.parametrize("patch", [
     {"aud": "another-api"}, {"tid": "another-tenant"}, {"oid": "another-workload"},
     {"roles": []}, {"iss": "https://attacker.test"}, {"exp": 1},

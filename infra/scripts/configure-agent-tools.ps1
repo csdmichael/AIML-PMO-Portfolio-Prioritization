@@ -1,12 +1,23 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$ApiAppName,
+    [Parameter(Mandatory)][string]$FoundryProjectResourceId,
     [switch]$Apply
 )
 
 $ErrorActionPreference = "Stop"
 $repo = (Get-Item $PSScriptRoot).Parent.Parent.FullName
 $cfg = Get-Content -Raw (Join-Path $repo "infra\config\pmo-deployment.json") | ConvertFrom-Json
+$agentConfig = Get-Content -Raw (Join-Path $repo "api\config\portfolio-agent.json") | ConvertFrom-Json
+if ($agentConfig.projectEndpoint -notmatch '^https://(?<account>[^.]+)\.services\.ai\.azure\.com/api/projects/(?<project>[^/]+)$') {
+    throw "The agent project endpoint is not a supported Foundry project URL."
+}
+$accountName = $Matches.account
+$projectName = $Matches.project
+$expectedProjectId = "/subscriptions/$($cfg.subscriptionId)/resourceGroups/$($cfg.resourceGroup)/providers/Microsoft.CognitiveServices/accounts/$accountName/projects/$projectName"
+if ($FoundryProjectResourceId -ne $expectedProjectId) {
+    throw "The approved project resource ID must match portfolio-agent.json."
+}
 $roleId = "33459c87-266c-43e9-b649-f97d0b133902"
 $appName = "PMO Read-only Fabric Query Tools"
 $identityName = "$ApiAppName-tools"
@@ -51,10 +62,18 @@ if ($account.id -ne $cfg.subscriptionId -or $account.tenantId -ne $cfg.tenantId)
 $apim = Invoke-AzJson @("apim", "show", "-g", $cfg.reuse.apim.resourceGroup, "-n", $cfg.reuse.apim.name)
 if ($apim.publicNetworkAccess -ne "Disabled") { throw "This private-tool rollout requires APIM public access to remain disabled." }
 $api = Invoke-AzJson @("webapp", "show", "-g", $cfg.resourceGroup, "-n", $ApiAppName)
+$project = Invoke-AzJson @("rest", "--method", "get", "--url", "https://management.azure.com${FoundryProjectResourceId}?api-version=2025-10-01-preview")
+if (-not $project.identity.principalId) { throw "The Foundry project must have a system-assigned identity." }
+$foundry = Invoke-AzJson @("cognitiveservices", "account", "show", "-g", $cfg.resourceGroup, "-n", $accountName)
+if (-not ($foundry.properties.networkInjections | Where-Object { $_.scenario -eq "agent" -and $_.subnetArmId })) {
+    throw "Private APIM MCP requires an existing VNet-injected Foundry account."
+}
+$projectPrincipalId = $project.identity.principalId
 if (-not $Apply) {
     Write-Output "Plan: dedicated workload identity $identityName; Entra application with Portfolio.Query app role;"
     Write-Output "assign only this identity; add API outbound VNet integration; configure fail-closed JWT validation;"
-    Write-Output "publish separate pmo-tools API on existing private APIM. No public-access settings changed."
+    Write-Output "authorize the PMO Foundry project identity; publish pmo-tools REST and pmo-onelake MCP APIs."
+    Write-Output "No public-access settings changed. Foundry account must already have private outbound connectivity."
     return
 }
 
@@ -94,11 +113,13 @@ for ($attempt = 1; $attempt -le 12; $attempt++) {
     Write-Output "Waiting for dedicated tool identity to propagate to Entra (attempt $attempt/12)."
     Start-Sleep -Seconds 10
 }
-$assignments = Invoke-AzJson @("rest", "--method", "get", "--url", "https://graph.microsoft.com/v1.0/servicePrincipals/$($identity.principalId)/appRoleAssignments")
-if (-not ($assignments.value | Where-Object { $_.resourceId -eq $resourceSp.id -and $_.appRoleId -eq $roleId })) {
-    Invoke-JsonBody POST "https://graph.microsoft.com/v1.0/servicePrincipals/$($identity.principalId)/appRoleAssignments" @{
-        principalId = $identity.principalId; resourceId = $resourceSp.id; appRoleId = $roleId
-    } | Out-Null
+foreach ($principalId in @($identity.principalId, $projectPrincipalId)) {
+    $assignments = Invoke-AzJson @("rest", "--method", "get", "--url", "https://graph.microsoft.com/v1.0/servicePrincipals/$principalId/appRoleAssignments")
+    if (-not ($assignments.value | Where-Object { $_.resourceId -eq $resourceSp.id -and $_.appRoleId -eq $roleId })) {
+        Invoke-JsonBody POST "https://graph.microsoft.com/v1.0/servicePrincipals/$principalId/appRoleAssignments" @{
+            principalId = $principalId; resourceId = $resourceSp.id; appRoleId = $roleId
+        } | Out-Null
+    }
 }
 Invoke-AzJson @("webapp", "identity", "assign", "-g", $cfg.resourceGroup, "-n", $ApiAppName, "--identities", $identity.id) | Out-Null
 $integrations = @(Invoke-AzJson @("webapp", "vnet-integration", "list", "-g", $cfg.resourceGroup, "-n", $ApiAppName))
@@ -118,8 +139,19 @@ Invoke-JsonBody PUT "${arm}?api-version=2024-05-01" @{
     properties = @{ displayName = "PMO read-only Fabric tools"; path = "pmo-tools"; protocols = @("https");
         serviceUrl = "https://$($api.defaultHostName)"; subscriptionRequired = $false }
 } | Out-Null
+$toolJson = & uv run --frozen --project (Join-Path $repo "api") --directory (Join-Path $repo "api") python -c "import json; from app.agent_tools import tool_definition; print(json.dumps(tool_definition()))"
+if ($LASTEXITCODE -ne 0) { throw "Unable to load the shared portfolio query schema." }
+$tool = $toolJson | ConvertFrom-Json
+Invoke-JsonBody PUT "$arm/schemas/portfolio-query?api-version=2024-05-01" @{
+    properties = @{ contentType = "application/vnd.oai.openapi.components+json"; document = @{
+        components = @{ schemas = @{ PortfolioQuery = $tool.parameters } }
+    } }
+} | Out-Null
 Invoke-JsonBody PUT "$arm/operations/queryFabricPortfolio?api-version=2024-05-01" @{
-    properties = @{ displayName = "Query approved portfolio"; method = "POST"; urlTemplate = "/portfolio/query" }
+    properties = @{
+        displayName = "query_portfolio"; description = $tool.description; method = "POST"; urlTemplate = "/portfolio/query"
+        request = @{ representations = @(@{ contentType = "application/json"; schemaId = "portfolio-query"; typeName = "PortfolioQuery" }) }
+    }
 } | Out-Null
 $policy = @"
 <policies>
@@ -130,7 +162,7 @@ $policy = @"
       <audiences><audience>$($app.appId)</audience></audiences>
       <issuers><issuer>https://login.microsoftonline.com/$($cfg.tenantId)/v2.0</issuer></issuers>
       <required-claims>
-        <claim name="oid" match="all"><value>$($identity.principalId)</value></claim>
+        <claim name="oid" match="any"><value>$($identity.principalId)</value><value>$projectPrincipalId</value></claim>
         <claim name="roles" match="any"><value>Portfolio.Query</value></claim>
       </required-claims>
     </validate-jwt>
@@ -143,10 +175,29 @@ $policy = @"
 </policies>
 "@
 Invoke-JsonBody PUT "$arm/policies/policy?api-version=2024-05-01" @{ properties = @{ format = "rawxml"; value = $policy } } | Out-Null
+$mcpArm = $arm.Substring(0, $arm.LastIndexOf("/apis/")) + "/apis/pmo-onelake"
+Invoke-JsonBody PUT "${mcpArm}?api-version=2025-09-01-preview" @{
+    properties = @{
+        displayName = "PMO OneLake MCP"; description = "Read-only bounded OneLake portfolio queries."
+        type = "mcp"; path = "pmo-onelake"; protocols = @("https"); subscriptionRequired = $false
+    }
+} | Out-Null
+Invoke-JsonBody PUT "$mcpArm/tools/query_portfolio?api-version=2025-09-01-preview" @{
+    properties = @{ displayName = "query_portfolio"; description = $tool.description; operationId = "$($arm.Replace('https://management.azure.com', ''))/operations/queryFabricPortfolio" }
+} | Out-Null
+$mcpPolicy = $policy.Replace('<rewrite-uri template="/v1/agent/tools/query" copy-unmatched-params="false" />', '')
+$mcpPolicy = $mcpPolicy.Replace('<backend><forward-request timeout="30" /></backend>', '<backend><base /></backend>')
+Invoke-JsonBody PUT "$mcpArm/policies/policy?api-version=2025-09-01-preview" @{ properties = @{ format = "rawxml"; value = $mcpPolicy } } | Out-Null
+Invoke-JsonBody PUT "https://management.azure.com$FoundryProjectResourceId/connections/$($agentConfig.mcpConnectionName)?api-version=2025-10-01-preview" @{
+    properties = @{
+        category = "RemoteTool"; authType = "ProjectManagedIdentity"; target = $agentConfig.mcpServerUrl
+        audience = "api://$($app.appId)"; isSharedToAll = $false; metadata = @{ type = "custom_MCP" }
+    }
+} | Out-Null
 Invoke-AzJson @(
     "webapp", "config", "appsettings", "set", "-g", $cfg.resourceGroup, "-n", $ApiAppName, "--settings",
     "PMO_TOOL_URL=$($apim.gatewayUrl)/pmo-tools/portfolio/query", "PMO_TOOL_AUDIENCE=$($app.appId)",
-    "PMO_TOOL_TENANT_ID=$($cfg.tenantId)", "PMO_TOOL_CALLER_OBJECT_ID=$($identity.principalId)",
+    "PMO_TOOL_TENANT_ID=$($cfg.tenantId)", "PMO_TOOL_CALLER_OBJECT_ID=$($identity.principalId),$projectPrincipalId",
     "PMO_TOOL_CLIENT_ID=$($identity.clientId)"
 ) | Out-Null
 Write-Output "Configured private APIM tool API $toolApiId with dedicated caller $($identity.clientId)."

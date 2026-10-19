@@ -47,7 +47,7 @@ flowchart LR
     M --> N[Human approve / adjust / reject]
 ```
 
-## Backend-mediated Foundry tool execution
+## Native Foundry MCP tool execution
 
 ```mermaid
 sequenceDiagram
@@ -55,40 +55,39 @@ sequenceDiagram
     participant G as Application APIM API
     participant O as Backend orchestrator
     participant F as Foundry agent
-    participant T as Private APIM tool API
+    participant T as Private APIM MCP server
     participant Q as Read-only query adapter
     participant L as Fabric OneLake
     U->>G: Chat question (no snapshot)
     G->>O: Forward chat
     O->>F: Question + bounded history; require query_portfolio
-    F-->>O: Structured function call
-    O->>O: Validate name, arguments, call budget
-    O->>T: Query + dedicated workload bearer token
+    F->>T: query_portfolio + project managed identity bearer token
     T->>T: Validate JWT issuer/audience/caller/role
     T->>Q: Forward authenticated bounded query
     Q->>Q: Validate token again
     Q->>L: Read approved portfolio export
     L-->>Q: Export (existing 120-second cache applies)
-    Q-->>O: APIM result: selected fields/rows + source/query IDs
-    O->>F: Function result, not the full export
-    F-->>O: Structured answer
+    Q-->>T: Selected fields/rows + source/query IDs
+    T-->>F: MCP tool result, not the full export
+    F-->>O: MCP call evidence + structured answer
     O->>O: Validate shape and citations against retrieved evidence
     O-->>U: Answer + Foundry response ID + APIM query IDs
 ```
 
-This implementation uses **custom read-only function tools**, not a native
-Fabric data agent, Fabric Core MCP, or an MCP server. The adapter reads approved
-persisted Fabric outputs; Foundry neither trains models nor changes project data.
-Native data-agent MCP can replace the adapter after private-link compatibility,
-identity behavior, and result contracts are verified in the target tenant.
+This implementation uses **native Foundry MCP execution**. APIM exports the
+bounded portfolio REST operation as `query_portfolio` at `pmo-onelake/mcp`.
+It is a solution-specific OneLake MCP server, not Fabric Core MCP or Fabric's
+general-purpose data-agent service. The adapter reads approved persisted Fabric
+outputs; Foundry neither trains models nor changes project data. AI Search is
+not used for exact ranking, budget aggregation, or capacity evidence.
 
 ### Enforced controls
 
-- Dedicated tool-caller managed identity attached only to the API application.
+- Explicitly allowlisted PMO project managed identity and legacy API tool identity.
   No Fabric permissions are granted to that identity; the adapter uses the
   existing backend OneLake identity. Its only new permission is `Portfolio.Query`
   on a dedicated single-tenant Entra API application.
-- Separate `pmo-tools` APIM API, not part of the browser API product. No shared
+- Separate `pmo-tools` REST API and `pmo-onelake` MCP API, not part of the browser API product. No shared
   subscription key is required: Entra workload authentication is mandatory.
   The query endpoint repeats signature, expiry, issuer, tenant, audience,
   object ID, and app-role checks to prevent a direct-backend bypass.
@@ -98,8 +97,8 @@ identity behavior, and result contracts are verified in the target tenant.
 - Every answer must retrieve current evidence; history is not a source of truth.
   The orchestrator checks cited project IDs against tool-returned IDs.
   This does not guarantee every generated sentence is factually correct.
-- The tool transport never follows redirects. Errors are explicit; no sample
-  fallback. Overall inference budget is 90 seconds; tool HTTP requests at most
+- Only the trusted read-only MCP tool is approved automatically. Errors are explicit;
+  no sample fallback. Overall inference budget is 90 seconds; APIM backend requests at most
   30 seconds. Gateway rate limit: 60 calls/minute.
 - Logs contain response/query identifiers, not tokens or full datasets.
   The Fabric export can still contain generated demo data.
@@ -110,7 +109,9 @@ Keep APIM public access disabled. Configure API outbound VNet integration,
 private DNS, routing, and private endpoints for the actual Fabric and Foundry
 services. Verify each required endpoint with public access blocked. An inbound
 Foundry private endpoint alone does not isolate its outbound tool traffic.
-Backend-mediated execution avoids requiring Foundry itself to reach private APIM.
+The dedicated PMO project runs on the existing VNet-injected
+`foundry-myaacoub-private` account so Foundry can reach private APIM itself.
+The project template does not change the shared account's public-access settings.
 
 This release does not automatically convert existing public UI/API/Foundry/Fabric
 endpoints to private endpoints. End-user Entra SSO, Conditional Access, delegated
@@ -126,9 +127,13 @@ adding a trusted caller authorization context and enforcing it before retrieval.
    identity, Entra permission, API VNet integration, JWT policies and app settings.
    It refuses an APIM gateway with public access enabled and does not change
    public-access settings. Existing mismatched registrations fail explicitly.
-2. Create the next immutable Foundry version using
+2. Provision the dedicated project using [agent-project.bicep](../infra/bicep/agent-project.bicep).
+   Pass its resource ID to the tool configuration script; it creates a keyless
+   project-managed-identity connection and grants `Portfolio.Query`.
+   Create the pinned immutable Foundry version using
    [the agent provisioning script](../infra/scripts/create-portfolio-agent.ps1)
-   with `-CreateNextVersion`. It shares the validated tool schema with the API.
+   (`-CreateNextVersion` is required only when an agent already exists).
+   APIM shares the validated query schema with the API.
 3. Publish API and UI with [the existing deployment script](../infra/scripts/deploy.ps1)
    in `publish` mode only. Do not apply the unrelated full-infrastructure drift.
 4. Run [the opt-in live test](../api/tests/test_agent_live.py) through the UI

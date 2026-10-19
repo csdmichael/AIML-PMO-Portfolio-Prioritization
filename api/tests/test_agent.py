@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.agent import FoundryAgentClient, load_agent_settings
-from app.agent_tools import ApimPortfolioTool, PortfolioQuery, query_portfolio
+from app.agent_tools import PortfolioQuery, query_portfolio
 from app.main import create_app
 from app.problems import ProblemError
 from app.routes.deps import get_services
@@ -42,14 +42,21 @@ def answer_response(answer=ANSWER):
     return envelope([{"type": "message", "content": [{"type": "output_text", "text": json.dumps(answer)}]}])
 
 
-def evidence_response():
-    return httpx.Response(200, json=query_portfolio(SNAPSHOT, PortfolioQuery.model_validate(QUERY)),
-                          request=httpx.Request("POST", "https://private-apim.test"))
+def mcp_call(**patch):
+    return {
+        "type": "mcp_call", "id": "mcp_test", "name": "query_portfolio",
+        "server_label": "onelake", "status": "completed", "error": None,
+        "arguments": json.dumps({"body": QUERY}),
+        "output": json.dumps(query_portfolio(SNAPSHOT, PortfolioQuery.model_validate(QUERY))),
+        **patch,
+    }
 
 
-def tool_response(name="query_portfolio", arguments=None):
-    return envelope([{"type": "function_call", "call_id": "call_test", "name": name,
-                      "arguments": json.dumps(arguments if arguments is not None else QUERY)}])
+def grounded_response(answer=ANSWER, calls=None):
+    return envelope([
+        *(calls if calls is not None else [mcp_call()]),
+        {"type": "message", "content": [{"type": "output_text", "text": json.dumps(answer)}]},
+    ])
 
 
 @pytest.fixture
@@ -58,19 +65,13 @@ def setup(monkeypatch):
     monkeypatch.setenv("PMO_TOOL_AUDIENCE", "tool-app-id")
     credentials = Mock()
     credentials.bearer_token.return_value = "test-token"
-    tools = ApimPortfolioTool(credentials)
-    evidence = query_portfolio(SNAPSHOT, PortfolioQuery.model_validate(QUERY))
-    post = Mock(side_effect=[
-        tool_response(),
-        httpx.Response(200, json=evidence, request=httpx.Request("POST", tools.url)),
-        answer_response(),
-    ])
+    post = Mock(return_value=grounded_response())
     monkeypatch.setattr("app.agent.httpx.post", post)
     exports = Mock()
     exports.read.return_value = SNAPSHOT
     token_verifier = Mock()
     services = SimpleNamespace(
-        agent=FoundryAgentClient(load_agent_settings(), credentials, tools), exports=exports,
+        agent=FoundryAgentClient(load_agent_settings(), credentials), exports=exports,
         paths=SimpleNamespace(portfolio_export=lambda: "Files/exports/portfolio.json"), tool_tokens=token_verifier,
     )
     app = create_app()
@@ -79,26 +80,26 @@ def setup(monkeypatch):
         yield client, post, exports, credentials, token_verifier
 
 
-def test_foundry_tool_loop_uses_apim_and_never_injects_full_snapshot(setup):
+def test_foundry_executes_native_mcp_without_client_function_loop(setup):
     client, post, exports, credentials, _ = setup
     response = client.post("/v1/agent/chat", json={"question": "Highest priority?"})
     assert response.status_code == 200
     answer = response.json()
     assert answer["provenance"]["groundingSource"] == "fabric-onelake-via-apim"
-    assert answer["provenance"]["agentVersion"] == "2"
+    assert answer["provenance"]["agentVersion"] == load_agent_settings().agentVersion
     assert len(answer["provenance"]["queryIds"]) == 1
     assert answer["sourceRecordCount"] == 1
-    first, query, final = post.call_args_list
-    assert first.kwargs["json"]["agent"]["version"] == "2"
+    post.assert_called_once()
+    first = post.call_args
+    assert first.kwargs["json"]["agent"]["version"] == load_agent_settings().agentVersion
     assert first.kwargs["json"]["input"][0] == {"role": "user", "content": "Highest priority?"}
-    assert first.kwargs["json"]["tool_choice"]["name"] == "query_portfolio"
-    assert query.args[0] == "https://private-apim.test/pmo-tools/portfolio/query"
-    assert query.kwargs["follow_redirects"] is False
-    assert query.kwargs["json"] == QUERY
-    assert "portfolioSnapshot" not in json.dumps(final.kwargs["json"])
-    assert "Not for the model" not in json.dumps(final.kwargs["json"])
-    assert "GIS-0002" not in json.dumps(final.kwargs["json"])
-    credentials.bearer_token.assert_any_call("api://tool-app-id/.default")
+    assert first.kwargs["json"]["tool_choice"] == {
+        "type": "mcp", "server_label": "onelake", "name": "query_portfolio",
+    }
+    assert first.kwargs["json"]["max_tool_calls"] == 4
+    assert "portfolioSnapshot" not in json.dumps(first.kwargs["json"])
+    assert "Not for the model" not in json.dumps(first.kwargs["json"])
+    credentials.bearer_token.assert_called_once_with(load_agent_settings().tokenScope)
     exports.read.assert_not_called()  # Only the authenticated tool route reads the lake.
 
 
@@ -121,8 +122,7 @@ def test_invalid_browser_inputs(setup, payload):
 ])
 def test_invalid_or_unretrieved_citations_rejected(setup, answer):
     client, post, _, _, _ = setup
-    post.side_effect = [tool_response(), evidence_response(),
-                        answer_response(answer)]
+    post.return_value = grounded_response(answer)
     assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 502
 
 
@@ -134,30 +134,57 @@ def test_foundry_transport_errors(setup, failure, status):
 
 
 @pytest.mark.parametrize("response", [
-    answer_response(), tool_response("delete_project"), tool_response(arguments={**QUERY, "sql": "DROP TABLE"}),
+    answer_response(), grounded_response(calls=[mcp_call(name="delete_project")]),
+    grounded_response(calls=[mcp_call(arguments=json.dumps({**QUERY, "sql": "DROP TABLE"}))]),
     envelope([None]), envelope([{"type": "function_call", "call_id": "c", "name": "query_portfolio", "arguments": "{bad"}]),
     httpx.Response(403, request=httpx.Request("POST", "https://example.test")),
     httpx.Response(200, json=None, request=httpx.Request("POST", "https://example.test")), envelope([]),
 ])
 def test_no_tool_evidence_or_invalid_tool_is_never_success(setup, response):
     client, post, _, _, _ = setup
-    post.side_effect = [response]
+    post.return_value = response
     assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 502
 
 
 def test_tool_failure_does_not_fall_back(setup):
     client, post, _, _, _ = setup
-    post.side_effect = [tool_response(), httpx.ReadTimeout("tool timeout")]
-    assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 504
-    assert post.call_count == 2
+    post.return_value = grounded_response(calls=[mcp_call(status="failed", error={"message": "timeout"})])
+    assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 502
+    assert post.call_count == 1
 
 
 def test_tool_budget_is_bounded(setup):
     client, post, _, _, _ = setup
-    tool_result = evidence_response()
-    post.side_effect = [tool_response(), tool_result] * 3 + [tool_response()]
+    post.return_value = grounded_response(calls=[mcp_call() for _ in range(5)])
     assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 502
-    assert post.call_count == 7
+    assert post.call_count == 1
+
+
+@pytest.mark.parametrize("patch", [
+    {"server_label": "untrusted"}, {"output": "{}"}, {"output": "not-json"},
+    {"output": json.dumps({"content": [{"type": "text", "text": "denied"}], "isError": True})},
+    {"arguments": "{}"}, {"status": "in_progress"},
+    {"output": "x" * 128001},
+])
+def test_invalid_native_mcp_evidence_is_rejected(setup, patch):
+    client, post, _, _, _ = setup
+    post.return_value = grounded_response(calls=[mcp_call(**patch)])
+    assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 502
+
+
+def test_mcp_text_content_wrapper(setup):
+    client, post, _, _, _ = setup
+    evidence = query_portfolio(SNAPSHOT, PortfolioQuery.model_validate(QUERY))
+    post.return_value = grounded_response(calls=[mcp_call(output=json.dumps({
+        "content": [{"type": "text", "text": json.dumps(evidence)}], "isError": False,
+    }))])
+    assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 200
+
+
+def test_pending_mcp_approval_is_not_presented_as_an_answer(setup):
+    client, post, _, _, _ = setup
+    post.return_value = grounded_response(calls=[mcp_call(), {"type": "mcp_approval_request"}])
+    assert client.post("/v1/agent/chat", json={"question": "Top?"}).status_code == 502
 
 
 def test_tool_route_checks_workload_before_reading_lake(setup):
@@ -191,6 +218,16 @@ def test_deprioritize_tool_value_matches_canonical_export_tier():
     ]}
     query = PortfolioQuery.model_validate({**QUERY, "tier": "Deprioritize"})
     assert query_portfolio(snapshot, query)["sourceProjectIds"] == ["GIS-0001"]
+
+
+def test_missing_cost_only_blocks_budget_queries():
+    snapshot = {"projects": [
+        {"projectId": "GIS-0001", "priorityScore": 5, "costEstimateUsd": None, "finalTier": "Must-do-now", "businessUnit": "A"},
+    ]}
+    assert query_portfolio(snapshot, PortfolioQuery.model_validate(QUERY))["sourceProjectIds"] == ["GIS-0001"]
+    budget = PortfolioQuery.model_validate({**QUERY, "kind": "budgetByBusinessUnit", "tier": ""})
+    with pytest.raises(ProblemError):
+        query_portfolio(snapshot, budget)
 
 
 def test_capacity_and_query_limits():
