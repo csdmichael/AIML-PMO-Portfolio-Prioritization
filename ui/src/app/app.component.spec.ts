@@ -92,15 +92,16 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
 
-    // Documentation category defaults to expanded
+    // Categories default to collapsed
+    expect(app.isCategoryExpanded('documentation')).toBe(false);
+    expect(app.isCategoryExpanded('admin')).toBe(false);
+
+    // Toggle to expand
+    app.toggleCategory('documentation');
     expect(app.isCategoryExpanded('documentation')).toBe(true);
 
     // Toggle to collapse
     app.toggleCategory('documentation');
     expect(app.isCategoryExpanded('documentation')).toBe(false);
-
-    // Toggle to re-expand
-    app.toggleCategory('documentation');
-    expect(app.isCategoryExpanded('documentation')).toBe(true);
   });
 });

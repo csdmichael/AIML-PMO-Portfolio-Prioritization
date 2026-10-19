@@ -1362,6 +1362,66 @@
         }
       }
     },
+    "/v1/admin/settings": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get global admin settings including demo environment flag",
+        "operationId": "getAdminSettings",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSettings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Update global admin settings including demo environment flag",
+        "operationId": "updateAdminSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSettingsUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSettings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/lookups": {
       "get": {
         "tags": [
@@ -1485,6 +1545,51 @@
   },
   "components": {
     "schemas": {
+      "AdminSettings": {
+        "properties": {
+          "isDemoEnvironment": {
+            "type": "boolean",
+            "title": "Isdemoenvironment",
+            "default": true
+          },
+          "environmentName": {
+            "type": "string",
+            "title": "Environmentname",
+            "default": "Demo / Sandbox"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": "Controls whether demo actions like sample dataset loading and clearing portfolio data are permitted."
+          }
+        },
+        "type": "object",
+        "title": "AdminSettings"
+      },
+      "AdminSettingsUpdateRequest": {
+        "properties": {
+          "isDemoEnvironment": {
+            "type": "boolean",
+            "title": "Isdemoenvironment"
+          },
+          "environmentName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environmentname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "isDemoEnvironment"
+        ],
+        "title": "AdminSettingsUpdateRequest"
+      },
       "AgentProvenance": {
         "properties": {
           "provider": {
