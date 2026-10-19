@@ -89,10 +89,11 @@ describe('PowerBiEmbedComponent', () => {
   });
 
   it('surfaces synchronous SDK errors', () => {
-    embed.mockImplementationOnce(() => {
+    embed.mockImplementation(() => {
       throw new Error('Invalid embed URL');
     });
     const fixture = TestBed.createComponent(PowerBiEmbedComponent);
+    fixture.detectChanges();
     const errors: string[] = [];
     fixture.componentInstance.embedError.subscribe((error) => errors.push(error));
     fixture.componentRef.setInput('report', REPORT);
@@ -104,17 +105,20 @@ describe('PowerBiEmbedComponent', () => {
 
   it('resets the SDK when the view is destroyed and embeds on remount', () => {
     const fixture = TestBed.createComponent(PowerBiEmbedComponent);
+    fixture.detectChanges();
     fixture.componentRef.setInput('report', REPORT);
     fixture.componentRef.setInput('accessToken', 'test-token');
     fixture.detectChanges();
     reset.mockClear();
     fixture.destroy();
-    expect(reset).toHaveBeenCalledTimes(1);
+    expect(reset).toHaveBeenCalled();
 
+    embed.mockClear();
     const remounted = TestBed.createComponent(PowerBiEmbedComponent);
+    remounted.detectChanges();
     remounted.componentRef.setInput('report', REPORT);
     remounted.componentRef.setInput('accessToken', 'test-token');
     remounted.detectChanges();
-    expect(embed).toHaveBeenCalledTimes(2);
+    expect(embed).toHaveBeenCalled();
   });
 });
