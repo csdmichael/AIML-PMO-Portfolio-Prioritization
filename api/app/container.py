@@ -32,6 +32,7 @@ class Services:
     decisions: DecisionService
     pipeline: PipelineService
     agent: FoundryAgentClient
+    recommendation_agent: FoundryAgentClient
     tool_tokens: ToolTokenVerifier
 
 
@@ -103,6 +104,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         portfolios=portfolios,
         decisions=decisions,
         pipeline=pipeline,
-        agent=FoundryAgentClient(load_agent_settings(), credentials),
+        agent=FoundryAgentClient(load_agent_settings("portfolio-agent.json"), credentials),
+        recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
         tool_tokens=ToolTokenVerifier(),
     )

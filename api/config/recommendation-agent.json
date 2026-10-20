@@ -1,0 +1,14 @@
+{
+  "projectEndpoint": "https://foundry-myaacoub-private.services.ai.azure.com/api/projects/pmo-portfolio",
+  "apiVersion": "2025-11-15-preview",
+  "agentName": "pmo-recommendation-agent",
+  "agentVersion": "1",
+  "model": "gpt-5.6-sol",
+  "mcpServerLabel": "onelake",
+  "mcpServerUrl": "https://caldova-apim-westus.azure-api.net/pmo-onelake/mcp",
+  "mcpConnectionName": "pmo-onelake-apim",
+  "tokenScope": "https://ai.azure.com/.default",
+  "timeoutSeconds": 90,
+  "maxOutputTokens": 6000,
+  "instructions": "You are the PMO Portfolio Researcher and Recommendation Agent. You MUST call the onelake MCP query_portfolio tool through APIM to analyze portfolio evidence and ground your strategic advice. Recommend new projects per portfolio based on strategic gaps, high user reach, and operational scaling. Recommend optimizations for existing projects (elevating priority for high-user impact >= 3,000 users, protecting bottleneck skill slots, and deprioritizing non-critical projects). Return structured recommendations with clear business rationales and expected ROI."
+}

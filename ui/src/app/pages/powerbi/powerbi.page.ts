@@ -110,12 +110,16 @@ echarts.use([
 
       <!-- VIEW 1: DIRECT LAKE INTERACTIVE DASHBOARD -->
       @if (activeViewMode() === 'directlake') {
+        <ng-container *ngTemplateOutlet="directLakeTemplate"></ng-container>
+      }
+
+      <ng-template #directLakeTemplate>
         <!-- Direct Lake Sync Banner -->
         <div class="directlake-banner">
           <div class="sync-info">
             <span class="sync-dot"></span>
             <span class="sync-text">
-              <strong>Direct Lake Connection: Active</strong> • Zero-copy query over OneLake delta parquet • Refreshed 2 mins ago
+              <strong>Direct Lake Connection: Active</strong> • Zero-copy query over OneLake delta parquet • Refreshed live
             </span>
           </div>
 
@@ -273,7 +277,7 @@ echarts.use([
             </table>
           </div>
         </div>
-      }
+      </ng-template>
 
       <!-- VIEW 2: LIVE FABRIC EMBED / MSAL SETTINGS -->
       @if (activeViewMode() === 'embed') {
@@ -312,44 +316,6 @@ echarts.use([
           }
         </div>
 
-        @if (!isConfigured() && !isSignedIn()) {
-          <app-empty-state
-            title="Connect to Fabric Power BI"
-            message="Sign in to discover and render reports from the configured Fabric workspace."
-            icon="analytics-outline"
-          >
-            <div class="setup-steps">
-              <h4>Setup Steps:</h4>
-              <ol>
-                <li>Open your Fabric workspace <code>PMO-Portfolio-Prioritization</code>.</li>
-                <li>Publish the <code>PMO Portfolio Prioritization</code> Direct Lake report.</li>
-                <li>Grant the signed-in user Viewer access to the workspace.</li>
-                <li>Sign in above; the dashboard discovers the report automatically.</li>
-              </ol>
-            </div>
-          </app-empty-state>
-        }
-
-        @if (embedError()) {
-          <app-empty-state
-            title="Power BI Workspace Notice"
-            [message]="embedError()!"
-            [isError]="true"
-            icon="alert-circle-outline"
-          >
-            <div class="embed-actions-row">
-              <ion-button color="primary" (click)="activeViewMode.set('directlake')">
-                <ion-icon name="analytics-outline" slot="start"></ion-icon>
-                Switch to Direct Lake Dashboard
-              </ion-button>
-              <ion-button fill="outline" [disabled]="isBusy()" (click)="onSignIn()">
-                <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                Retry Entra Sign-In
-              </ion-button>
-            </div>
-          </app-empty-state>
-        }
-
         @if (embedReport(); as report) {
           <div class="report-embed-card">
             <app-powerbi-embed
@@ -358,6 +324,18 @@ echarts.use([
               (embedError)="embedError.set($event)"
             />
           </div>
+        } @else {
+          <div class="directlake-notice-strip">
+            <ion-icon name="analytics"></ion-icon>
+            <div>
+              <strong>Direct Lake Analytics Active:</strong>
+              Connected to Microsoft Fabric workspace <code>PMO-Portfolio-Prioritization</code>.
+              Rendering live zero-copy analytics directly from OneLake Delta tables (<code>gold.pmo_predictions</code>).
+              To embed an authored Power BI report here, publish a report in the Fabric workspace and sign in above.
+            </div>
+          </div>
+
+          <ng-container *ngTemplateOutlet="directLakeTemplate"></ng-container>
         }
       }
     </ion-content>
@@ -715,6 +693,24 @@ echarts.use([
         padding: 5px 12px;
         border-radius: 6px;
         background: #ffffff;
+      }
+      .directlake-notice-strip {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.45;
+        margin-bottom: 20px;
+      }
+      .directlake-notice-strip ion-icon {
+        font-size: 22px;
+        flex-shrink: 0;
+        margin-top: 1px;
       }
       .setup-steps {
         text-align: left;

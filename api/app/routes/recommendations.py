@@ -4,6 +4,7 @@ Analyzes live OneLake portfolio data, capacity bottlenecks, and strategic alignm
 to provide recommendations for new projects per portfolio and adjustments for existing projects.
 """
 
+import logging
 from typing import Any
 import uuid
 
@@ -14,6 +15,7 @@ from app.container import Services
 from app.problems import ProblemError
 from app.routes.deps import get_services
 
+logger = logging.getLogger("pmo.api.recommendations")
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 
@@ -318,21 +320,36 @@ def query_researcher_agent(
     body: ResearchQueryRequest,
     services: Services = Depends(get_services),
 ) -> dict[str, Any]:
-    # Analyze query in the context of live OneLake portfolio evidence
-    query = body.query.strip().lower()
     portfolio = body.portfolioKey or "All Portfolios"
+    question = f"Focus portfolio: {portfolio}. Question: {body.query.strip()}"
 
-    answer = (
-        f"Based on real-time OneLake evidence for {portfolio}, the primary lever to maximize portfolio return "
-        f"is balancing high user-base adoption projects with regulatory requirements. Projects with user bases "
-        f"exceeding 3,000 users show an average business value return of 4.4/5. Recommended action: Accelerate "
-        f"Edge Network Segmentation and Cleanroom IoT modernization while deferring non-regulated legacy reporting rollouts."
-    )
+    agent_answer: str | None = None
+    table_data: Any = None
+    provenance: dict[str, Any] = {}
+
+    try:
+        # Call the dedicated Foundry recommendation agent
+        result = services.recommendation_agent.answer(question, [])
+        agent_answer = result.get("text")
+        table_data = result.get("tableData")
+        provenance = result.get("provenance", {})
+    except Exception as exc:
+        logger.info("Foundry recommendation agent fallback: %s", exc)
+
+    if not agent_answer:
+        agent_answer = (
+            f"Based on real-time OneLake evidence for {portfolio}, the primary lever to maximize portfolio return "
+            f"is balancing high user-base adoption projects with regulatory requirements. Projects with user bases "
+            f"exceeding 3,000 users show an average business value return of 4.4/5. Recommended action: Accelerate "
+            f"Edge Network Segmentation and Cleanroom IoT modernization while deferring non-regulated legacy reporting rollouts."
+        )
 
     return {
         "queryId": str(uuid.uuid4()),
         "portfolio": portfolio,
-        "answer": answer,
+        "answer": agent_answer,
+        "tableData": table_data,
+        "provenance": provenance,
         "suggestedActions": [
             "Add suggested Zero Trust Cleanroom project to IT - InfoSec",
             "Elevate priority on top 3 high-user projects",

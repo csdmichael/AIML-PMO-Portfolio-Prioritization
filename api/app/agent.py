@@ -32,8 +32,8 @@ class AgentSettings(BaseModel):
     mcpConnectionName: str
 
 
-def load_agent_settings() -> AgentSettings:
-    path = Path(__file__).resolve().parents[1] / "config" / "portfolio-agent.json"
+def load_agent_settings(filename: str = "portfolio-agent.json") -> AgentSettings:
+    path = Path(__file__).resolve().parents[1] / "config" / filename
     return AgentSettings.model_validate_json(path.read_text(encoding="utf-8"))
 
 

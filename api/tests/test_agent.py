@@ -71,7 +71,9 @@ def setup(monkeypatch):
     exports.read.return_value = SNAPSHOT
     token_verifier = Mock()
     services = SimpleNamespace(
-        agent=FoundryAgentClient(load_agent_settings(), credentials), exports=exports,
+        agent=FoundryAgentClient(load_agent_settings(), credentials),
+        recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
+        exports=exports,
         paths=SimpleNamespace(portfolio_export=lambda: "Files/exports/portfolio.json"), tool_tokens=token_verifier,
     )
     app = create_app()
