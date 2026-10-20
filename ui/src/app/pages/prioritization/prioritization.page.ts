@@ -145,7 +145,7 @@ import { ConfigService } from '../../services/config.service';
                   <option value="finalTier">Priority Tier</option>
                   <option value="confidenceLevel">Confidence</option>
                   <option value="businessUnit">Business Unit</option>
-                  <option value="cluster">Cluster</option>
+                  <option value="cluster">Project Group</option>
                   <option value="recommendedAction">Action</option>
                 </select>
               </div>
@@ -187,9 +187,8 @@ import { ConfigService } from '../../services/config.service';
             <app-loading-skeleton [cards]="3" [rows]="8"></app-loading-skeleton>
           } @else if (store.loadError()) {
             <app-empty-state
-              title="No Data in OneLake"
+              title="Unable to load portfolio data"
               [message]="store.loadError()!"
-              [detail]="store.problemDetail()"
               [isError]="true"
             >
               <ion-button (click)="store.init()">Retry</ion-button>
@@ -197,7 +196,7 @@ import { ConfigService } from '../../services/config.service';
           } @else if (store.rawProjects().length === 0) {
             <app-empty-state
               title="No Projects in Portfolio"
-              message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load baseline datasets."
+              message="Your portfolio has no projects yet. Use Data Entry to add projects or import an Excel workbook. Demo environments also offer approved sample projects."
               icon="file-tray-outline"
             >
               <ion-button routerLink="/data-entry">

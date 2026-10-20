@@ -18,5 +18,5 @@ def query(
     services: Services = Depends(get_services),
 ) -> dict[str, Any]:
     services.tool_tokens.verify(authorization)
-    snapshot = services.exports.read(services.paths.portfolio_export())
+    snapshot = services.catalog.export()
     return query_portfolio(snapshot, body)

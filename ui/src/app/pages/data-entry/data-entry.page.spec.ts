@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { By } from '@angular/platform-browser';
+import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataEntryPageComponent } from './data-entry.page';
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
-import { IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem } from '../../models/api.models';
+import { DemoProjectCatalog, DemoResetResult, IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem } from '../../models/api.models';
 
 const options = {
   options: {
@@ -47,6 +48,18 @@ const businessUnitSuggestion: IntakeSuggestion = {
   rationale: 'No existing unit fits the description.',
 };
 
+const demoCatalog: DemoProjectCatalog = {
+  projectCount: 100,
+  portfolios: [{ key: 'it-infosec', displayName: 'IT - InfoSec', projectCount: 40 }],
+  capturedAtUtc: '2026-10-20T00:00:00Z',
+  asOfDate: '2026-10-12',
+  oneLakePath: 'Files/demo/portfolio.json',
+};
+const demoResult: DemoResetResult = {
+  action: 'load', portfolioKey: null, loadedProjects: 100, replacedProjects: 100,
+  totalProjects: 100, revision: 'dataset-1', updatedAtUtc: '2026-10-20T00:00:00Z',
+};
+
 function prefilledDraft(fields: Record<string, unknown>, suggestions: Record<string, IntakeSuggestion> = {}): IntakeDraft {
   return {
     draftId: 'DRF-1',
@@ -71,6 +84,11 @@ function createApi(overrides: Record<string, unknown> = {}) {
     dismissIntakeSuggestion: vi.fn(() => of(prefilledDraft({}))),
     createProject: vi.fn(() => of({ projectId: 'GIS-0100' })),
     createPortfolio: vi.fn(() => of({})),
+    getAdminSettings: vi.fn(() => of({ isDemoEnvironment: false })),
+    getDemoProjectCatalog: vi.fn(() => of(demoCatalog)),
+    loadDemoProjects: vi.fn(() => of(demoResult)),
+    clearDemoProjects: vi.fn(() => of({ ...demoResult, action: 'clear', loadedProjects: 0, totalProjects: 0 })),
+    importProjects: vi.fn(() => of({ count: 0, created: [], warnings: [] })),
     ...overrides,
   };
 }
@@ -85,6 +103,7 @@ function render(api: ReturnType<typeof createApi>) {
   });
   const fixture = TestBed.createComponent(DataEntryPageComponent);
   fixture.detectChanges();
+  fixture.componentInstance.ionViewWillEnter();
   fixture.componentInstance.projectStep.set(2);
   fixture.detectChanges();
   return fixture;
@@ -213,5 +232,138 @@ describe('Data Entry page: AI prefill and dropdown suggestions', () => {
     page.onPrefillWithAi();
     expect(page.suggestions()).toEqual({});
     expect(page.submitError()).toBe('AI service unavailable.');
+  });
+
+  it('hides demo controls in production and does not fetch a synthetic catalog', () => {
+    const api = createApi();
+    const fixture = render(api);
+    fixture.debugElement.query(By.css('ion-segment')).triggerEventHandler('ngModelChange', 'import');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.demo-controls')).toBeNull();
+    expect(api.getDemoProjectCatalog).not.toHaveBeenCalled();
+    fixture.componentInstance.requestDemoAction('clear');
+    fixture.componentInstance.confirmDemoAction();
+    expect(api.clearDemoProjects).not.toHaveBeenCalled();
+  });
+
+  it('shows full and portfolio loaders plus clear-all only in demo mode', () => {
+    const fixture = render(createApi({ getAdminSettings: vi.fn(() => of({ isDemoEnvironment: true })) }));
+    fixture.debugElement.query(By.css('ion-segment')).triggerEventHandler('ngModelChange', 'import');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.demo-load-all')?.textContent).toContain('100');
+    expect(fixture.nativeElement.querySelector('.demo-load-portfolio')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.demo-clear')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('option[value="it-infosec"]')?.textContent).toContain('40');
+  });
+
+  it('requires a confirmation before replacing all projects and refreshes the API-backed store', () => {
+    const api = createApi({ getAdminSettings: vi.fn(() => of({ isDemoEnvironment: true })) });
+    const fixture = render(api);
+    const page = fixture.componentInstance;
+    page.requestDemoAction('all');
+    expect(api.loadDemoProjects).not.toHaveBeenCalled();
+    expect(page.demoConfirmationText()).toContain('all current projects');
+    page.confirmDemoAction();
+    expect(api.loadDemoProjects).toHaveBeenCalledWith(undefined);
+    expect(page.demoResult()?.totalProjects).toBe(100);
+    expect(page.store.refresh).toHaveBeenCalledOnce();
+    expect(page.store.reloadPortfolioItems).toHaveBeenCalledOnce();
+  });
+
+  it('confirms only the selected portfolio and cannot change scope after confirmation is shown', () => {
+    const api = createApi({ getAdminSettings: vi.fn(() => of({ isDemoEnvironment: true })) });
+    const page = render(api).componentInstance;
+    page.demoPortfolioKey = 'it-infosec';
+    page.requestDemoAction('portfolio');
+    expect(page.demoConfirmationText()).toContain('40 demo projects');
+    expect(page.demoConfirmationText()).toContain('Other portfolios will not be changed');
+    page.demoPortfolioKey = 'another-portfolio';
+    page.confirmDemoAction();
+    expect(api.loadDemoProjects).toHaveBeenCalledWith('it-infosec');
+  });
+
+  it('requires confirmation to clear all projects and supports cancel without an API write', () => {
+    const api = createApi({ getAdminSettings: vi.fn(() => of({ isDemoEnvironment: true })) });
+    const page = render(api).componentInstance;
+    page.requestDemoAction('clear');
+    expect(api.clearDemoProjects).not.toHaveBeenCalled();
+    page.demoConfirmation.set(null);
+    page.confirmDemoAction();
+    expect(api.clearDemoProjects).not.toHaveBeenCalled();
+    page.requestDemoAction('clear');
+    page.confirmDemoAction();
+    expect(api.clearDemoProjects).toHaveBeenCalledOnce();
+    expect(page.demoResult()?.totalProjects).toBe(0);
+  });
+
+  it('prevents duplicate clicks while a demo write is in progress', () => {
+    const pending = new Subject<DemoResetResult>();
+    const api = createApi({
+      getAdminSettings: vi.fn(() => of({ isDemoEnvironment: true })),
+      loadDemoProjects: vi.fn(() => pending),
+    });
+    const page = render(api).componentInstance;
+    page.requestDemoAction('all');
+    page.confirmDemoAction();
+    page.confirmDemoAction();
+    expect(api.loadDemoProjects).toHaveBeenCalledOnce();
+    expect(page.demoBusy()).toBe(true);
+    pending.next(demoResult);
+    expect(page.demoBusy()).toBe(false);
+  });
+
+  it('fails closed and shows an explicit error when the global setting cannot be read', () => {
+    const api = createApi({
+      getAdminSettings: vi.fn(() => throwError(() => ({ error: { detail: 'Settings unavailable.' } }))),
+    });
+    const fixture = render(api);
+    fixture.debugElement.query(By.css('ion-segment')).triggerEventHandler('ngModelChange', 'import');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.demo-controls')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Settings unavailable.');
+    expect(api.getDemoProjectCatalog).not.toHaveBeenCalled();
+  });
+
+  it('retains an error instead of pretending a rejected clear operation succeeded', () => {
+    const api = createApi({
+      getAdminSettings: vi.fn(() => of({ isDemoEnvironment: true })),
+      clearDemoProjects: vi.fn(() => throwError(() => ({
+        status: 403, error: { detail: 'Demo mode has been disabled.' },
+      }))),
+    });
+    const page = render(api).componentInstance;
+    page.requestDemoAction('clear');
+    page.confirmDemoAction();
+    expect(page.demoResult()).toBeNull();
+    expect(page.demoError()).toBe('Demo mode has been disabled.');
+    expect(page.isDemo()).toBe(false);
+    expect(page.store.refresh).not.toHaveBeenCalled();
+  });
+
+  it('rechecks the global setting on subsequent page entries', () => {
+    const api = createApi({
+      getAdminSettings: vi.fn()
+        .mockReturnValueOnce(of({ isDemoEnvironment: true }))
+        .mockReturnValue(of({ isDemoEnvironment: false })),
+    });
+    const page = render(api).componentInstance;
+    expect(page.isDemo()).toBe(true);
+    page.ionViewWillEnter();
+    expect(page.isDemo()).toBe(false);
+    expect(page.demoCatalog()).toBeNull();
+    expect(api.getDemoProjectCatalog).toHaveBeenCalledOnce();
+  });
+
+  it('lists workbook validation errors in the actual API field/message format', () => {
+    const api = createApi({
+      importProjects: vi.fn(() => throwError(() => ({
+        error: { detail: 'No projects were saved.', errors: [{ field: 'row 2: Portfolio', message: 'is not available' }] },
+      }))),
+    });
+    const page = render(api).componentInstance;
+    page.onFileSelect({ target: { files: [new File(['workbook'], 'projects.xlsx')], value: 'projects.xlsx' } } as unknown as Event);
+    expect(page.importError()).toBe('No projects were saved.');
+    expect(page.importIssues()).toEqual(['row 2: Portfolio: is not available']);
+    expect(page.store.refresh).not.toHaveBeenCalled();
   });
 });

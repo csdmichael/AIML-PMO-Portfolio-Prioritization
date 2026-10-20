@@ -86,6 +86,33 @@ describe('DataApiService', () => {
     request.flush({});
   });
 
+  it('loads the demo catalog through the API rather than browser sample data', () => {
+    service.getDemoProjectCatalog().subscribe();
+    const request = httpController.expectOne('/api/v1/demo/projects');
+    expect(request.request.method).toBe('GET');
+    request.flush({ projectCount: 100, portfolios: [] });
+  });
+
+  it('posts an explicitly confirmed full or portfolio demo replacement', () => {
+    service.loadDemoProjects('it-infosec').subscribe();
+    const scoped = httpController.expectOne('/api/v1/demo/projects/load');
+    expect(scoped.request.method).toBe('POST');
+    expect(scoped.request.body).toEqual({ confirmReplace: true, portfolioKey: 'it-infosec' });
+    scoped.flush({});
+    service.loadDemoProjects().subscribe();
+    const full = httpController.expectOne('/api/v1/demo/projects/load');
+    expect(full.request.body).toEqual({ confirmReplace: true });
+    full.flush({});
+  });
+
+  it('posts an explicitly confirmed demo clear-all', () => {
+    service.clearDemoProjects().subscribe();
+    const request = httpController.expectOne('/api/v1/demo/projects/clear');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ confirmClear: true });
+    request.flush({});
+  });
+
   it('posts a decision with its tier, action, reason, and decider, and maps the saved record', () => {
     let saved: unknown;
     service
@@ -144,6 +171,17 @@ describe('DataApiService', () => {
     const req = httpController.expectOne('/api/v1/options');
     expect(req.request.method).toBe('GET');
     req.flush({});
+  });
+
+  it('reads the cached recommendation for exactly one portfolio and research question', () => {
+    let cached: unknown = 'not loaded';
+    service.getCachedRecommendations('it-infosec', 'Where are the gaps?').subscribe((result) => (cached = result));
+    const request = httpController.expectOne((req) => req.url === '/api/v1/recommendations/cached');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('portfolioKey')).toBe('it-infosec');
+    expect(request.request.params.get('query')).toBe('Where are the gaps?');
+    request.flush(null);
+    expect(cached).toBeNull();
   });
 
   it('should call GET /portfolio under configured basePath', () => {

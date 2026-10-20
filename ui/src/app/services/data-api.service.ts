@@ -15,6 +15,8 @@ import { RecommendationReport } from '../models/recommendation.models';
 import { OneLakeDatasetList, OneLakeDatasetView } from '../models/onelake.models';
 import {
   OptionsResponse,
+  DemoProjectCatalog,
+  DemoResetResult,
   PortfolioItem,
   PortfolioList,
   ProjectImportResult,
@@ -112,6 +114,21 @@ export class DataApiService {
     formData.append('file', file, file.name);
     const params = new HttpParams().set('runPipeline', runPipeline.toString());
     return this.http.post<ProjectImportResult>(`${this.base}/projects/import`, formData, { params });
+  }
+
+  getDemoProjectCatalog(): Observable<DemoProjectCatalog> {
+    return this.http.get<DemoProjectCatalog>(`${this.base}/demo/projects`);
+  }
+
+  loadDemoProjects(portfolioKey?: string): Observable<DemoResetResult> {
+    return this.http.post<DemoResetResult>(`${this.base}/demo/projects/load`, {
+      confirmReplace: true,
+      ...(portfolioKey ? { portfolioKey } : {}),
+    });
+  }
+
+  clearDemoProjects(): Observable<DemoResetResult> {
+    return this.http.post<DemoResetResult>(`${this.base}/demo/projects/clear`, { confirmClear: true });
   }
 
   uploadProjectFile(projectId: string, sourceKey: string, file: File): Observable<ProjectUploadMetadata> {
@@ -244,6 +261,13 @@ export class DataApiService {
     let params = new HttpParams();
     if (portfolioKey) params = params.set('portfolioKey', portfolioKey);
     return this.http.get<RecommendationReport>(`${this.base}/recommendations`, { params });
+  }
+
+  getCachedRecommendations(portfolioKey?: string, query?: string): Observable<RecommendationReport | null> {
+    let params = new HttpParams();
+    if (portfolioKey) params = params.set('portfolioKey', portfolioKey);
+    if (query) params = params.set('query', query);
+    return this.http.get<RecommendationReport | null>(`${this.base}/recommendations/cached`, { params });
   }
 
   queryResearcherAgent(query: string, portfolioKey?: string): Observable<RecommendationReport> {

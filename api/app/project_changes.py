@@ -29,10 +29,12 @@ class ProjectChanges:
         paths: LakePaths,
         contract: DataEntryContract,
         cache: TtlCache[dict[str, dict[str, Any]]],
+        reset_cache: TtlCache[dict[str, Any] | None] | None = None,
     ) -> None:
         self._entries = entries
         self._paths = paths
         self._cache = cache
+        self._reset_cache = reset_cache or TtlCache(0)
         self._export_keys = {rule.key: rule.exportKey or rule.key for rule in contract.projectFields}
         self._skill_names = {skill.key: skill.displayName for skill in contract.options.skills}
 
@@ -52,7 +54,11 @@ class ProjectChanges:
     ) -> dict[str, Any]:
         path = self._paths.project_change(project_id)
         found = self._entries.get_with_etag(path)
-        record: dict[str, Any] = dict(found[0]) if found is not None else {"projectId": project_id, "values": {}}
+        reset, _ = self.reset_snapshot()
+        current = reset["records"].get(project_id) if reset is not None else None
+        if found is not None and (current is None or found[0].get("resetRevision") == current.get("resetRevision")):
+            current = found[0]
+        record: dict[str, Any] = dict(current) if current is not None else {"projectId": project_id, "values": {}}
         if values:
             record["values"] = {**record.get("values", {}), **values}
         if is_deleted is not None:
@@ -87,7 +93,8 @@ class ProjectChanges:
         if change.get("deleted"):
             return None
         values: Mapping[str, Any] = change.get("values") or {}
-        applied = dict(record)
+        replacement = change.get("replacement")
+        applied = dict(replacement if isinstance(replacement, Mapping) else record)
         for key, value in values.items():
             if shape == "export" and key == "primarySkill":
                 value = self._skill_names.get(str(value), value)
@@ -108,6 +115,7 @@ class ProjectChanges:
 
     def apply_export(self, export: Mapping[str, Any], *, portfolios: PortfolioIndex) -> dict[str, Any]:
         """The portfolio export with the project changes applied. The rollups stay as the pipeline computed them."""
+        export = self.extend_export(export)
         projects = export.get("projects")
         if not self.all() or not isinstance(projects, list):
             return dict(export)
@@ -119,12 +127,75 @@ class ProjectChanges:
                     applied.append(record)
             else:
                 applied.append(item)
-        return {**export, "projects": applied}
+        result = {**export, "projects": applied}
+        if self.dataset_reset() is not None:
+            # The original pipeline aggregates do not describe a replaced demo scope.
+            result.update(capacityBySkill=[], clusters=[])
+        return result
+
+    def dataset_reset(self) -> dict[str, Any] | None:
+        return self._reset_cache.get_or_load("reset", lambda: self.reset_snapshot()[0])
+
+    def reset_snapshot(self) -> tuple[dict[str, Any] | None, str | None]:
+        found = self._entries.get_with_etag(self._paths.project_resets())
+        if found is None:
+            return None, None
+        document, etag = found
+        records = document.get("records")
+        if (
+            not isinstance(document.get("revision"), str)
+            or not isinstance(records, dict)
+            or not all(
+                isinstance(record, dict) and record.get("projectId") == key and isinstance(record.get("resetRevision"), str)
+                for key, record in records.items()
+            )
+            or not isinstance(document.get("portfolios"), list)
+        ):
+            raise ProblemError(502, "The saved project reset is invalid.", slug="upstream-failure")
+        return document, etag
+
+    def save_reset(self, document: dict[str, Any], etag: str | None) -> None:
+        """Commit a complete reset in one conditional write, never a partially applied per-project loop."""
+        if etag is None:
+            self._entries.create(self._paths.project_resets(), document)
+        else:
+            self._entries.replace(self._paths.project_resets(), document, etag)
+        self.invalidate()
+
+    def invalidate(self) -> None:
+        self._cache.invalidate()
+        self._reset_cache.invalidate()
+
+    def extend_export(self, export: Mapping[str, Any]) -> dict[str, Any]:
+        projects = list(export.get("projects") or [])
+        known = {record.get("projectId") for record in projects if isinstance(record, Mapping)}
+        for project_id, change in self.all().items():
+            if project_id not in known and isinstance(change.get("replacement"), dict) and not change.get("deleted"):
+                projects.append(dict(change["replacement"]))
+                known.add(project_id)
+        portfolios = list(export.get("portfolios") or [])
+        reset = self.dataset_reset()
+        if reset is not None:
+            keys = {record.get("key") for record in portfolios if isinstance(record, Mapping)}
+            portfolios.extend(record for record in reset["portfolios"] if record.get("key") not in keys)
+        result = {**export, "projects": projects, "portfolios": portfolios}
+        if reset is not None:
+            result["datasetReset"] = {
+                "revision": reset["revision"],
+                "updatedAtUtc": reset["updatedAtUtc"],
+                "action": reset["action"],
+                "portfolioKey": reset.get("portfolioKey"),
+                "isSynthetic": True,
+            }
+        return result
 
     def _load_all(self) -> dict[str, dict[str, Any]]:
-        changes: dict[str, dict[str, Any]] = {}
+        reset = self.dataset_reset()
+        changes: dict[str, dict[str, Any]] = dict(reset["records"]) if reset is not None else {}
         for _, record in self._entries.list(self._paths.project_changes_folder()):
             project_id = record.get("projectId")
             if isinstance(project_id, str):
-                changes[project_id] = record
+                previous = changes.get(project_id)
+                if previous is None or record.get("resetRevision") == previous.get("resetRevision"):
+                    changes[project_id] = record
         return changes

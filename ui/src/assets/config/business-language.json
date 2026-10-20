@@ -1,0 +1,23 @@
+{
+  "assistantWelcome": "Ask about project priorities, the reasons behind them, budgets, or resource capacity. Answers use recorded portfolio evidence and require human review.",
+  "replacements": [
+    { "pattern": "\\bMicrosoft Fabric OneLake\\b", "text": "portfolio database" },
+    { "pattern": "\\bMicrosoft Foundry\\b", "text": "AI service" },
+    { "pattern": "\\bFoundry agent\\b", "text": "AI assistant" },
+    { "pattern": "\\bMicrosoft Fabric\\b", "text": "analytics service" },
+    { "pattern": "\\bOneLake\\b", "text": "database" },
+    { "pattern": "\\bFoundry\\b", "text": "AI service" },
+    { "pattern": "\\bFabric\\b", "text": "analytics service" },
+    { "pattern": "\\bBing grounding\\b", "text": "web research" },
+    { "pattern": "\\bBing\\b", "text": "web search" },
+    { "pattern": "\\bDirect Lake\\b", "text": "portfolio analysis" },
+    { "pattern": "\\bLightGBM\\b", "text": "priority assessment" },
+    { "pattern": "\\bSHAP\\b", "text": "priority contribution" },
+    { "pattern": "\\bML\\b", "text": "priority analysis" },
+    { "pattern": "\\b(?:APIM|MCP|API)\\b", "text": "service" },
+    { "pattern": "\\bpipeline\\b", "text": "analysis refresh" },
+    { "pattern": "\\bETag\\b", "text": "record version" },
+    { "pattern": "\\bPower BI\\b", "text": "reporting" },
+    { "pattern": "\\b(?:Files|Tables)/[^\\s,;]+", "text": "database record" }
+  ]
+}

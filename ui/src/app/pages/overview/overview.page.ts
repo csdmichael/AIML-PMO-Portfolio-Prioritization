@@ -28,6 +28,8 @@ import { KpiRowComponent } from '../../components/kpi-row/kpi-row.component';
 import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { getConfidenceColor } from '../../core/portfolio-filter';
+import { ChartExplanationComponent } from '../../components/chart-explanation/chart-explanation.component';
+import chartHelp from '../../../assets/config/overview-charts.json';
 
 echarts.use([
   PieChart,
@@ -62,6 +64,7 @@ echarts.use([
     KpiRowComponent,
     LoadingSkeletonComponent,
     EmptyStateComponent,
+    ChartExplanationComponent,
   ],
   providers: [provideEchartsCore({ echarts })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,7 +73,7 @@ echarts.use([
       <div class="overview-header-row">
         <div>
           <h2 class="page-title">Executive Portfolio Overview</h2>
-          <p class="page-subtitle">Cross-dimensional machine learning insights & resource capacity analytics</p>
+          <p class="page-subtitle">Project priorities, business impact, and resource capacity at a glance</p>
         </div>
       </div>
 
@@ -78,9 +81,8 @@ echarts.use([
         <app-loading-skeleton [cards]="6" [rows]="6"></app-loading-skeleton>
       } @else if (store.loadError()) {
         <app-empty-state
-          title="No Data in OneLake"
+          title="Unable to load portfolio data"
           [message]="store.loadError()!"
-          [detail]="store.problemDetail()"
           [isError]="true"
         >
           <ion-button (click)="store.init()">Retry</ion-button>
@@ -88,7 +90,7 @@ echarts.use([
       } @else if (store.rawProjects().length === 0) {
         <app-empty-state
           title="No Projects in Portfolio"
-          message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load baseline datasets."
+          message="Your portfolio has no projects yet. Use Data Entry to add projects or import an Excel workbook. Demo environments also offer approved sample projects."
           icon="file-tray-outline"
         >
           <ion-button routerLink="/data-entry">
@@ -107,7 +109,8 @@ echarts.use([
             <ion-col size="12" size-lg="4">
               <ion-card class="chart-card">
                 <ion-card-header>
-                  <ion-card-title>Prioritization Tier Distribution</ion-card-title>
+                  <ion-card-title>{{ chartHelp.tiers.title }}</ion-card-title>
+                  <app-chart-explanation [explanation]="chartHelp.tiers" />
                 </ion-card-header>
                 <ion-card-content>
                   <div echarts [options]="getTierDonutOptions()" class="echart-box"></div>
@@ -119,7 +122,8 @@ echarts.use([
             <ion-col size="12" size-lg="8">
               <ion-card class="chart-card">
                 <ion-card-header>
-                  <ion-card-title>Confidence Level Distribution by Business Unit</ion-card-title>
+                  <ion-card-title>{{ chartHelp.confidence.title }}</ion-card-title>
+                  <app-chart-explanation [explanation]="chartHelp.confidence" />
                 </ion-card-header>
                 <ion-card-content>
                   <div echarts [options]="getConfidenceByBuOptions()" class="echart-box"></div>
@@ -133,7 +137,8 @@ echarts.use([
             <ion-col size="12" size-lg="6">
               <ion-card class="chart-card">
                 <ion-card-header>
-                  <ion-card-title>Cost Allocation Treemap (BU &gt; Site)</ion-card-title>
+                  <ion-card-title>{{ chartHelp.cost.title }}</ion-card-title>
+                  <app-chart-explanation [explanation]="chartHelp.cost" />
                 </ion-card-header>
                 <ion-card-content>
                   <div echarts [options]="getCostTreemapOptions()" class="echart-box"></div>
@@ -145,7 +150,8 @@ echarts.use([
             <ion-col size="12" size-lg="6">
               <ion-card class="chart-card">
                 <ion-card-header>
-                  <ion-card-title>Strategic Hierarchy Sunburst (BU &gt; Site &gt; Tier)</ion-card-title>
+                  <ion-card-title>{{ chartHelp.hierarchy.title }}</ion-card-title>
+                  <app-chart-explanation [explanation]="chartHelp.hierarchy" />
                 </ion-card-header>
                 <ion-card-content>
                   <div echarts [options]="getSunburstOptions()" class="echart-box"></div>
@@ -159,10 +165,15 @@ echarts.use([
             <ion-col size="12" size-lg="6">
               <ion-card class="chart-card">
                 <ion-card-header>
-                  <ion-card-title>Capacity Supply vs Demand (FTE by Skill)</ion-card-title>
+                  <ion-card-title>{{ chartHelp.capacity.title }}</ion-card-title>
+                  <app-chart-explanation [explanation]="chartHelp.capacity" />
                 </ion-card-header>
                 <ion-card-content>
-                  <div echarts [options]="getCapacityChartOptions()" class="echart-box"></div>
+                  @if (store.dataset()?.capacityBySkill?.length) {
+                    <div echarts [options]="getCapacityChartOptions()" class="echart-box"></div>
+                  } @else {
+                    <p class="chart-empty" role="status">Resource capacity figures are not available for this saved project selection.</p>
+                  }
                 </ion-card-content>
               </ion-card>
             </ion-col>
@@ -171,7 +182,8 @@ echarts.use([
             <ion-col size="12" size-lg="6">
               <ion-card class="chart-card">
                 <ion-card-header>
-                  <ion-card-title>Completeness vs Data Quality (Bubble Size = Cost USD)</ion-card-title>
+                  <ion-card-title>{{ chartHelp.readiness.title }}</ion-card-title>
+                  <app-chart-explanation [explanation]="chartHelp.readiness" />
                 </ion-card-header>
                 <ion-card-content>
                   <div echarts [options]="getScatterPlotOptions()" class="echart-box"></div>
@@ -220,11 +232,13 @@ echarts.use([
         height: 310px;
         width: 100%;
       }
+      .chart-empty { color: var(--ion-color-step-600, #595959); padding: 24px 0; font-size: 14px; }
     `,
   ],
 })
 export class OverviewPageComponent {
   readonly store = inject(PortfolioStore);
+  readonly chartHelp = chartHelp.charts;
 
   // 1. Tier Donut Chart
   getTierDonutOptions(): echarts.EChartsCoreOption {

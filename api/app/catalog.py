@@ -122,7 +122,10 @@ class Catalog:
 
     def _export(self) -> dict[str, Any]:
         value = self._exports.read(self._paths.portfolio_export())
-        return value if isinstance(value, dict) else {}
+        return self._changes.extend_export(value) if isinstance(value, dict) else {}
+
+    def export(self) -> dict[str, Any]:
+        return self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
 
     def _export_projects(self) -> list[dict[str, Any]]:
         return [item for item in self._export().get("projects") or [] if isinstance(item, dict)]

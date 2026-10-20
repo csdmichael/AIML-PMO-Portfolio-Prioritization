@@ -58,7 +58,7 @@ describe('PortfolioAgentService', () => {
     await service.askQuestion('Duplicate');
     http.expectOne('/api/v1/agent/chat').flush({ detail: 'Fabric unavailable' }, { status: 502, statusText: 'Bad Gateway' });
     await pending;
-    expect(service.error()).toBe('Fabric unavailable');
+    expect(service.error()).toBe('analytics service unavailable');
     expect(service.messages()).toHaveLength(1);
     expect(service.isThinking()).toBe(false);
     const retry = service.askQuestion('Retry');

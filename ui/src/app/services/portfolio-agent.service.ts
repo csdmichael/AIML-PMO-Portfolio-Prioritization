@@ -1,10 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { FileExportService, ExportTableData } from './file-export.service';
 import { ConfigService } from './config.service';
 import { CopilotSamplePrompt } from '../models/ui-config.models';
 import { EChartsOption } from 'echarts';
+import { ASSISTANT_WELCOME, problemMessage } from '../core/problem-detail';
 
 export type AgentChartType = 'bar' | 'line' | 'pie' | 'radar';
 
@@ -50,7 +51,7 @@ export class PortfolioAgentService {
   readonly isThinking = signal(false);
   readonly error = signal<string | null>(null);
   readonly messages = signal<AgentStructuredResponse[]>([{
-    id: 'msg-welcome', query: '', text: 'Ask about portfolio priorities, recorded ML explanations, budgets, or capacity. Answers require available Fabric evidence and human review.',
+    id: 'msg-welcome', query: '', text: ASSISTANT_WELCOME,
     tableData: { title: '', headers: [], rows: [] }, activeView: 'table', activeChartType: 'bar',
     timestamp: '', sourceRecordCount: 0,
   }]);
@@ -84,8 +85,7 @@ export class PortfolioAgentService {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }]);
     } catch (error: unknown) {
-      const detail: unknown = error instanceof HttpErrorResponse ? error.error?.detail : null;
-      this.error.set(typeof detail === 'string' ? detail : 'The portfolio agent could not answer. No sample results were substituted. Please retry.');
+      this.error.set(problemMessage(error, 'Your portfolio assistant could not answer. Please try again; no example results were substituted.'));
     } finally {
       this.isThinking.set(false);
     }

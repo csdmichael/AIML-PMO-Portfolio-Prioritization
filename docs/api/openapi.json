@@ -1811,12 +1811,87 @@
         }
       }
     },
+    "/v1/recommendations/cached": {
+      "get": {
+        "tags": [
+          "recommendations"
+        ],
+        "summary": "Last saved OneLake recommendation report for this portfolio and question, or null on a cache miss",
+        "operationId": "getCachedPortfolioRecommendations",
+        "parameters": [
+          {
+            "name": "portfolioKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Portfoliokey"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RecommendationReport"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getcachedportfoliorecommendations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/recommendations": {
       "get": {
         "tags": [
           "recommendations"
         ],
-        "summary": "Recommendation agent report: new projects per portfolio and changes to existing projects",
+        "summary": "Run the recommendation agent and save its grounded report to OneLake",
         "operationId": "getPortfolioRecommendations",
         "parameters": [
           {
@@ -1867,7 +1942,7 @@
         "tags": [
           "recommendations"
         ],
-        "summary": "Ask the recommendation agent a research question about the portfolio",
+        "summary": "Ask the recommendation agent a research question and save its grounded report to OneLake",
         "operationId": "queryResearcherAgent",
         "requestBody": {
           "content": {
@@ -2031,6 +2106,109 @@
           }
         }
       }
+    },
+    "/v1/demo/projects": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Approved synthetic demo counts by portfolio (demo mode only)",
+        "operationId": "getDemoProjectCatalog",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/demo/projects/load": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Replace all projects or one portfolio with approved demo projects",
+        "operationId": "loadDemoProjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoLoadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoResetResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/demo/projects/clear": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Clear every project from application views, preserving source and audit files",
+        "operationId": "clearDemoProjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoClearRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoResetResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2039,21 +2217,23 @@
         "properties": {
           "isDemoEnvironment": {
             "type": "boolean",
-            "title": "Isdemoenvironment",
-            "default": true
+            "title": "Isdemoenvironment"
           },
           "environmentName": {
             "type": "string",
-            "title": "Environmentname",
-            "default": "Demo / Sandbox"
+            "title": "Environmentname"
           },
           "description": {
             "type": "string",
-            "title": "Description",
-            "default": "Controls whether demo actions like sample dataset loading and clearing portfolio data are permitted."
+            "title": "Description"
           }
         },
         "type": "object",
+        "required": [
+          "isDemoEnvironment",
+          "environmentName",
+          "description"
+        ],
         "title": "AdminSettings"
       },
       "AdminSettingsUpdateRequest": {
@@ -2562,6 +2742,161 @@
           "recordedAtUtc"
         ],
         "title": "DecisionView"
+      },
+      "DemoCatalog": {
+        "properties": {
+          "projectCount": {
+            "type": "integer",
+            "title": "Projectcount"
+          },
+          "portfolios": {
+            "items": {
+              "$ref": "#/components/schemas/DemoPortfolioCount"
+            },
+            "type": "array",
+            "title": "Portfolios"
+          },
+          "capturedAtUtc": {
+            "type": "string",
+            "title": "Capturedatutc"
+          },
+          "asOfDate": {
+            "type": "string",
+            "title": "Asofdate"
+          },
+          "oneLakePath": {
+            "type": "string",
+            "title": "Onelakepath"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectCount",
+          "portfolios",
+          "capturedAtUtc",
+          "asOfDate",
+          "oneLakePath"
+        ],
+        "title": "DemoCatalog"
+      },
+      "DemoClearRequest": {
+        "properties": {
+          "confirmClear": {
+            "type": "boolean",
+            "const": true,
+            "title": "Confirmclear"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "confirmClear"
+        ],
+        "title": "DemoClearRequest"
+      },
+      "DemoLoadRequest": {
+        "properties": {
+          "confirmReplace": {
+            "type": "boolean",
+            "const": true,
+            "title": "Confirmreplace"
+          },
+          "portfolioKey": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliokey"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "confirmReplace"
+        ],
+        "title": "DemoLoadRequest"
+      },
+      "DemoPortfolioCount": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "projectCount": {
+            "type": "integer",
+            "title": "Projectcount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "displayName",
+          "projectCount"
+        ],
+        "title": "DemoPortfolioCount"
+      },
+      "DemoResetResult": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "load",
+              "clear"
+            ],
+            "title": "Action"
+          },
+          "portfolioKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliokey"
+          },
+          "loadedProjects": {
+            "type": "integer",
+            "title": "Loadedprojects"
+          },
+          "replacedProjects": {
+            "type": "integer",
+            "title": "Replacedprojects"
+          },
+          "totalProjects": {
+            "type": "integer",
+            "title": "Totalprojects"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "updatedAtUtc": {
+            "type": "string",
+            "title": "Updatedatutc"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "portfolioKey",
+          "loadedProjects",
+          "replacedProjects",
+          "totalProjects",
+          "revision",
+          "updatedAtUtc"
+        ],
+        "title": "DemoResetResult"
       },
       "DraftCreate": {
         "properties": {
@@ -4594,6 +4929,10 @@
     {
       "name": "templates",
       "description": "Intake workbook template with no data rows."
+    },
+    {
+      "name": "demo",
+      "description": "Demo-only, confirmed project resets using a dedicated synthetic OneLake snapshot."
     },
     {
       "name": "intake",

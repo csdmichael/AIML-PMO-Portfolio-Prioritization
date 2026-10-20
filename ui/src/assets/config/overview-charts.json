@@ -1,0 +1,44 @@
+{
+  "labels": {
+    "more": "More detail and an example",
+    "example": "Illustrative example, not live results"
+  },
+  "charts": {
+    "tiers": {
+      "title": "Project Priority Mix",
+      "summary": "See how the selected projects are divided across the four priority tiers.",
+      "detail": "Each slice represents the number of projects in a priority tier, not their cost. Use the mix to understand how much work needs immediate attention, can proceed, can wait, or should be considered for deprioritization. This chart follows the current project filters.",
+      "example": "If 5 of 20 selected projects are Must-do-now, that slice represents 25% of the projects, even if those five projects account for more than 25% of the budget."
+    },
+    "confidence": {
+      "title": "Priority Confidence by Business Unit",
+      "summary": "Compare how well the available information supports project priorities in each business unit.",
+      "detail": "Each bar counts the selected projects in a business unit, split into High, Medium, and Low confidence. Confidence reflects information completeness, data quality, and confidence in the suggested priority. It is not a measure of business value or project importance. A large Low-confidence segment suggests that project information needs review.",
+      "example": "If Finance has 10 projects, with 7 High-confidence and 3 Low-confidence priorities, review the information gaps in those three projects before relying on their rankings."
+    },
+    "cost": {
+      "title": "Planned Investment by Business Unit and Site",
+      "summary": "Find where estimated project investment is concentrated across business units and locations.",
+      "detail": "Larger rectangles represent higher total estimated project cost. Each business unit contains smaller rectangles for its sites, so you can compare spending within and across units. These are project cost estimates, not actual spending or a measure of priority. The totals follow the current project filters.",
+      "example": "If a business unit has $1.2 million of estimated project cost in Seattle and $0.8 million in Austin, Seattle occupies 60% of that unit's area. This does not mean its projects are more urgent."
+    },
+    "hierarchy": {
+      "title": "Priorities Across Business Units and Sites",
+      "summary": "Follow the rings to see which priority tiers make up each business unit and site.",
+      "detail": "The inner ring groups selected projects by business unit, the next ring separates sites, and the outer ring shows priority tiers. Segment sizes represent project counts, not cost. Follow a branch outward to understand where urgent work is concentrated and which locations have work that can wait.",
+      "example": "A branch labelled Finance, then Austin, then Proceed with a count of 4 means four selected Finance projects in Austin are in the Proceed tier."
+    },
+    "capacity": {
+      "title": "Available Capacity vs Project Demand",
+      "summary": "Compare available people with the staffing required by projects for each skill.",
+      "detail": "For each skill, compare available capacity with project demand, measured as full-time equivalent people. One full-time equivalent is the workload of one full-time person. Demand above capacity signals a staffing gap that may require hiring, reassignment, or rescheduling. These are portfolio-wide totals from the saved analysis and do not change with project filters. They are unavailable after a demo reset if the original staffing totals no longer match the project selection.",
+      "example": "If Data Engineering has capacity equivalent to 8 full-time people and project demand of 11, the gap is 3 full-time equivalents. The PMO may add capacity or sequence projects differently."
+    },
+    "readiness": {
+      "title": "Project Information Readiness",
+      "summary": "Identify projects whose information needs attention before making investment decisions.",
+      "detail": "Each circle is a selected project. Moving right means more complete information; moving up means better data quality. Larger circles generally indicate higher estimated cost, and colour shows High, Medium, or Low priority confidence. Review expensive projects with missing or inconsistent information before committing funding.",
+      "example": "A project at 80% completeness and 60% quality has most of its information recorded, but several checks still need attention. A large circle at that position is a useful candidate for a focused information review."
+    }
+  }
+}

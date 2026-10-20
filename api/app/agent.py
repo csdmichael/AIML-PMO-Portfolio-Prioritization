@@ -72,6 +72,7 @@ class AgentSettings(BaseModel):
     timeoutSeconds: float
     maxOutputTokens: int
     instructions: str
+    responseStyleInstructions: str | None = None
     tools: list[Annotated[McpToolSettings | BingToolSettings, Field(discriminator="type")]]
     evidence: EvidenceSettings
 
@@ -166,7 +167,10 @@ class FoundryAgentClient:
         )
 
     def answer(self, question: str, history: list[dict[str, str]]) -> dict[str, Any]:
-        run = self.run([*history, {"role": "user", "content": question}])
+        inputs = [*history, {"role": "user", "content": question}]
+        if self.settings.responseStyleInstructions:
+            inputs.insert(0, {"role": "system", "content": self.settings.responseStyleInstructions})
+        run = self.run(inputs)
         try:
             answer = AgentAnswer.model_validate_json(run.text)
         except ValidationError as error:

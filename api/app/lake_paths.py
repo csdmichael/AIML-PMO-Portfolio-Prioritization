@@ -17,6 +17,8 @@ class LakePaths:
         self._decisions = f"{self.raw_root}/{onelake.uiEntryFolders.decisions}"
         self._drafts = f"{self.raw_root}/{onelake.uiEntryFolders.drafts}"
         self._project_changes = f"{self.raw_root}/{onelake.uiEntryFolders.projectChanges}"
+        self._recommendations = config.recommendations.cache.oneLakeFolder
+        self._demo = config.api.demo
         self._upload_folder_template = uploads.oneLakeFolderTemplate
         self._file_name_template = uploads.fileNameTemplate
         self._source_folders = {source.key: source.folder for source in config.data_sources.sources}
@@ -62,6 +64,15 @@ class LakePaths:
 
     def project_change(self, project_id: str) -> str:
         return f"{self._project_changes}/{project_id}.json"
+
+    def recommendation_report(self, cache_key: str) -> str:
+        return f"{self._recommendations}/{cache_key}.json"
+
+    def demo_source(self) -> str:
+        return self._demo.sourceFile
+
+    def project_resets(self) -> str:
+        return self._demo.resetFile
 
     def source_folder(self, source_key: str) -> str:
         try:

@@ -17,6 +17,7 @@
       { "name": "capacity", "description": "Capacity what-if scenarios." },
       { "name": "decisions", "description": "PMO decisions per project." },
       { "name": "templates", "description": "Intake workbook template with no data rows." },
+      { "name": "demo", "description": "Demo-only, confirmed project resets using a dedicated synthetic OneLake snapshot." },
       { "name": "intake", "description": "Quick add: drafts, documents, AI prefill, review, and submit." },
       { "name": "agent", "description": "Foundry portfolio agent chat grounded in server-read OneLake data." }
     ]
@@ -66,6 +67,7 @@
     "dfsEndpoint": { "file": "fabricItems", "path": "oneLake.dfsEndpoint" },
     "itemSuffix": ".Lakehouse",
     "lookupsFile": "Files/config/data-entry.json",
+    "systemSettingsTable": "system_settings",
     "rawRoot": { "file": "fabricItems", "path": "lakehouse.rawRoot" },
     "exportsRoot": { "file": "fabricItems", "path": "lakehouse.exportsRoot" },
     "exportFiles": {
@@ -77,6 +79,12 @@
       "drafts": "ui_entries/drafts",
       "projectChanges": "ui_entries/project_changes"
     }
+  },
+  "demo": {
+    "sourceFile": "Files/demo/portfolio.json",
+    "resetFile": "Files/raw/ui_entries/project_resets.json",
+    "generatorFile": "data-generator/generate_pmo_data.py",
+    "expectedProjectCount": 100
   },
   "openApi": {
     "outputFile": { "file": "deployment", "path": "create.apimApi.openApiFile" }

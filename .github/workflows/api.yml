@@ -60,6 +60,10 @@ jobs:
       - name: Fail when the OpenAPI document changed
         run: git diff --exit-code -- docs/api/openapi.json
 
+      - name: Test gateway operation synchronization
+        shell: pwsh
+        run: ./infra/tests/sync-api-operations.tests.ps1
+
   deploy:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'

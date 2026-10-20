@@ -129,10 +129,14 @@ class OneLakeClient:
         client = self._file(lake_path)
         try:
             if etag is None:
-                if not overwrite and self.properties(lake_path) is not None:
-                    raise LakeConflict(f"{lake_path} already exists")
                 self._ensure_parent(lake_path)
-                response = client.upload_data(data, overwrite=True)
+                if overwrite:
+                    response = client.upload_data(data, overwrite=True)
+                else:
+                    # overwrite=False skips file creation in the ADLS SDK; guard the create request instead.
+                    response = client.upload_data(
+                        data, overwrite=True, match_condition=MatchConditions.IfMissing,
+                    )
             else:
                 response = client.upload_data(
                     data,
@@ -160,8 +164,9 @@ class OneLakeClient:
         data = self.read_json(path)
         if data is not None:
             records, _ = data
-            if isinstance(records, list):
+            if isinstance(records, list) and all(isinstance(row, dict) for row in records):
                 return records
+            raise LakeError(f"{path} does not hold a JSON array of records")
         return None
 
     def write_table(self, table_name: str, records: list[dict[str, Any]]) -> str:

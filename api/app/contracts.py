@@ -169,10 +169,23 @@ class RecommendationLimits(Contract):
     maxItemsPerSection: int
 
 
+class RecommendationCacheSettings(Contract):
+    oneLakeFolder: str
+
+    @field_validator("oneLakeFolder")
+    @classmethod
+    def lakehouse_folder(cls, value: str) -> str:
+        value = value.rstrip("/")
+        if not value.startswith("Files/") or ".." in value.split("/"):
+            raise ValueError("must start with Files/ and must not contain '..'")
+        return value
+
+
 class RecommendationSettings(Contract):
     schemaVersion: int
     description: str
     defaultFocus: str
+    cache: RecommendationCacheSettings
     limits: RecommendationLimits
     prompt: PromptTemplates
 

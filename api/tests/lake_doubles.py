@@ -1,7 +1,7 @@
 import copy
 from types import SimpleNamespace
 
-from app.onelake import LakeConflict
+from app.onelake import LakeConflict, LakeError
 
 
 class MemoryLake:
@@ -33,3 +33,14 @@ class MemoryLake:
 
     def delete(self, lake_path: str) -> None:
         self.files.pop(lake_path, None)
+
+    def read_table(self, table_name: str):
+        found = self.read_json(f"Tables/{table_name}/records.json")
+        if found is None:
+            return None
+        if not isinstance(found[0], list) or not all(isinstance(row, dict) for row in found[0]):
+            raise LakeError(f"{table_name} is not an array of records")
+        return found[0]
+
+    def write_table(self, table_name: str, records):
+        return self.write_json(f"Tables/{table_name}/records.json", records, overwrite=True)

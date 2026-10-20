@@ -10,6 +10,8 @@ Generated: 2026-10-14T13:52:00-07:00
 
 **Goal:** Publish `pmo-portfolio-copilot:2` with backend-mediated read-only Fabric queries through private APIM, not full-snapshot prompting. Publish both supplied ML diagrams in README, architecture documentation, and UI screens.
 
+**Current update (2026-10-20):** Publish the user-approved recommendation cache, demo-only project controls, business-facing operational terminology, six expandable Overview chart explanations, and the showcase feature catalog. Reuse the API/UI GitHub Actions and the existing showcase ZIP deployment. No infrastructure provisioning, identity changes, capacity changes, or active project resets.
+
 **Path:** Modify Existing
 
 ---
@@ -97,9 +99,9 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 - [x] Update plan status to `Ready for Validation`
 - [x] Run Azure validation and record proof
 - [x] All validation checks pass
-  - [x] Core validation: Azure CLI, authentication, production UI build, existing App Service target, Bicep validation/what-if
+  - [x] Core validation for this app-only update: Azure CLI/authentication, API/UI tests, main/showcase builds, and existing App Service targets; Bicep validate/what-if is not an application-publish gate because no IaC changes are being applied
   - [x] Docker build: not applicable; Python App Service ZIPs
-  - [x] Azure Policy validation: existing resources plus scoped tool identity/APIM API/VNet integration
+  - [x] Azure Policy validation: existing running app resources and build settings verified; resource-group policy assignments empty; no hosting resources, identities, SKUs, or network settings change
   - [x] Scoped activation preview: dedicated tool identity/app role, APIM JWT policy, API outbound VNet integration; APIM public access must remain disabled
   - [x] Static permission review: dedicated tool caller only has Portfolio.Query on the tool API audience; adapter retains existing OneLake identity; Foundry runtime role remains project-scoped
   - [x] Changed UI surfaces lint clean; production build succeeds. Full UI lint has unrelated pre-existing no-output-native violation in edit-project-modal.component.ts
@@ -111,6 +113,11 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 ---
 
 ## 8. Validation Proof
+
+- 2026-10-20 preparation: API suite passed 208 tests with one opt-in test skipped. UI suite passed 114 tests; focused chart and presentation suite passed 66 tests. UI lint and production build passed. Shared configuration check passed, and the OpenAPI document was regenerated.
+- 2026-10-20 final checks: native PowerShell gateway synchronization tests passed complete OpenAPI coverage, path-parameter registration, no overwrites of existing operations, and explicit failure handling. The final Overview subset passed all three tests. Showcase production browser verified 20 feature cards, their icons, and the six-chart guidance description. All three existing App Service targets are running; main API health, live UI portfolio read (100 projects), and showcase health return success. There are no RBAC/IaC changes to apply, and no resource-group policy assignments.
+- 2026-10-20 source publication: the dedicated approved demo snapshot was published and read back with exactly 100 projects across five portfolios (40/20/15/10/15). Scores and explanations were retained; the one missing project name was restored from the deterministic generator and audited. A read-only check confirmed no active reset document exists.
+- 2026-10-20 deployment scope: existing resource group m365-myaacoub and approved subscription/tenant confirmed. API target azapittlyg2gcvfsso, UI target azuittlyg2gcvfsso, showcase target caldova-pmo-showcase (West US 2, Python 3.12, existing Uvicorn startup). Main app uses existing CI/CD; showcase uses the existing server, requirements and built www assets. Missing operations on the existing APIM API must be registered from the current OpenAPI document, preserving existing operation policies. No new hosting resources, permission changes, network changes, or full infrastructure deployment are authorized or needed.
 
 - 2026-10-18 architecture tabs: commit `c99e2e1` published in UI deployment `5e9d8058-531b-441f-9aab-546ca5cb207d`. Explicit restart and bundle comparison confirmed the new release (`main-3KTDN6YW.js`), not just an older healthy process. Production browser verified the five tabs in order, Solution Architecture selected by default with its diagram loaded, both ML images loaded (1536/1152 pixels wide), seven pipeline steps, OneLake/services panels, native ArrowRight keyboard selection, and horizontally scrollable tabs at a 390-pixel viewport.
 

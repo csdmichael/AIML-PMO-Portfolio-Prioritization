@@ -46,7 +46,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
       <div class="page-header">
         <h2 class="page-title">PMO Decisions & Human Governance Log</h2>
         <p class="page-subtitle">
-          Record human-approved decisions (Approve, Adjust, Reject) directly into OneLake with audit trails.
+          Record approved, adjusted, or rejected recommendations in the database, with a clear decision history.
         </p>
       </div>
 
@@ -112,7 +112,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
               (click)="onSubmitDecision()"
             >
               <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-              Save Decision to OneLake
+              Save Decision
             </ion-button>
             @if (submitError(); as message) {
               <span class="submit-error" role="alert">{{ message }}</span>
@@ -134,7 +134,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         } @else if (decisions().length === 0) {
           <app-empty-state
             title="No Decisions Recorded"
-            message="No PMO governance decisions have been recorded yet in OneLake."
+            message="No portfolio decisions have been recorded in the database yet."
             icon="checkbox-outline"
           ></app-empty-state>
         } @else {
@@ -339,7 +339,7 @@ export class DecisionsPageComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err: unknown) => {
-        this.error.set(problemMessage(err, 'Failed to load decisions from OneLake'));
+        this.error.set(problemMessage(err, 'Unable to load decisions from the database.'));
         this.isLoading.set(false);
       },
     });

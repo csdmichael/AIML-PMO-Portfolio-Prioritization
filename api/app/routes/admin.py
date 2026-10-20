@@ -11,6 +11,7 @@ from app.container import Services
 from app.contracts import OptionLists, SkillOption
 from app.problems import ProblemError
 from app.routes.deps import get_fresh_services, get_services
+from app.system_settings import AdminSettings, read_settings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -45,14 +46,6 @@ class PriorityWeightsResponse(BaseModel):
     presets: list[dict[str, Any]] = Field(default_factory=list)
 
 
-class AdminSettings(BaseModel):
-    isDemoEnvironment: bool = True
-    environmentName: str = "Demo / Sandbox"
-    description: str = (
-        "Controls whether demo actions like sample dataset loading and clearing portfolio data are permitted."
-    )
-
-
 class AdminSettingsUpdateRequest(BaseModel):
     isDemoEnvironment: bool
     environmentName: str | None = None
@@ -64,17 +57,6 @@ def _shared_json(services: Services, key: str) -> dict[str, Any]:
     return json.loads((services.config.shared_dir / spec.fileName).read_text(encoding="utf-8"))
 
 
-def _settings_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    values: dict[str, Any] = {}
-    for row in rows:
-        key = row.get("setting_key")
-        raw = row.get("setting_value")
-        if key not in AdminSettings.model_fields or raw is None:
-            continue
-        values[key] = str(raw).lower() in ("true", "1", "yes") if row.get("setting_type") == "boolean" else raw
-    return values
-
-
 @router.get(
     "/settings",
     response_model=AdminSettings,
@@ -82,8 +64,7 @@ def _settings_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     summary="Get global admin settings from OneLake system_settings table",
 )
 def get_admin_settings(services: Services = Depends(get_services)) -> AdminSettings:
-    stored = _settings_from_rows(services.lake.read_table("system_settings") or [])
-    return AdminSettings.model_validate({**_shared_json(services, "systemSettings"), **stored})
+    return read_settings(services.config, services.lake)
 
 
 @router.put(
@@ -95,11 +76,12 @@ def get_admin_settings(services: Services = Depends(get_services)) -> AdminSetti
 def update_admin_settings(
     body: AdminSettingsUpdateRequest, services: Services = Depends(get_services)
 ) -> AdminSettings:
-    settings = AdminSettings(
-        isDemoEnvironment=body.isDemoEnvironment,
-        environmentName=body.environmentName
-        or ("Demo / Sandbox" if body.isDemoEnvironment else "Production"),
-    )
+    current = read_settings(services.config, services.lake)
+    names = _shared_json(services, "systemSettings")["environmentNames"]
+    settings = current.model_copy(update={
+        "isDemoEnvironment": body.isDemoEnvironment,
+        "environmentName": body.environmentName or names["demo" if body.isDemoEnvironment else "production"],
+    })
     now = datetime.now(timezone.utc).isoformat()
     # 1. Write directly to OneLake table Tables/system_settings
     table_rows = [
@@ -118,7 +100,7 @@ def update_admin_settings(
             "updated_at": now,
         },
     ]
-    services.lake.write_table("system_settings", table_rows)
+    services.lake.write_table(services.config.api.oneLake.systemSettingsTable, table_rows)
     return settings
 
 

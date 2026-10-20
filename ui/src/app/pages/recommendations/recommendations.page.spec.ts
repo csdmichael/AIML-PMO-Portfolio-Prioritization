@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RecommendationsPageComponent } from './recommendations.page';
 import { DataApiService } from '../../services/data-api.service';
@@ -69,6 +69,7 @@ const configStub = {
 
 function createApi(overrides: Record<string, unknown> = {}) {
   return {
+    getCachedRecommendations: vi.fn(() => of(null)),
     getRecommendations: vi.fn(() => of(report)),
     queryResearcherAgent: vi.fn(() => of(report)),
     postDecision: vi.fn(() => of({ decisionId: 'DEC-1' })),
@@ -83,10 +84,14 @@ function render(api: ReturnType<typeof createApi>) {
     providers: [
       { provide: DataApiService, useValue: api },
       { provide: ConfigService, useValue: configStub },
-      { provide: PortfolioStore, useValue: { portfolios: signal(['it-infosec']), init: vi.fn() } },
+      { provide: PortfolioStore, useValue: {
+        portfolioItems: signal([{ key: 'it-infosec', displayName: 'IT - InfoSec' }]),
+        init: vi.fn(),
+      } },
     ],
   });
   const fixture = TestBed.createComponent(RecommendationsPageComponent);
+  fixture.componentInstance.ionViewWillEnter();
   fixture.detectChanges();
   return fixture;
 }
@@ -109,7 +114,7 @@ describe('AI recommendations page', () => {
       getRecommendations: vi.fn(() => throwError(() => ({ error: { detail: 'The Foundry agent timed out.' } }))),
     });
     const element: HTMLElement = render(api).nativeElement;
-    expect(element.querySelector('.error-text')?.textContent).toContain('The Foundry agent timed out.');
+    expect(element.querySelector('.error-text')?.textContent).toContain('The AI assistant timed out.');
     expect(element.querySelector('.item-card')).toBeNull();
   });
 
@@ -128,5 +133,109 @@ describe('AI recommendations page', () => {
     expect(api.postDecision).toHaveBeenCalledWith(action.payload);
     const status = fixture.nativeElement.querySelector('.action-status.failed');
     expect(status?.textContent).toContain('decision: must be a tier');
+  });
+
+  it('shows the persisted report before the agent finishes, then replaces it with the fresh report', () => {
+    const fresh = new Subject<RecommendationReport>();
+    const api = createApi({
+      getCachedRecommendations: vi.fn(() => of(report)),
+      getRecommendations: vi.fn(() => fresh),
+    });
+    const fixture = render(api);
+    const page = fixture.componentInstance;
+    expect(page.loading()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.item-title')?.textContent).toContain('Review GIS-0002');
+    expect(fixture.nativeElement.querySelector('.report-status')?.textContent).toContain('Previous');
+
+    fresh.next({ ...report, summary: 'Updated evidence from the agent.' });
+    fixture.detectChanges();
+    expect(page.loading()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.summary-text')?.textContent).toContain('Updated evidence');
+    expect(fixture.nativeElement.querySelector('.report-status')?.textContent).toContain('Updated');
+  });
+
+  it('keeps saved recommendations visible when the refresh fails', () => {
+    const fixture = render(createApi({
+      getCachedRecommendations: vi.fn(() => of(report)),
+      getRecommendations: vi.fn(() => throwError(() => ({ error: { detail: 'Foundry is unavailable.' } }))),
+    }));
+    expect(fixture.nativeElement.querySelector('.item-card')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.error-text')?.textContent).toContain('AI service is unavailable.');
+    expect(fixture.componentInstance.showingSaved()).toBe(true);
+  });
+
+  it('still loads a saved report when its read completes after a refresh failure', () => {
+    const cached = new Subject<RecommendationReport | null>();
+    const fixture = render(createApi({
+      getCachedRecommendations: vi.fn(() => cached),
+      getRecommendations: vi.fn(() => throwError(() => ({ error: { detail: 'Agent timed out.' } }))),
+    }));
+    cached.next(report);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.item-card')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.error-text')?.textContent).toContain('Agent timed out.');
+  });
+
+  it('does not let a slow cache read overwrite fresh agent results', () => {
+    const cached = new Subject<RecommendationReport | null>();
+    const fixture = render(createApi({ getCachedRecommendations: vi.fn(() => cached) }));
+    cached.next({ ...report, summary: 'Older report' });
+    fixture.detectChanges();
+    expect(fixture.componentInstance.report()?.summary).toBe(report.summary);
+    expect(fixture.componentInstance.showingSaved()).toBe(false);
+  });
+
+  it('reports a cache read failure while continuing the agent refresh', () => {
+    const fresh = new Subject<RecommendationReport>();
+    const fixture = render(createApi({
+      getCachedRecommendations: vi.fn(() => throwError(() => ({ error: { detail: 'OneLake unavailable.' } }))),
+      getRecommendations: vi.fn(() => fresh),
+    }));
+    expect(fixture.nativeElement.querySelector('.cache-warning')?.textContent).toContain('database unavailable.');
+    expect(fixture.componentInstance.loading()).toBe(true);
+    fresh.next(report);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.cache-warning')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.item-card')).not.toBeNull();
+  });
+
+  it('isolates portfolio and research caches and sends portfolio keys, not display names', () => {
+    const pending = new Subject<RecommendationReport>();
+    const api = createApi({ queryResearcherAgent: vi.fn(() => pending) });
+    const fixture = render(api);
+    const page = fixture.componentInstance;
+    const option = fixture.nativeElement.querySelector('option[value="it-infosec"]');
+    expect(option?.textContent).toContain('IT - InfoSec');
+    page.portfolioKey = 'it-infosec';
+    page.ask('Which projects need capacity?');
+    fixture.detectChanges();
+    expect(page.report()).toBeNull();
+    expect(api.getCachedRecommendations).toHaveBeenLastCalledWith('it-infosec', 'Which projects need capacity?');
+    expect(api.queryResearcherAgent).toHaveBeenCalledWith('Which projects need capacity?', 'it-infosec');
+  });
+
+  it('runs the agent on every page entry and cancels view subscriptions when leaving', () => {
+    const fresh = new Subject<RecommendationReport>();
+    const api = createApi({ getRecommendations: vi.fn(() => fresh) });
+    const fixture = render(api);
+    const page = fixture.componentInstance;
+    page.ionViewWillLeave();
+    fresh.next(report);
+    expect(page.report()).toBeNull();
+    page.ionViewWillEnter();
+    expect(api.getRecommendations).toHaveBeenCalledTimes(2);
+    expect(api.getCachedRecommendations).toHaveBeenCalledTimes(2);
+  });
+
+  it('drops an in-memory report when a dataset reset invalidates its persisted cache', () => {
+    const pending = new Subject<RecommendationReport>();
+    const api = createApi({
+      getRecommendations: vi.fn().mockReturnValueOnce(of(report)).mockReturnValue(pending),
+    });
+    const fixture = render(api);
+    expect(fixture.componentInstance.report()).toEqual(report);
+    fixture.componentInstance.ionViewWillEnter();
+    expect(fixture.componentInstance.report()).toBeNull();
+    expect(fixture.componentInstance.loading()).toBe(true);
   });
 });

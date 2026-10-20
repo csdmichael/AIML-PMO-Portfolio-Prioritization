@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subscription, map } from 'rxjs';
@@ -18,6 +18,7 @@ import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
 import { ConfigService } from '../../services/config.service';
 import { RecommendationAction, RecommendationReport } from '../../models/recommendation.models';
+import { businessText } from '../../core/problem-detail';
 
 type ActionStatus = 'running' | 'done' | 'failed';
 
@@ -31,7 +32,7 @@ function problemText(err: unknown): string {
   const problem = (err as { error?: { detail?: string; errors?: { field: string; message: string }[] } })?.error;
   const issues = (problem?.errors ?? []).map((issue) => `${issue.field}: ${issue.message}`);
   const detail = problem?.detail ?? (err as { message?: string })?.message ?? 'The request failed.';
-  return issues.length ? `${detail} ${issues.join('; ')}` : detail;
+  return businessText(issues.length ? `${detail} ${issues.join('; ')}` : detail);
 }
 
 @Component({
@@ -56,7 +57,7 @@ function problemText(err: unknown): string {
     <ion-content class="ion-padding rec-page">
       <div class="page-header">
         <div class="header-text">
-          <div class="agent-pill"><ion-icon name="sparkles-outline"></ion-icon> Recommendation agent</div>
+          <div class="agent-pill"><ion-icon name="sparkles-outline"></ion-icon> Portfolio recommendations assistant</div>
           <h2 class="page-title">{{ report()?.title || ui.title }}</h2>
           <p class="page-subtitle">{{ ui.subtitle }}</p>
         </div>
@@ -65,12 +66,12 @@ function problemText(err: unknown): string {
             <span>Portfolio</span>
             <select [(ngModel)]="portfolioKey" (change)="loadDefault()" [disabled]="loading()">
               <option value="">All portfolios</option>
-              @for (pf of store.portfolios(); track pf) {
-                <option [value]="pf">{{ pf }}</option>
+              @for (pf of store.portfolioItems(); track pf.key) {
+                <option [value]="pf.key">{{ pf.displayName }}</option>
               }
             </select>
           </label>
-          <ion-button fill="outline" [disabled]="loading()" (click)="loadDefault()">Refresh</ion-button>
+          <ion-button fill="outline" [disabled]="loading()" (click)="retry()">Refresh</ion-button>
         </div>
       </div>
 
@@ -101,28 +102,45 @@ function problemText(err: unknown): string {
       </ion-card>
 
       @if (loading()) {
-        <div class="state-line">
+        <div class="state-line" role="status">
           <ion-spinner name="crescent"></ion-spinner>
-          <span>The recommendation agent is querying OneLake and searching the web. This can take up to two minutes.</span>
+          <span>
+            @if (report()) {
+              Showing the previous report while your assistant reviews the latest database records and public research.
+            } @else {
+              Loading saved recommendations from the database and preparing an updated report. This can take up to two minutes.
+            }
+          </span>
         </div>
-      } @else if (error(); as message) {
+      }
+      @if (cacheError(); as message) {
+        <p class="cache-warning" role="alert">Could not load the saved report: {{ message }}</p>
+      }
+      @if (error(); as message) {
         <ion-card class="error-card">
-          <ion-card-content>
-            <strong>The recommendation agent could not complete the report.</strong>
+          <ion-card-content role="alert">
+            <strong>The recommendation refresh failed.</strong>
             <p class="error-text">{{ message }}</p>
+            @if (report()) {
+              <p>The previous report is still shown below. Its generation time indicates how old it is.</p>
+            }
             <ion-button fill="outline" size="small" (click)="retry()">Try again</ion-button>
           </ion-card-content>
         </ion-card>
-      } @else if (report(); as r) {
+      }
+      @if (report(); as r) {
         <ion-card class="summary-card">
           <ion-card-content>
+            <div class="report-status" role="status">
+              {{ showingSaved() ? 'Previous recommendations saved in the database' : 'Updated recommendations saved in the database' }}
+            </div>
             @if (r.query) {
               <div class="query-line">Research question: <strong>{{ r.query }}</strong></div>
             }
             <p class="summary-text">{{ r.summary }}</p>
             <div class="provenance-row">
-              <span>{{ r.provenance.agentName }} v{{ r.provenance.agentVersion }}</span>
-              <span>{{ r.provenance.queryIds.length }} OneLake {{ r.provenance.queryIds.length === 1 ? 'query' : 'queries' }}</span>
+              <span>Reviewed against approved portfolio records</span>
+              <span>{{ r.provenance.queryIds.length }} database {{ r.provenance.queryIds.length === 1 ? 'check' : 'checks' }}</span>
               <span>{{ r.provenance.webSearches }} web {{ r.provenance.webSearches === 1 ? 'search' : 'searches' }}</span>
               <span>{{ r.sourceProjectIds.length }} projects cited</span>
               <span>Generated {{ r.generatedAtUtc | date: 'medium' }}</span>
@@ -174,7 +192,7 @@ function problemText(err: unknown): string {
                     }
                     @if (item.sourceProjectIds.length) {
                       <div class="source-row">
-                        <span class="source-label">OneLake:</span>
+                        <span class="source-label">Project records:</span>
                         @for (projectId of item.sourceProjectIds; track $index) {
                           <span class="source-chip">{{ projectId }}</span>
                         }
@@ -242,6 +260,8 @@ function problemText(err: unknown): string {
     .state-line { display: flex; align-items: center; gap: 10px; color: var(--rec-muted); padding: 16px 0; }
     .error-card { border-left: 4px solid #d13438; }
     .error-text { color: #a4262c; margin: 6px 0 12px; }
+    .cache-warning { color: #92400e; font-size: 13px; }
+    .report-status { color: var(--rec-muted); font-size: 12px; font-weight: 600; margin-bottom: 8px; }
     .summary-card { margin: 0 0 16px; }
     .summary-text { font-size: 15px; margin: 0 0 10px; }
     .query-line { font-size: 13px; color: var(--rec-muted); margin-bottom: 6px; }
@@ -269,7 +289,7 @@ function problemText(err: unknown): string {
     .empty-note { color: var(--rec-muted); font-size: 14px; }
   `],
 })
-export class RecommendationsPageComponent implements OnInit, OnDestroy {
+export class RecommendationsPageComponent implements OnDestroy {
   private readonly dataApi = inject(DataApiService);
   private readonly configService = inject(ConfigService);
   readonly store = inject(PortfolioStore);
@@ -278,15 +298,22 @@ export class RecommendationsPageComponent implements OnInit, OnDestroy {
   readonly report = signal<RecommendationReport | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly cacheError = signal<string | null>(null);
+  readonly showingSaved = signal(false);
   readonly activeQuery = signal<string | null>(null);
   readonly actionStates = signal<Record<string, ActionState>>({});
 
   portfolioKey = '';
   researchQuery = '';
   private request?: Subscription;
+  private reportScope?: string;
 
-  ngOnInit(): void {
+  ionViewWillEnter(): void {
     this.loadDefault();
+  }
+
+  ionViewWillLeave(): void {
+    this.request?.unsubscribe();
   }
 
   ngOnDestroy(): void {
@@ -339,20 +366,48 @@ export class RecommendationsPageComponent implements OnInit, OnDestroy {
 
   private run(request$: Observable<RecommendationReport>): void {
     this.request?.unsubscribe();
+    this.request = new Subscription();
+    const scope = JSON.stringify([this.portfolioKey || null, this.activeQuery()]);
+    if (this.reportScope !== scope) {
+      this.report.set(null);
+      this.actionStates.set({});
+    }
+    this.reportScope = scope;
     this.loading.set(true);
     this.error.set(null);
-    this.actionStates.set({});
-    this.request = request$.subscribe({
+    this.cacheError.set(null);
+    this.showingSaved.set(this.report() !== null);
+    let freshReceived = false;
+    const cachedRequest = this.dataApi
+      .getCachedRecommendations(this.portfolioKey || undefined, this.activeQuery() || undefined)
+      .subscribe({
+        next: (cached) => {
+          if (!freshReceived) {
+            if (this.report()?.generatedAtUtc !== cached?.generatedAtUtc) this.actionStates.set({});
+            this.report.set(cached);
+            this.showingSaved.set(cached !== null);
+          }
+        },
+        error: (err) => {
+          if (!freshReceived) this.cacheError.set(problemText(err));
+        },
+      });
+    this.request.add(cachedRequest);
+    this.request.add(request$.subscribe({
       next: (report) => {
+        freshReceived = true;
+        cachedRequest.unsubscribe();
         this.report.set(report);
+        this.showingSaved.set(false);
+        this.actionStates.set({});
+        this.cacheError.set(null);
         this.loading.set(false);
       },
       error: (err) => {
-        this.report.set(null);
         this.error.set(problemText(err));
         this.loading.set(false);
       },
-    });
+    }));
   }
 
   private setState(key: string, state: ActionState): void {

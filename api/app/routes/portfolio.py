@@ -19,8 +19,7 @@ router = APIRouter(tags=["portfolio"])
     responses={404: {"description": "The export is missing. The problem names the OneLake path and the pipeline."}},
 )
 def get_portfolio(services: Services = Depends(get_services)) -> JSONResponse:
-    export = services.exports.read(services.paths.portfolio_export())
-    return JSONResponse(content=services.changes.apply_export(export, portfolios=services.catalog.portfolio_index))
+    return JSONResponse(content=services.catalog.export())
 
 
 @router.get("/portfolios", response_model=PortfolioList, operation_id="listPortfolios", summary="Portfolios from the export plus pending entries")

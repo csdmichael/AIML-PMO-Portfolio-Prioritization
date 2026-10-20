@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { Observable, Subscription, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import {
   IonContent,
   IonCard,
@@ -27,7 +28,7 @@ import {
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
 import { problemMessage } from '../../core/problem-detail';
-import { IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem, ProblemDetail, ProjectImportResult, ProjectUploadMetadata } from '../../models/api.models';
+import { DemoProjectCatalog, DemoResetResult, IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem, ProblemDetail, ProjectImportResult, ProjectUploadMetadata } from '../../models/api.models';
 import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 
@@ -552,6 +553,77 @@ export interface ProjectFormFields {
 
         <!-- TAB 3: IMPORT & UPLOADS (MERGED WITH LIFECYCLE CONTROLS) -->
         @if (activeTab === 'import') {
+          @if (demoSettingsLoading()) {
+            <p role="status">Checking demo controls...</p>
+          }
+          @if (demoError(); as message) {
+            <div class="error-banner" role="alert">
+              {{ message }}
+              <ion-button size="small" fill="clear" (click)="loadDemoState()" [disabled]="demoBusy()">Retry demo controls</ion-button>
+            </div>
+          }
+          @if (isDemo()) {
+            <ion-card class="form-card demo-controls">
+              <ion-card-header>
+                <ion-card-title>Demo Project Data</ion-card-title>
+                <ion-card-subtitle>
+                  Synthetic data only. Loads replace the chosen scope, never append duplicates.
+                  These actions are blocked when the global demo setting is off.
+                </ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                @if (demoCatalog(); as catalog) {
+                  <p class="import-note">
+                    Approved database snapshot: {{ catalog.projectCount }} projects, with priority scores as of {{ catalog.asOfDate }}.
+                    Loading reuses those scores. Original capacity and project-group summaries are hidden after a reset because they no longer describe the selected projects.
+                  </p>
+                  <div class="demo-load-actions">
+                    <ion-button class="demo-load-all" [disabled]="demoBusy() || importing()" (click)="requestDemoAction('all')">
+                      Load {{ catalog.projectCount }} Demo Projects
+                    </ion-button>
+                    <label class="field-item">
+                      Portfolio subset
+                      <select class="form-select" [(ngModel)]="demoPortfolioKey" [disabled]="demoBusy()">
+                        <option value="">Select a demo portfolio</option>
+                        @for (portfolio of catalog.portfolios; track portfolio.key) {
+                          <option [value]="portfolio.key">{{ portfolio.displayName }} ({{ portfolio.projectCount }})</option>
+                        }
+                      </select>
+                    </label>
+                    <ion-button class="demo-load-portfolio" fill="outline"
+                      [disabled]="!demoPortfolioKey || demoBusy() || importing()" (click)="requestDemoAction('portfolio')">
+                      Load Selected Portfolio
+                    </ion-button>
+                  </div>
+                }
+                <div class="danger-zone">
+                  <div>
+                    <strong>Clear all projects</strong>
+                    <p class="import-note">Removes every project from application views, including pending and deleted items. Original source files and audit history are retained in the database.</p>
+                  </div>
+                  <ion-button class="demo-clear" color="danger" fill="outline"
+                    [disabled]="demoBusy() || importing()" (click)="requestDemoAction('clear')">Clear All Projects</ion-button>
+                </div>
+                @if (demoConfirmation(); as action) {
+                  <div class="demo-confirmation" role="alertdialog" aria-label="Confirm demo project replacement">
+                    <strong>{{ action === 'clear' ? 'Clear every project?' : 'Replace project data?' }}</strong>
+                    <p>{{ demoConfirmationText() }}</p>
+                    <ion-button class="demo-confirm" color="danger" [disabled]="demoBusy()" (click)="confirmDemoAction()">Confirm</ion-button>
+                    <ion-button fill="clear" [disabled]="demoBusy()" (click)="demoConfirmation.set(null)">Cancel</ion-button>
+                  </div>
+                }
+                @if (demoBusy()) {
+                  <p role="status"><ion-spinner name="crescent"></ion-spinner> Saving the project selection in the database...</p>
+                }
+                @if (demoResult(); as result) {
+                  <p class="import-result" role="status">
+                    {{ result.action === 'clear' ? 'All projects cleared from application views.' : result.loadedProjects + ' demo projects loaded.' }}
+                    {{ result.totalProjects }} projects now in the application.
+                  </p>
+                }
+              </ion-card-content>
+            </ion-card>
+          }
           <ion-card class="form-card">
             <ion-card-header>
               <ion-card-title>Import Projects from Excel (.xlsx)</ion-card-title>
@@ -565,7 +637,7 @@ export interface ProjectFormFields {
                 <div class="drop-sub">Columns will be automatically mapped to the PMO prioritization schema.</div>
 
                 <input type="file" #fileInput accept=".xlsx,.xls" (change)="onFileSelect($event)" style="display: none;" />
-                <ion-button size="small" fill="outline" (click)="fileInput.click()">
+                <ion-button size="small" fill="outline" [disabled]="importing() || demoBusy()" (click)="fileInput.click()">
                   Browse Excel File
                 </ion-button>
               </div>
@@ -585,7 +657,7 @@ export interface ProjectFormFields {
 
               @if (importResult(); as result) {
                 <div class="import-result" role="status">
-                  <div>Saved {{ result.count }} project{{ result.count === 1 ? '' : 's' }}. Scores and dashboards update when the pipeline run finishes.</div>
+                  <div>Saved {{ result.count }} project{{ result.count === 1 ? '' : 's' }}. Scores and dashboards update when the analysis refresh finishes.</div>
                   <div class="import-ids">
                     @for (item of result.created; track item.projectId) {
                       <span class="project-pill">{{ item.projectId }}</span>
@@ -1022,6 +1094,9 @@ export interface ProjectFormFields {
       color: #475569;
       font-size: 13px;
     }
+    .demo-load-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+    .demo-load-actions .field-item { min-width: 240px; flex: 1; margin: 0; }
+    .demo-confirmation { border: 1px solid #fca5a5; background: #fff7ed; border-radius: 8px; padding: 16px; margin-top: 16px; }
     .import-result {
       margin-top: 12px;
       padding: 12px 14px;
@@ -1045,6 +1120,7 @@ export interface ProjectFormFields {
 })
 export class DataEntryPageComponent implements OnInit {
   private readonly dataApi = inject(DataApiService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly store = inject(PortfolioStore);
 
   readonly isLoading = signal(true);
@@ -1056,6 +1132,16 @@ export class DataEntryPageComponent implements OnInit {
   readonly importResult = signal<ProjectImportResult | null>(null);
   readonly importError = signal<string | null>(null);
   readonly importIssues = signal<string[]>([]);
+  readonly isDemo = signal(false);
+  readonly demoSettingsLoading = signal(false);
+  readonly demoCatalog = signal<DemoProjectCatalog | null>(null);
+  readonly demoError = signal<string | null>(null);
+  readonly demoBusy = signal(false);
+  readonly demoResult = signal<DemoResetResult | null>(null);
+  readonly demoConfirmation = signal<'all' | 'portfolio' | 'clear' | null>(null);
+  demoPortfolioKey = '';
+  private demoStateRequest?: Subscription;
+  private confirmedPortfolioKey?: string;
 
   activeTab = 'project';
   projectStep = signal<number>(1);
@@ -1103,6 +1189,83 @@ export class DataEntryPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadOptions();
+  }
+
+  ionViewWillEnter(): void {
+    this.loadDemoState();
+  }
+
+  loadDemoState(): void {
+    this.demoStateRequest?.unsubscribe();
+    this.isDemo.set(false);
+    this.demoCatalog.set(null);
+    this.demoConfirmation.set(null);
+    this.demoSettingsLoading.set(true);
+    this.demoError.set(null);
+    this.demoStateRequest = this.dataApi.getAdminSettings().pipe(
+      switchMap((settings) => {
+        this.isDemo.set(settings.isDemoEnvironment);
+        return settings.isDemoEnvironment ? this.dataApi.getDemoProjectCatalog() : of(null);
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (catalog) => {
+        this.demoCatalog.set(catalog);
+        this.demoSettingsLoading.set(false);
+        if (!catalog?.portfolios.some((item) => item.key === this.demoPortfolioKey)) this.demoPortfolioKey = '';
+      },
+      error: (err: unknown) => {
+        this.demoSettingsLoading.set(false);
+        if ((err as { status?: number } | null)?.status === 403) this.isDemo.set(false);
+        this.demoError.set(problemMessage(err, 'Demo settings or the approved snapshot could not be loaded. No data was changed.'));
+      },
+    });
+  }
+
+  requestDemoAction(action: 'all' | 'portfolio' | 'clear'): void {
+    if (!this.isDemo() || this.demoBusy() || this.importing()) return;
+    if (action !== 'clear' && !this.demoCatalog()) return;
+    if (action === 'portfolio' && !this.demoCatalog()?.portfolios.some((item) => item.key === this.demoPortfolioKey)) return;
+    this.confirmedPortfolioKey = action === 'portfolio' ? this.demoPortfolioKey : undefined;
+    this.demoConfirmation.set(action);
+    this.demoResult.set(null);
+  }
+
+  demoConfirmationText(): string {
+    if (this.demoConfirmation() === 'clear') {
+      return 'Every current project will be removed from application views. Source records and audit files will be kept. You can reload the approved demo snapshot afterward.';
+    }
+    if (this.demoConfirmation() === 'portfolio') {
+      const portfolio = this.demoCatalog()?.portfolios.find((item) => item.key === this.confirmedPortfolioKey);
+      return `Replace all current projects in ${portfolio?.displayName} with its ${portfolio?.projectCount} demo projects? Other portfolios will not be changed.`;
+    }
+    return `Replace all current projects with the approved ${this.demoCatalog()?.projectCount}-project demo snapshot? This also removes projects added outside that snapshot.`;
+  }
+
+  confirmDemoAction(): void {
+    const action = this.demoConfirmation();
+    if (!action || !this.isDemo() || this.demoBusy()) return;
+    this.demoBusy.set(true);
+    this.demoError.set(null);
+    const request = action === 'clear'
+      ? this.dataApi.clearDemoProjects()
+      : this.dataApi.loadDemoProjects(this.confirmedPortfolioKey);
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (result) => {
+        this.demoBusy.set(false);
+        this.demoConfirmation.set(null);
+        this.demoResult.set(result);
+        this.importResult.set(null);
+        this.store.refresh();
+        this.store.reloadPortfolioItems();
+      },
+      error: (err: unknown) => {
+        this.demoBusy.set(false);
+        this.demoConfirmation.set(null);
+        if ((err as { status?: number } | null)?.status === 403) this.isDemo.set(false);
+        this.demoError.set(problemMessage(err, 'The demo operation could not be completed. Refresh the portfolio to check its current state.'));
+      },
+    });
   }
 
   loadOptions(): void {
@@ -1162,13 +1325,13 @@ export class DataEntryPageComponent implements OnInit {
           },
           error: (err) => {
             this.isPrefilling.set(false);
-            this.submitError.set(err?.error?.detail || err?.message || 'AI prefill service call failed.');
+            this.submitError.set(problemMessage(err, 'Your assistant could not suggest missing project details. Please try again.'));
           },
         });
       },
       error: (err) => {
         this.isPrefilling.set(false);
-        this.submitError.set(err?.error?.detail || err?.message || 'Unable to create intake draft for AI prefill.');
+        this.submitError.set(problemMessage(err, 'Unable to prepare this project for AI assistance.'));
       },
     });
   }
@@ -1287,7 +1450,7 @@ export class DataEntryPageComponent implements OnInit {
         },
         error: (err) => {
           this.applyingSuggestion.set(null);
-          this.submitError.set(err?.error?.detail || err?.message || 'Unable to create the suggested value.');
+          this.submitError.set(problemMessage(err, 'Unable to create the suggested value.'));
         },
       });
   }
@@ -1300,7 +1463,7 @@ export class DataEntryPageComponent implements OnInit {
       next: (draft) => this.rememberDraft(draft),
       error: (err) => {
         if (err?.status !== 404) {
-          this.submitError.set(err?.error?.detail || err?.message || 'Unable to dismiss the suggestion.');
+          this.submitError.set(problemMessage(err, 'Unable to dismiss the suggestion.'));
         }
       },
     });
@@ -1426,8 +1589,8 @@ export class DataEntryPageComponent implements OnInit {
       error: (err: unknown) => {
         this.importing.set(false);
         this.importError.set(problemMessage(err, 'The workbook could not be imported.'));
-        const invalid = (err as { error?: ProblemDetail } | null)?.error?.invalidFields ?? {};
-        this.importIssues.set(Object.entries(invalid).map(([field, text]) => `${field}: ${text}`));
+        const issues = (err as { error?: ProblemDetail } | null)?.error?.errors ?? [];
+        this.importIssues.set(issues.map((issue) => `${issue.field}: ${issue.message}`));
       },
     });
   }

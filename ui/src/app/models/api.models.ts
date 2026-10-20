@@ -15,6 +15,31 @@ export interface ProblemDetail {
   detail?: string;
   instance?: string;
   invalidFields?: Record<string, string>;
+  errors?: Array<{ field: string; message: string }>;
+}
+
+export interface DemoPortfolioCount {
+  key: string;
+  displayName: string;
+  projectCount: number;
+}
+
+export interface DemoProjectCatalog {
+  projectCount: number;
+  portfolios: DemoPortfolioCount[];
+  capturedAtUtc: string;
+  asOfDate: string;
+  oneLakePath: string;
+}
+
+export interface DemoResetResult {
+  action: 'load' | 'clear';
+  portfolioKey: string | null;
+  loadedProjects: number;
+  replacedProjects: number;
+  totalProjects: number;
+  revision: string;
+  updatedAtUtc: string;
 }
 
 export interface SkillOption {

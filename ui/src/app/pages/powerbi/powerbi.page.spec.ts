@@ -66,6 +66,7 @@ describe('PowerBiPageComponent embedding', () => {
         { provide: PowerBiAuthService, useValue: auth },
         { provide: PortfolioStore, useValue: {
           rawProjects: signal([]),
+          dataset: signal(null),
           portfolios: signal([]),
           businessUnits: signal([]),
         } },

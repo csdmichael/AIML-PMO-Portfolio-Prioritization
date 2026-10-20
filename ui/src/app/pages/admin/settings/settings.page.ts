@@ -74,7 +74,8 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
                 <div class="setting-title">Is Demo Environment</div>
                 <div class="setting-description">
                   When enabled (<strong>Yes</strong>), every page shows a banner saying the portfolio data is synthetic demo data.
-                                    When disabled (<strong>No</strong>), the banner is hidden.
+                  Import &amp; Uploads also offers confirmed demo dataset loading and clear-all controls.
+                  When disabled (<strong>No</strong>), those controls are hidden and demo operations are blocked.
                 </div>
               </div>
               <div class="setting-control">
@@ -94,8 +95,8 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
                 <strong>{{ isDemo() ? 'Demo Mode Active' : 'Production Guardrails Active' }}</strong>
                 <p>
                   {{ isDemo() 
-                    ? 'Every page shows a synthetic demo data banner. Portfolio data is read from OneLake through the API.' 
-                    : 'Portfolio records and data entries are protected. The demo banner is hidden.' }}
+                    ? 'Synthetic data is labelled. Import & Uploads can replace all projects or one portfolio with approved demo data, or clear all projects after confirmation. All changes are saved in the database.'
+                    : 'Demo project loading and clearing are blocked. Normal project entry, editing, and imports remain available.' }}
                 </p>
               </div>
             </div>

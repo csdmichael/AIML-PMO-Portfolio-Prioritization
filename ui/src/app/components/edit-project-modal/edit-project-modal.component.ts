@@ -50,13 +50,13 @@ import { DataApiService } from '../../services/data-api.service';
             [class.active]="activeTab() === 'ai'"
             (click)="activeTab.set('ai')"
           >
-            2. Model Signals (Read-only)
+            2. Priority Assessment (Read-only)
           </button>
         </div>
 
         <div class="modal-body">
           @if (!ready()) {
-            <p class="loading-note">Loading options from the API…</p>
+            <p class="loading-note">Loading project options...</p>
           } @else {
           <!-- TAB 1: CORE INPUTS -->
           @if (activeTab() === 'core') {
@@ -173,8 +173,8 @@ import { DataApiService } from '../../services/data-api.service';
                 <div class="callout-left">
                   <ion-icon name="sparkles" class="callout-sparkle"></ion-icon>
                   <div>
-                    <strong>Model outputs are read-only</strong>
-                    <p>Tiers, scores, and clusters come from the prioritization pipeline. Risk rating, skill demand, and effort are project inputs and save with the project.</p>
+                    <strong>Calculated priorities are read-only</strong>
+                    <p>Priority tiers, scores, and project groups update during an analysis refresh. You can edit risk, skill demand, and effort with the other project details.</p>
                   </div>
                 </div>
               </div>
@@ -186,7 +186,7 @@ import { DataApiService } from '../../services/data-api.service';
                 </div>
 
                 <div class="form-field col-half">
-                  <label class="field-label">ML Predicted Tier</label>
+                  <label class="field-label">Suggested Priority Tier</label>
                   <div class="readonly-value">{{ form().mlTier }}</div>
                 </div>
 
@@ -589,7 +589,7 @@ export class EditProjectModalComponent implements OnInit {
         this.baseline.set(structuredClone(resolved));
         this.options.set(options);
       },
-      error: (err: unknown) => this.loadError.set(problemMessage(err, 'Could not load the form options from the API.')),
+      error: (err: unknown) => this.loadError.set(problemMessage(err, 'Could not load the project options.')),
     });
   }
 

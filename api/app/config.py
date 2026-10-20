@@ -11,7 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.contracts import AiPrefillSettings, DataEntryContract, DataSourcesContract, OneLakeDatasetsContract, OptionLists, RecommendationSettings
 
@@ -109,10 +109,25 @@ class OneLakeSettings(Settings):
     dfsEndpoint: FileRef
     itemSuffix: str
     lookupsFile: str
+    systemSettingsTable: str
     rawRoot: FileRef
     exportsRoot: FileRef
     exportFiles: ExportFileNames
     uiEntryFolders: UiEntryFolders
+
+
+class DemoSettings(Settings):
+    sourceFile: str
+    resetFile: str
+    generatorFile: str
+    expectedProjectCount: int = Field(gt=0)
+
+    @field_validator("sourceFile", "resetFile")
+    @classmethod
+    def lake_file(cls, value: str) -> str:
+        if not value.startswith("Files/") or not value.endswith(".json") or ".." in value.split("/"):
+            raise ValueError("must be a JSON file under Files/")
+        return value
 
 
 class OpenApiSettings(Settings):
@@ -220,6 +235,7 @@ class ApiSettings(Settings):
     sharedConfig: SharedConfigSettings
     fabric: FabricSettings
     oneLake: OneLakeSettings
+    demo: DemoSettings
     openApi: OpenApiSettings
     validation: ValidationSettings
     projects: ProjectSettings

@@ -40,6 +40,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
 import { PortfolioStore } from '../../services/portfolio.store';
 import { Project } from '../../models/portfolio.models';
 import { PowerBiEmbedComponent } from '../../components/powerbi-embed/powerbi-embed.component';
+import { businessText } from '../../core/problem-detail';
 
 echarts.use([
   BarChart,
@@ -83,12 +84,12 @@ echarts.use([
           <div class="pbi-title-row">
             <span class="pbi-badge-pill">
               <ion-icon name="analytics"></ion-icon>
-              Power BI Direct Lake
+              Portfolio Insights
             </span>
             <h2 class="page-title">Executive Portfolio Analytics</h2>
           </div>
           <p class="page-subtitle">
-            Direct Lake semantic model on Microsoft Fabric OneLake Delta tables (gold.pmo_predictions)
+            Explore project investment, priority, confidence, and resource needs using saved database records.
           </p>
         </div>
 
@@ -99,10 +100,10 @@ echarts.use([
             class="mode-switch-segment"
           >
             <ion-segment-button value="directlake">
-              <ion-label>Direct Lake Dashboard</ion-label>
+              <ion-label>Portfolio Dashboard</ion-label>
             </ion-segment-button>
             <ion-segment-button value="embed">
-              <ion-label>Live Fabric Embed</ion-label>
+              <ion-label>Published Reports</ion-label>
             </ion-segment-button>
           </ion-segment>
         </div>
@@ -119,7 +120,7 @@ echarts.use([
           <div class="sync-info">
             <span class="sync-dot"></span>
             <span class="sync-text">
-              <strong>Direct Lake Connection: Active</strong> • Zero-copy query over OneLake delta parquet • Refreshed live
+              <strong>Portfolio Analysis</strong> • Saved database records • Last analysed {{ store.dataset()?.asOfDate }}
             </span>
           </div>
 
@@ -127,7 +128,7 @@ echarts.use([
             <div class="slicer-group">
               <label class="slicer-label">Portfolio:</label>
               <select class="slicer-select" [(ngModel)]="selectedPortfolio">
-                <option value="All">All Portfolios (5)</option>
+                <option value="All">All Portfolios ({{ store.portfolios().length }})</option>
                 @for (p of store.portfolios(); track p) {
                   <option [value]="p">{{ p }}</option>
                 }
@@ -148,7 +149,7 @@ echarts.use([
             <div class="slicer-group">
               <label class="slicer-label">Business Unit:</label>
               <select class="slicer-select" [(ngModel)]="selectedBu">
-                <option value="All">All BUs (10)</option>
+                <option value="All">All Business Units ({{ store.businessUnits().length }})</option>
                 @for (bu of store.businessUnits(); track bu) {
                   <option [value]="bu">{{ bu }}</option>
                 }
@@ -172,9 +173,9 @@ echarts.use([
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-label">Average ML Confidence</div>
+            <div class="kpi-label">Average Priority Confidence</div>
             <div class="kpi-value text-success">{{ avgConfidence() }}%</div>
-            <div class="kpi-sub">LightGBM calibrated certainty</div>
+            <div class="kpi-sub">Based on completeness, quality, and prediction confidence</div>
           </div>
 
           <div class="kpi-card">
@@ -217,7 +218,7 @@ echarts.use([
         <!-- Visual 4: High Impact Direct Lake Matrix Table -->
         <div class="matrix-card">
           <div class="matrix-header">
-            <span class="matrix-title">Direct Lake Project Portfolio Matrix (Top 10 Ranked)</span>
+            <span class="matrix-title">Project Portfolio Summary (Top 10 Ranked)</span>
             <span class="matrix-counter">Showing 10 of {{ filteredCount() }} projects</span>
           </div>
 
@@ -304,14 +305,14 @@ echarts.use([
           } @else {
             <ion-button size="small" color="primary" [disabled]="isBusy()" (click)="onSignIn()">
               <ion-icon name="log-in-outline" slot="start"></ion-icon>
-              Sign in with Microsoft Entra ID
+              Sign in to view reports
             </ion-button>
           }
 
           @if (openInPowerBiUrl()) {
             <a [href]="openInPowerBiUrl()" target="_blank" rel="noopener" class="open-pbi-btn">
               <ion-icon name="open-outline"></ion-icon>
-              Open in Power BI Service
+              Open Report in New Window
             </a>
           }
         </div>
@@ -328,10 +329,9 @@ echarts.use([
           <div class="directlake-notice-strip">
             <ion-icon name="analytics"></ion-icon>
             <div>
-              <strong>Direct Lake Analytics Active:</strong>
-              Connected to Microsoft Fabric workspace <code>PMO-Portfolio-Prioritization</code>.
-              Rendering live zero-copy analytics directly from OneLake Delta tables (<code>gold.pmo_predictions</code>).
-              To embed an authored Power BI report here, publish a report in the Fabric workspace and sign in above.
+              <strong>Portfolio dashboard available:</strong>
+              Review saved project analysis from the database below.
+              Sign in above to view reports published by your reporting team.
             </div>
           </div>
 
@@ -934,7 +934,7 @@ export class PowerBiPageComponent implements OnInit {
       },
       error: (error: unknown) => {
         this.embedError.set(
-          error instanceof Error ? error.message : 'Unable to load Power BI configuration',
+          businessText(error instanceof Error ? error.message : 'Unable to load reporting settings.'),
         );
       },
     });
@@ -971,7 +971,7 @@ export class PowerBiPageComponent implements OnInit {
       }
     } catch (err: unknown) {
       const error = err as { message?: string };
-      this.embedError.set(error.message ?? 'Unable to restore the Power BI sign-in');
+      this.embedError.set(businessText(error.message ?? 'Unable to restore your report sign-in.'));
     } finally {
       this.isBusy.set(false);
     }
@@ -993,7 +993,7 @@ export class PowerBiPageComponent implements OnInit {
       await this.discoverReportsAndEmbed(token);
     } catch (err: unknown) {
       const e = err as { message?: string };
-      this.embedError.set(e?.message ?? 'Sign-in failed');
+      this.embedError.set(businessText(e?.message ?? 'Sign-in failed'));
     } finally {
       this.isBusy.set(false);
     }
@@ -1012,7 +1012,7 @@ export class PowerBiPageComponent implements OnInit {
       this.embedAccessToken.set(null);
       this.embedError.set(null);
     } catch (error: unknown) {
-      this.embedError.set(error instanceof Error ? error.message : 'Sign-out failed');
+      this.embedError.set(businessText(error instanceof Error ? error.message : 'Sign-out failed'));
     } finally {
       this.isBusy.set(false);
     }
@@ -1044,7 +1044,7 @@ export class PowerBiPageComponent implements OnInit {
       this.embedReport.set({ ...report });
     } catch (err: unknown) {
       const e = err as { message?: string };
-      this.embedError.set(e?.message ?? 'Failed to embed Power BI report');
+      this.embedError.set(businessText(e?.message ?? 'The selected report could not be displayed.'));
     }
   }
 
@@ -1066,7 +1066,7 @@ export class PowerBiPageComponent implements OnInit {
       if (!selected) {
         this.isConfigured.set(false);
         this.embedError.set(
-          'No Power BI reports are published yet in the Fabric workspace PMO-Portfolio-Prioritization. Switch to the Direct Lake Dashboard above for real-time OneLake analytics.',
+          'No reports have been published for this portfolio yet. Ask your reporting team to publish a report, or use the Portfolio Dashboard to review saved project analysis.',
         );
         return;
       }
@@ -1078,10 +1078,10 @@ export class PowerBiPageComponent implements OnInit {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('401')) {
         this.embedError.set(
-          `Workspace Access Restricted (HTTP 401): The signed-in account (${this.userEmail() || 'current account'}) is not authorized to list reports in Fabric workspace PMO-Portfolio-Prioritization (tenant caldova37587778), or no report is published. Use the Direct Lake Dashboard for live data-driven analytics.`,
+          `Your account (${this.userEmail() || 'current account'}) does not have permission to view the published reports. Contact your reporting team for access, or use the Portfolio Dashboard.`,
         );
       } else {
-        this.embedError.set(msg);
+        this.embedError.set(businessText(msg));
       }
     }
   }

@@ -75,6 +75,7 @@ def setup(monkeypatch):
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
         intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),
         exports=exports,
+        catalog=SimpleNamespace(export=lambda: exports.read("Files/exports/portfolio.json")),
         paths=SimpleNamespace(portfolio_export=lambda: "Files/exports/portfolio.json"), tool_tokens=token_verifier,
     )
     app = create_app()
@@ -95,7 +96,11 @@ def test_foundry_executes_native_mcp_without_client_function_loop(setup):
     post.assert_called_once()
     first = post.call_args
     assert first.kwargs["json"]["agent"]["version"] == load_agent_settings().agentVersion
-    assert first.kwargs["json"]["input"][0] == {"type": "message", "role": "user", "content": "Highest priority?"}
+    messages = first.kwargs["json"]["input"]
+    assert messages[0] == {
+        "type": "message", "role": "system", "content": load_agent_settings().responseStyleInstructions,
+    }
+    assert messages[-1] == {"type": "message", "role": "user", "content": "Highest priority?"}
     assert first.kwargs["json"]["tool_choice"] == {
         "type": "mcp", "server_label": "onelake", "name": "query_portfolio",
     }

@@ -49,9 +49,9 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
     <ion-content class="ion-padding lookups-page-content">
       <div class="page-header">
         <div class="header-left">
-          <h2 class="page-title">Dropdown Lookups</h2>
+          <h2 class="page-title">Project Options</h2>
           <p class="page-subtitle">
-            Configure dropdown values for site locations, business units, project statuses, and other standard taxonomy.
+            Manage the site locations, business units, project statuses, and other choices available during project entry.
           </p>
         </div>
         <div class="header-right">
@@ -61,7 +61,7 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
               Saving...
             } @else {
               <ion-icon name="save-outline" slot="start"></ion-icon>
-              Save Lookups
+              Save Project Options
             }
           </ion-button>
         </div>

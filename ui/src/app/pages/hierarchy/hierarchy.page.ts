@@ -45,9 +45,8 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         <app-loading-skeleton [cards]="1" [rows]="8"></app-loading-skeleton>
       } @else if (store.loadError()) {
         <app-empty-state
-          title="No Data in OneLake"
+          title="Unable to load portfolio data"
           [message]="store.loadError()!"
-          [detail]="store.problemDetail()"
           [isError]="true"
         >
           <ion-button (click)="store.init()">Retry</ion-button>
@@ -55,7 +54,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
       } @else if (store.rawProjects().length === 0) {
         <app-empty-state
           title="No Projects in Portfolio"
-          message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load baseline datasets."
+          message="Your portfolio has no projects yet. Use Data Entry to add projects or import an Excel workbook. Demo environments also offer approved sample projects."
           icon="file-tray-outline"
         >
           <ion-button routerLink="/data-entry">
@@ -66,7 +65,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
       } @else if (store.hierarchyTree().length === 0) {
         <app-empty-state
           title="No Projects Available"
-          message="No projects found matching the current criteria in OneLake."
+          message="No projects in the database match the selected criteria."
         ></app-empty-state>
       } @else {
         <div class="tree-container">

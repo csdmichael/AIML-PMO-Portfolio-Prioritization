@@ -116,6 +116,46 @@ function Wait-ForDeployment([string]$AppName) {
     throw "Deployment to $AppName did not finish in time."
 }
 
+function Sync-ApiOperations {
+    param([string]$OpenApiFile, [string]$ResourceGroup, [string]$ServiceName, [string]$ApiPath)
+
+    $apis = az apim api list --resource-group $ResourceGroup --service-name $ServiceName --output json | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0) { throw "Unable to resolve the existing PMO APIM API." }
+    $matches = @($apis | Where-Object path -EQ $ApiPath)
+    if ($matches.Count -ne 1) { throw "Expected one APIM API for path $ApiPath." }
+    $apiId = $matches[0].name
+    $existing = @(az apim api operation list --resource-group $ResourceGroup --service-name $ServiceName --api-id $apiId --output json | ConvertFrom-Json)
+    if ($LASTEXITCODE -ne 0) { throw "Unable to read the existing PMO gateway operations." }
+    $specification = Get-Content -LiteralPath $OpenApiFile -Raw | ConvertFrom-Json
+    foreach ($path in $specification.paths.PSObject.Properties) {
+        foreach ($method in $path.Value.PSObject.Properties) {
+            if ($method.Name -notin @("get", "post", "put", "patch", "delete", "head", "options", "trace")) { continue }
+            $verb = $method.Name.ToUpperInvariant()
+            $operation = $method.Value
+            if ($existing | Where-Object { $_.method -eq $verb -and $_.urlTemplate -eq $path.Name }) { continue }
+            if (-not $operation.operationId -or -not $operation.summary) {
+                throw "The API contract is missing an operation ID or summary for $verb $($path.Name)."
+            }
+            if ($existing | Where-Object name -EQ $operation.operationId) {
+                throw "Gateway operation ID $($operation.operationId) already belongs to another route."
+            }
+            $arguments = @(
+                "apim", "api", "operation", "create", "--resource-group", $ResourceGroup,
+                "--service-name", $ServiceName, "--api-id", $apiId,
+                "--operation-id", $operation.operationId, "--method", $verb,
+                "--url-template", $path.Name, "--display-name", $operation.summary, "--output", "none"
+            )
+            foreach ($parameter in @($path.Value.parameters) + @($operation.parameters) | Where-Object { $_.in -eq "path" }) {
+                if (-not $parameter.schema.type) { throw "The path parameter $($parameter.name) has no type." }
+                $arguments += @("--template-parameters", "name=$($parameter.name)", "type=$($parameter.schema.type)", "required=true")
+            }
+            az @arguments
+            if ($LASTEXITCODE -ne 0) { throw "Unable to register gateway operation $verb $($path.Name)." }
+            Write-Output "Registered gateway operation: $verb $($path.Name)"
+        }
+    }
+}
+
 function Publish-Apps($outputs) {
     $stage = Join-Path $tempDir "pmo-publish"
     if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
@@ -164,16 +204,10 @@ function Publish-Apps($outputs) {
         Invoke-Checked "API zip" { & $Python -m zipfile -c $apiZip @((Get-ChildItem -Path $apiStage).FullName) }
         Invoke-Checked "API deploy" { az webapp deploy --resource-group $resourceGroup --name $outputs.api_app_name --src-path $apiZip --type zip --clean true --restart true --async true --track-status false }
         Wait-ForDeployment $outputs.api_app_name
-        Invoke-Checked "Portfolio agent APIM operation" {
-            $apis = az apim api list --resource-group $cfg.reuse.apim.resourceGroup `
-                --service-name $cfg.reuse.apim.name --output json | ConvertFrom-Json
-            if ($LASTEXITCODE -ne 0) { throw "Unable to resolve the existing PMO APIM API." }
-            $matches = @($apis | Where-Object path -EQ $cfg.create.apimApi.path)
-            if ($matches.Count -ne 1) { throw "Expected one APIM API for path $($cfg.create.apimApi.path)." }
-            az apim api operation create --resource-group $cfg.reuse.apim.resourceGroup `
-                --service-name $cfg.reuse.apim.name --api-id $matches[0].name `
-                --operation-id chatWithPortfolioAgent --method POST --url-template "/v1/agent/chat" `
-                --display-name "Ask the Foundry portfolio agent" --output none
+        Invoke-Checked "Synchronize API gateway operations" {
+            Sync-ApiOperations -OpenApiFile (Join-Path $repoRoot $cfg.create.apimApi.openApiFile) `
+                -ResourceGroup $cfg.reuse.apim.resourceGroup -ServiceName $cfg.reuse.apim.name `
+                -ApiPath $cfg.create.apimApi.path
         }
     }
     if ($publishUi) {

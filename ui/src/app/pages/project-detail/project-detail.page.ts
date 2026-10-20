@@ -25,7 +25,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
       } @else {
         <app-empty-state
           title="Project Not Found"
-          message="The requested project ID could not be found in the current OneLake dataset."
+          message="The requested project could not be found in the database."
           icon="alert-circle-outline"
         >
           <ion-button routerLink="/prioritization">View All Projects</ion-button>

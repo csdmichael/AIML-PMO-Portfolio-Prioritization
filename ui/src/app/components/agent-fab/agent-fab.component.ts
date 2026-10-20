@@ -74,7 +74,7 @@ echarts.use([
           [name]="agent.isOpen() ? 'close-outline' : 'sparkles'"
           class="fab-icon"
         ></ion-icon>
-        @if (!agent.isOpen()) { <span class="fab-label">Ask AI Agent</span> }
+        @if (!agent.isOpen()) { <span class="fab-label">Ask AI Assistant</span> }
       </button>
     </div>
 
@@ -96,7 +96,7 @@ echarts.use([
             <div class="header-titles">
               <h3 class="copilot-title">PMO Portfolio Copilot</h3>
               <span class="copilot-subtitle">
-                Microsoft Foundry • Governed Fabric query tools
+                Portfolio insights from approved database records
               </span>
             </div>
           </div>
@@ -123,7 +123,7 @@ echarts.use([
 
         <!-- Pre-saved Sample Prompts Bar -->
         <div class="prompts-bar">
-          <span class="prompts-label">Pre-saved Prompts:</span>
+          <span class="prompts-label">Suggested questions:</span>
           <div class="prompts-scroll">
             @for (sp of agent.samplePrompts; track sp.id) {
               <button
@@ -168,11 +168,10 @@ echarts.use([
                 </div>
                 @if (msg.provenance; as provenance) {
                   <div class="agent-provenance">
-                    <p>Foundry {{ provenance.agentName }}:{{ provenance.agentVersion }}</p>
-                    <p>Response: {{ provenance.responseId }}</p>
-                    <p>Grounding: {{ provenance.groundingSource }}</p>
-                    <p>Queries: {{ provenance.queryIds.join(', ') }}</p>
-                    <p>Sources: {{ msg.sourceProjectIds?.join(', ') || 'No project-specific citations' }}</p>
+                    <p>Reference: {{ provenance.responseId }}</p>
+                    <p>Evidence: approved project records in the database</p>
+                    <p>{{ provenance.queryIds.length }} database checks completed</p>
+                    <p>Project references: {{ msg.sourceProjectIds?.join(', ') || 'No project-specific citations' }}</p>
                   </div>
                 }
 
@@ -322,7 +321,7 @@ echarts.use([
                 <ion-spinner name="crescent" color="primary"></ion-spinner>
               </div>
               <span class="thinking-text"
-                >Requesting authorized Fabric evidence through APIM...</span
+                >Reviewing approved portfolio records...</span
               >
             </div>
           }
@@ -347,7 +346,7 @@ echarts.use([
               class="query-input"
               [(ngModel)]="userInput"
               name="agentQuery"
-              placeholder="Ask Copilot about priorities, SHAP, capacity, rules..."
+              placeholder="Ask about priorities, key factors, capacity, or business rules..."
               [disabled]="agent.isThinking()"
               autocomplete="off"
               maxlength="4000"

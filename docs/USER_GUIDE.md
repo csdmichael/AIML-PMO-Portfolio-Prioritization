@@ -10,9 +10,9 @@ Welcome to the **AI-Powered PMO Portfolio Prioritization** solution user manual.
 2. [Multi-Device Layout Optimization](#2-multi-device-layout-optimization)
 3. [Prioritization Board & Table](#3-prioritization-board--table)
 4. [Organizational Hierarchy & Rollups](#4-organizational-hierarchy--rollups)
-5. [Power BI Direct Lake Executive Analytics](#5-power-bi-direct-lake-executive-analytics)
+5. [Executive Analytics](#5-executive-analytics)
 6. [Quick Add with AI Prefill](#6-quick-add-with-ai-prefill)
-7. [Direct Data Entry & OneLake Ingestion](#7-direct-data-entry--onelake-ingestion)
+7. [Data Entry, Imports & Demo Controls](#7-data-entry-imports--demo-controls)
 8. [PMO Decisions & Human Governance Log](#8-pmo-decisions--human-governance-log)
 9. [Project Deep Dive & SHAP Drivers](#9-project-deep-dive--shap-drivers)
 10. [AI Portfolio Copilot (Agent FAB & Multi-Format Exports)](#10-ai-portfolio-copilot-agent-fab--multi-format-exports)
@@ -21,20 +21,22 @@ Welcome to the **AI-Powered PMO Portfolio Prioritization** solution user manual.
 
 ## 1. Executive Portfolio Overview
 
-The **Overview** screen surfaces cross-dimensional machine learning insights, strategic priority tier allocations, confidence distributions, and workforce capacity analytics across all 100 enterprise projects.
+The **Overview** screen brings together project priorities, confidence, estimated investment, and resource needs for the current portfolio.
 
-Portfolio data is read from OneLake through the API. While the Demo Environment setting is on (Admin Settings), every page shows a banner saying the data is synthetic demo data.
+Portfolio data comes from the database. While the Demo Environment setting is on (Admin Settings), every page shows a banner saying the data is synthetic demo data. Operational screens use business terminology; Architecture and Agents documentation explain the underlying technologies.
 
 ![Executive Portfolio Overview Desktop](images/user-guide/01-overview-desktop.png)
 
 ### Key Capabilities:
-- **Executive KPI Cards**: Real-time rollups of filtered project counts, Must-do-now counts, Proceed counts, average machine learning confidence (0-100%), average priority scores, and total capital spend in millions ($M).
-- **Prioritization Tier Donut**: Visual breakdown of projects classified into *Must-do-now*, *Proceed*, *Can wait*, and *Candidate to deprioritize*.
-- **Confidence Level Distribution by BU**: Analyzes signal completeness, source quality, and Platt-calibrated model certainty across each Business Unit.
-- **Cost Allocation Treemap**: Hierarchical visualization of budget density by Business Unit and Site location.
-- **Strategic Hierarchy Sunburst**: Multi-level concentric analysis showing Business Unit &gt; Site &gt; Tier.
-- **Workforce Capacity Supply vs Demand**: FTE comparisons across 8 critical skill domains (Application Development, Cloud, Data, Cyber, Networks, UC, iPaaS, PM).
-- **Completeness vs Data Quality Quadrant**: Scatter bubble chart correlating signal resolution with audit quality, sized by budget.
+- **Executive KPI Cards**: Rollups of filtered project counts, priority tiers, confidence, priority scores, and estimated cost.
+- **Project Priority Mix**: Counts projects in *Must-do-now*, *Proceed*, *Can wait*, and *Candidate to deprioritize*. Slice size is project count, not budget.
+- **Priority Confidence by Business Unit**: Shows the number of High-, Medium-, and Low-confidence project assessments in each business unit. Confidence is not business value.
+- **Planned Investment by Business Unit and Site**: Larger rectangles represent higher estimated project cost; these are not actual spending figures.
+- **Priorities Across Business Units and Sites**: Rings show business unit, site, and priority tier, sized by project count.
+- **Available Capacity vs Project Demand**: Compares saved portfolio-wide staffing supply and demand by skill. Unlike the project charts, these totals do not change with project filters.
+- **Project Information Readiness**: Each circle is a project; horizontal position shows completeness, vertical position shows quality, size indicates estimated cost, and colour shows confidence.
+
+Every chart includes a one-sentence explanation directly beneath its title. Select **More detail and an example** to expand reading guidance and a practical example; select it again to collapse. The controls also work with a keyboard. Examples are explicitly labelled as illustrative, not live portfolio results. All six chart titles and explanations are editable in [overview-charts.json](../ui/src/assets/config/overview-charts.json).
 
 ---
 
@@ -87,18 +89,18 @@ The **Hierarchy** view provides aggregated rollups structured by **Business Unit
 
 ---
 
-## 5. Power BI Direct Lake Executive Analytics
+## 5. Executive Analytics
 
-The **Power BI** dashboard embeds an enterprise analytics experience backed directly by OneLake Delta parquet tables without data movement:
+Open **Executive Analytics** for the **Portfolio Dashboard** and **Published Reports** views. The dashboard summarizes saved project records from the database. Published reports are available only after your reporting team publishes them and grants your account access.
 
 ![Power BI Direct Lake Analytics](images/user-guide/05-powerbi-directlake.png)
 
 ### Key Features:
-- **Zero-Copy Direct Lake Sync**: Reads directly from `gold.pmo_predictions` with sub-second response times.
+- **Saved Analysis**: Displays the date of the underlying project analysis; it does not claim that scores are being recalculated live.
 - **Interactive Slicers**: Filter across Portfolios, Priority Tiers, and Business Units simultaneously.
 - **Prioritization Scatter Matrix**: Quadrant analysis comparing Business Value (1-5) against Estimated Cost ($M).
 - **Top 10 High-Impact Matrix**: Live ranking table with conditional mini-bars illustrating relative priority scores.
-- **Live Fabric MSAL Embed**: Seamless Microsoft Entra ID authentication to embed the live report hosted in the Power BI Service.
+- **Published Reports**: Use **Sign in to view reports** to access a published report. Missing reports or access restrictions are shown explicitly; the Portfolio Dashboard remains available.
 
 ---
 
@@ -115,9 +117,9 @@ The **Quick Add** wizard allows business sponsors and PMs to submit project prop
 
 ---
 
-## 7. Direct Data Entry & OneLake Ingestion
+## 7. Data Entry, Imports & Demo Controls
 
-The **Data Entry** module allows direct ingestion, portfolio management, and monitoring of the 11 enterprise connectors:
+The **Data Entry** page supports project and portfolio creation and the **Import & Uploads** tab.
 
 ![Data Entry & Ingestion Sources](images/user-guide/07-data-entry-ingestion.png)
 
@@ -127,6 +129,24 @@ The **Data Entry** module allows direct ingestion, portfolio management, and mon
 - **Program**: lists the programs of the selected portfolio. Changing the portfolio clears a program that belongs to another portfolio.
 - **Create Portfolio**: Register new portfolios and program taxonomies.
 - **Import Excel**: Upload a workbook that follows the import template. Download the template from the same screen; its *Allowed values* sheet lists the portfolios, programs, skills, and statuses the workbook must use. Every row is checked first. If any row is invalid, nothing is saved and each problem is listed by row and column (for example, row 4, Sponsor). A valid workbook saves its projects and starts a pipeline run, so scores and dashboards update when the run finishes.
+
+### Demo project controls
+
+When **Demo Environment** is enabled, **Import & Uploads** also provides:
+
+- **Load all demo projects**: Replace the current project set with the approved 100-project synthetic snapshot.
+- **Load a portfolio**: Replace projects only within the selected portfolio using its approved demo subset; other portfolios are preserved.
+- **Clear all projects**: Remove the current projects from the application's active view without deleting the original source or decision history.
+
+Each operation shows an explicit confirmation. Repeated loads do not create duplicates. If a demo project was moved to another portfolio, a portfolio-only load stops with an explanation rather than changing that other portfolio. These controls disappear outside demo mode, and the server also refuses them.
+
+Demo loading reuses the snapshot's recorded priorities and scores; it is not a new analysis run. Old resource totals and capacity scenarios are unavailable after a reset rather than being shown against the wrong projects. The current analysis pipeline does not yet incorporate these reset/lifecycle overlays.
+
+### AI Recommendations
+
+Opening **AI Recommendations** starts two independent requests: one retrieves the last saved report for the chosen portfolio and question; the other asks the recommendation assistant for a fresh report. You can read the saved report, with its original generation time, while the refresh runs. A successful fresh report replaces it and is saved to the database. If the refresh fails, the saved report remains visible with an error and retry option.
+
+Portfolio choices use their saved identifiers, and changing portfolio clears the previous portfolio's report. A demo reset prevents recommendations from the old project set from being reused. Proposed projects and changes still require human review before they are saved.
 
 ---
 

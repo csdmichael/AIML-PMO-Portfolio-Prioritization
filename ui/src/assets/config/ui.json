@@ -21,7 +21,7 @@
     { "id": "prioritization", "label": "Prioritization", "icon": "funnel-outline", "route": "/prioritization" },
     { "id": "recommendations", "label": "AI Recommendations", "icon": "sparkles-outline", "route": "/recommendations" },
     { "id": "hierarchy", "label": "Hierarchy", "icon": "git-network-outline", "route": "/hierarchy" },
-    { "id": "powerbi", "label": "Power BI dashboards", "icon": "analytics-outline", "route": "/powerbi" },
+    { "id": "powerbi", "label": "Executive Analytics", "icon": "analytics-outline", "route": "/powerbi" },
     { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },
     { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" },
     {
@@ -32,7 +32,7 @@
       "children": [
         { "id": "admin-settings", "label": "System Settings", "icon": "settings-outline", "route": "/admin/settings" },
         { "id": "admin-priority-weights", "label": "Priority Weights", "icon": "options-outline", "route": "/admin/priority-weights" },
-        { "id": "admin-lookups", "label": "Dropdown Lookups", "icon": "list-outline", "route": "/admin/lookups" }
+        { "id": "admin-lookups", "label": "Project Options", "icon": "list-outline", "route": "/admin/lookups" }
       ]
     },
     {
@@ -53,9 +53,9 @@
   ],
   "recommendations": {
     "title": "AI Recommendations",
-    "subtitle": "The recommendation agent reads approved OneLake evidence and public web sources, then proposes new projects for each portfolio and changes to existing projects. A person adds each project or records each decision.",
-    "researchPlaceholder": "Ask the recommendation agent a portfolio question",
-    "askLabel": "Ask agent",
+    "subtitle": "Your AI assistant reviews approved project records in the database and public research to suggest new opportunities and changes to existing projects. You decide which projects to add and which recommendations to approve.",
+    "researchPlaceholder": "Ask a question about your portfolio",
+    "askLabel": "Ask assistant",
     "quickPrompts": [
       { "label": "Priority elevation", "prompt": "Which projects should have their priority raised, and why?" },
       { "label": "Skill bottlenecks", "prompt": "Where are the skill capacity bottlenecks, and which projects depend on them?" },
@@ -104,7 +104,7 @@
       { "id": "must-do", "title": "Top 5 Must-Do-Now Projects", "icon": "sparkles-outline", "prompt": "Show top 5 Must-do-now projects by priority score", "category": "priority" },
       { "id": "budget-bu", "title": "Budget by Business Unit", "icon": "pie-chart-outline", "prompt": "Break down project budget and count by Business Unit", "category": "budget" },
       { "id": "skills-gap", "title": "Skills Capacity Deficits", "icon": "people-outline", "prompt": "Which skills have capacity deficits compared to project demand?", "category": "skills" },
-      { "id": "explain-top", "title": "Explain the Top Project", "icon": "help-circle-outline", "prompt": "Explain the recorded ML drivers and rules for the top Must-do-now project", "category": "rules" },
+      { "id": "explain-top", "title": "Explain the Top Project", "icon": "help-circle-outline", "prompt": "Explain the recorded priority factors and business rules for the top Must-do-now project", "category": "rules" },
       { "id": "regulatory", "title": "Regulatory & Security Projects", "icon": "shield-checkmark-outline", "prompt": "List regulatory and security mandatory projects; state if the retrieved results are truncated", "category": "risk" },
       { "id": "r5-blockers", "title": "Cross-Portfolio Dependencies", "icon": "git-network-outline", "prompt": "Show recorded dependency links for the top 5 Must-do-now projects; distinguish recorded links from inferred critical paths", "category": "rules" }
     ]

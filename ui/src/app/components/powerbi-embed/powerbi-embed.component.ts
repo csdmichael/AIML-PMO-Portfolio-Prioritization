@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import * as pbi from 'powerbi-client';
 import { ReportEmbedDetails } from '../../services/powerbi-auth.service';
+import { businessText } from '../../core/problem-detail';
 
 @Component({
   selector: 'app-powerbi-embed',
@@ -79,13 +80,13 @@ export class PowerBiEmbedComponent implements AfterViewInit, OnChanges, OnDestro
       report.on('error', (event?: pbi.service.ICustomEvent<pbi.models.IError>) => {
         const error = event?.detail;
         this.embedError.emit(
-          [error?.message, error?.detailedMessage].filter(Boolean).join(' - ') ||
-          'Power BI could not render the report.',
+          businessText([error?.message, error?.detailedMessage].filter(Boolean).join(' - ') ||
+          'The selected report could not be displayed.'),
         );
       });
     } catch (error: unknown) {
       this.embedError.emit(
-        error instanceof Error ? error.message : 'Failed to embed Power BI report',
+        businessText(error instanceof Error ? error.message : 'The selected report could not be displayed.'),
       );
     }
   }

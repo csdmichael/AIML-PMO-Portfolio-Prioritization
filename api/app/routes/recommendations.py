@@ -9,7 +9,7 @@ import logging
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.agent import AgentRun, clean_web_urls
 from app.agent_context import agent_options, render_lines
@@ -83,10 +83,31 @@ class ResearchQueryRequest(BaseModel):
 
 
 @router.get(
+    "/cached",
+    response_model=RecommendationReport | None,
+    operation_id="getCachedPortfolioRecommendations",
+    summary="Last saved OneLake recommendation report for this portfolio and question, or null on a cache miss",
+)
+def get_cached_recommendations(
+    portfolioKey: str | None = Query(None),
+    query: str | None = Query(None, min_length=3, max_length=1000),
+    services: Services = Depends(get_services),
+) -> dict[str, Any] | None:
+    cached = services.recommendation_cache.read(portfolio_key=portfolioKey, query=query.strip() if query else None)
+    if cached is None:
+        return None
+    try:
+        return RecommendationReport.model_validate(cached).model_dump()
+    except ValidationError as exc:
+        logger.error("The saved recommendation report does not match the report contract")
+        raise ProblemError(502, "The saved recommendation report is invalid.", slug="upstream-failure") from exc
+
+
+@router.get(
     "",
     response_model=RecommendationReport,
     operation_id="getPortfolioRecommendations",
-    summary="Recommendation agent report: new projects per portfolio and changes to existing projects",
+    summary="Run the recommendation agent and save its grounded report to OneLake",
 )
 def get_recommendations(
     portfolioKey: str | None = Query(None, description="Limit the report to one portfolio"),
@@ -99,13 +120,14 @@ def get_recommendations(
     "/research",
     response_model=RecommendationReport,
     operation_id="queryResearcherAgent",
-    summary="Ask the recommendation agent a research question about the portfolio",
+    summary="Ask the recommendation agent a research question and save its grounded report to OneLake",
 )
 def query_researcher_agent(body: ResearchQueryRequest, services: Services = Depends(get_services)) -> dict[str, Any]:
     return _report(services, focus=body.query.strip(), portfolio_key=body.portfolioKey)
 
 
 def _report(services: Services, *, focus: str | None, portfolio_key: str | None) -> dict[str, Any]:
+    revision = services.recommendation_cache.revision()
     settings = services.config.recommendations
     message = render_lines(
         settings.prompt.userTemplate,
@@ -123,13 +145,15 @@ def _report(services: Services, *, focus: str | None, portfolio_key: str | None)
     )
     _check_grounding(draft, run)
     draft = _tidy(draft, settings.limits.maxSections, settings.limits.maxItemsPerSection)
-    return {
+    report = RecommendationReport.model_validate({
         **draft.model_dump(),
         "generatedAtUtc": utc_now(),
         "portfolioKey": portfolio_key,
         "query": focus,
         "provenance": services.recommendation_agent.provenance(run),
-    }
+    }).model_dump()
+    services.recommendation_cache.save(report, revision=revision)
+    return report
 
 
 def _check_grounding(draft: RecommendationDraft, run: AgentRun) -> None:

@@ -139,7 +139,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
               <div class="section-heading">Tier Alignment & Rules</div>
               <div class="tier-compare-row">
                 <div class="tier-box ml-tier">
-                  <span class="tier-sub">ML Predicted</span>
+                  <span class="tier-sub">Suggested Priority</span>
                   <span class="tier-name">{{ p.mlTier }}</span>
                 </div>
                 <div class="arrow">&rarr;</div>
@@ -151,14 +151,14 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
               @if (p.ruleOverrides.length > 0) {
                 <div class="rules-box">
-                  <span class="rules-label">Deterministic Rules Fired:</span>
+                  <span class="rules-label">Business Rules Applied:</span>
                   @for (r of p.ruleOverrides; track r) {
                     <span class="rule-chip">{{ r }}</span>
                   }
                 </div>
               } @else {
                 <div class="rules-box none">
-                  <span>No rule overrides applied. ML prediction directly confirmed.</span>
+                  <span>No business-rule adjustments were needed. The suggested priority is unchanged.</span>
                 </div>
               }
             </div>
@@ -167,7 +167,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
             <div class="detail-section confidence-breakdown-section">
               <div class="section-heading">
                 <span>Confidence Assessment</span>
-                <span class="weight-note">Weighted: 0.45 Completeness + 0.35 Quality + 0.20 Model Certainty</span>
+                <span class="weight-note">45% completeness + 35% data quality + 20% prediction confidence</span>
               </div>
 
               <div class="confidence-summary-row">
@@ -198,7 +198,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                   <!-- Model Certainty (20%) -->
                   <div class="bar-group">
                     <div class="bar-label-row">
-                      <span>ML Model Certainty (20%)</span>
+                      <span>Prediction Confidence (20%)</span>
                       <span>{{ (p.modelCertainty * 100).toFixed(0) }}%</span>
                     </div>
                     <div class="progress-track">
@@ -211,18 +211,18 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
             <!-- 10 SHAP SIGNAL DRIVERS -->
             <div class="detail-section drivers-section">
-              <div class="section-heading">Top 10 Signal Drivers (SHAP Attribution)</div>
+              <div class="section-heading">Top 10 Factors Behind This Priority</div>
               <div
                 echarts
                 [options]="getDriverChartOptions(p)"
                 class="driver-chart"
-                aria-label="Signal Drivers SHAP Attribution Chart"
+                aria-label="Factors contributing to the suggested priority"
               ></div>
             </div>
 
             <!-- 11 SOURCES BADGES -->
             <div class="detail-section sources-section">
-              <div class="section-heading">11 Enterprise Source Telemetry ({{ p.sourcesPresent }}/11 Present)</div>
+              <div class="section-heading">Project Information Coverage ({{ p.sourcesPresent }}/{{ p.sourcesTotal }} Sources)</div>
               <div class="sources-grid">
                 @for (src of getSourcesList(p); track src.name) {
                   <span class="source-badge" [class.present]="src.present" [class.missing]="!src.present">
@@ -341,7 +341,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
       </div>
     } @else {
       <div class="no-selection">
-        <p>Select a project from the board or table to review its ML signals and confidence breakdown.</p>
+        <p>Select a project from the board or table to review its priority factors and confidence assessment.</p>
       </div>
     }
   `,
@@ -850,7 +850,7 @@ export class DetailPanelComponent {
           if (!arr || arr.length === 0) return '';
           const idx = arr[0].dataIndex;
           const drv = drivers[idx];
-          return `<b>${drv.signalLabel}</b><br/>SHAP: ${drv.shapValue > 0 ? '+' : ''}${drv.shapValue.toFixed(3)}<br/>Direction: ${drv.direction}<br/>Raw: ${drv.featureValue}`;
+          return `<b>${drv.signalLabel}</b><br/>Priority contribution: ${drv.shapValue > 0 ? '+' : ''}${drv.shapValue.toFixed(3)}<br/>Direction: ${drv.direction}<br/>Recorded value: ${drv.featureValue}`;
         },
       },
       grid: {
@@ -871,7 +871,7 @@ export class DetailPanelComponent {
       },
       series: [
         {
-          name: 'SHAP Value',
+          name: 'Priority Contribution',
           type: 'bar',
           data: values.map((val) => ({
             value: val,

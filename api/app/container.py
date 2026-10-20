@@ -8,6 +8,7 @@ from app.cache import TtlCache
 from app.catalog import Catalog
 from app.config import AppConfig, get_config
 from app.decisions import DecisionService
+from app.demo_data import DemoDataService
 from app.fabric import FabricClient
 from app.lake_paths import LakePaths
 from app.onelake import OneLakeClient
@@ -17,6 +18,7 @@ from app.portfolios import PortfolioService
 from app.project_changes import ProjectChanges
 from app.project_import import ProjectImport
 from app.projects import ProjectService
+from app.recommendation_cache import RecommendationCache
 from app.store import EntryStore, ExportReader
 
 
@@ -32,6 +34,7 @@ class Services:
     catalog: Catalog
     projects: ProjectService
     changes: ProjectChanges
+    demo: DemoDataService
     imports: ProjectImport
     portfolios: PortfolioService
     decisions: DecisionService
@@ -39,6 +42,7 @@ class Services:
     options: OptionsStore
     agent: FoundryAgentClient
     recommendation_agent: FoundryAgentClient
+    recommendation_cache: RecommendationCache
     intake_agent: FoundryAgentClient
     tool_tokens: ToolTokenVerifier
 
@@ -64,7 +68,10 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
     paths = LakePaths(config)
     entries = EntryStore(lake)
     exports = ExportReader(lake=lake, cache=TtlCache(api.cache.ttlSeconds), pipeline_name=values.pipeline_display_name)
-    changes = ProjectChanges(entries=entries, paths=paths, contract=config.data_entry, cache=TtlCache(api.cache.ttlSeconds))
+    changes = ProjectChanges(
+        entries=entries, paths=paths, contract=config.data_entry,
+        cache=TtlCache(api.cache.ttlSeconds), reset_cache=TtlCache(api.cache.ttlSeconds),
+    )
     catalog = Catalog(
         exports=exports, entries=entries, paths=paths, statuses=api.projects, contract=config.data_entry, changes=changes,
     )
@@ -117,6 +124,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         catalog=catalog,
         projects=projects,
         changes=changes,
+        demo=DemoDataService(config=config, lake=lake, paths=paths, catalog=catalog, changes=changes),
         imports=imports,
         portfolios=portfolios,
         decisions=decisions,
@@ -124,6 +132,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         options=options,
         agent=FoundryAgentClient(load_agent_settings("portfolio-agent.json"), credentials),
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
+        recommendation_cache=RecommendationCache(lake=lake, paths=paths),
         intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),
         tool_tokens=ToolTokenVerifier(),
     )

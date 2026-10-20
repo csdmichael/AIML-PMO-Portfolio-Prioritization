@@ -23,6 +23,7 @@ import {
 } from '../core/portfolio-filter';
 import { PortfolioService } from './portfolio.service';
 import { DataApiService } from './data-api.service';
+import { problemMessage } from '../core/problem-detail';
 
 const SAVED_VIEWS_STORAGE_KEY = 'pmo_portfolio_saved_views_v1';
 const PINNED_STORAGE_KEY = 'pmo_portfolio_pinned_v1';
@@ -236,9 +237,9 @@ export class PortfolioStore {
       error: (err) => {
         this.dataset.set(null);
         this.isLoading.set(false);
-        const detail = err?.error?.detail || err?.message || 'Unable to load portfolio data from OneLake in Fabric.';
+        const detail = problemMessage(err, 'Unable to load portfolio data from the database. Please try again.');
         this.loadError.set(detail);
-        this.problemDetail.set(err?.error || null);
+        this.problemDetail.set(detail);
       },
     });
   }

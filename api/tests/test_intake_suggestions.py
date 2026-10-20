@@ -59,9 +59,12 @@ def prefill_reply(**overrides):
 @pytest.fixture
 def harness(monkeypatch):
     config = load_config()
+    paths = LakePaths(config)
     stored = {"draft": draft_document()}
     entries = Mock()
-    entries.get_with_etag.side_effect = lambda path: (copy.deepcopy(stored["draft"]), "etag-1")
+    entries.get_with_etag.side_effect = lambda path: (
+        (copy.deepcopy(stored["draft"]), "etag-1") if path == paths.draft(DRAFT_ID) else None
+    )
     entries.replace.side_effect = lambda path, document, etag: stored.update(draft=copy.deepcopy(document))
     entries.list.return_value = []
     entries.names.return_value = []
@@ -70,7 +73,6 @@ def harness(monkeypatch):
     lake.write_json.return_value = "etag-2"
     exports = Mock()
     exports.read.return_value = {"portfolios": PORTFOLIOS, "projects": []}
-    paths = LakePaths(config)
     changes = ProjectChanges(entries=entries, paths=paths, contract=config.data_entry, cache=TtlCache(0))
     catalog = Catalog(
         exports=exports, entries=entries, paths=paths, statuses=config.api.projects, contract=config.data_entry, changes=changes,
