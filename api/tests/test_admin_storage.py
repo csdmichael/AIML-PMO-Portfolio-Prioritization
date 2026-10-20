@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.config import load_config
 from app.main import create_app
 from app.onelake import LakeError, LakeUnavailable
+from app.options_store import OptionsStore
 from app.routes.deps import get_services
 
 WEIGHT_ROWS = [
@@ -19,9 +20,14 @@ WEIGHT_ROWS = [
 def harness():
     lake = Mock()
     lake.read_table.return_value = None
+    lake.read_json.return_value = None
     lake.write_table.return_value = "etag"
     lake.write_json.return_value = "etag"
-    services = SimpleNamespace(config=load_config(), lake=lake)
+    config = load_config()
+    services = SimpleNamespace(config=config, lake=lake)
+    services.options = OptionsStore(
+        lake=lake, contract=config.data_entry, path=config.api.oneLake.lookupsFile, ttl_seconds=0
+    )
     app = create_app()
     app.dependency_overrides[get_services] = lambda: services
     with TestClient(app) as client:

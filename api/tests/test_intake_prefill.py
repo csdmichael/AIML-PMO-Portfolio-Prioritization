@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.agent import FoundryAgentClient, load_agent_settings
 from app.config import load_config
 from app.main import create_app
+from app.options_store import OptionsStore
 from app.routes.deps import get_services
 from tests.agent_doubles import agent_reply
 
@@ -57,10 +58,14 @@ def harness(monkeypatch):
     credentials = Mock()
     credentials.bearer_token.return_value = "test-token"
     catalog = Mock()
+    catalog.options.return_value.all_values.side_effect = lambda source: ["it-infosec"] if source == "portfolios" else None
+    catalog.options.return_value.key_for_name.return_value = None
     catalog.portfolios.return_value = [
         {"key": "it-infosec", "displayName": "IT - InfoSec", "programs": [{"key": "cloud-program", "displayName": "Cloud"}]},
     ]
     entries = Mock()
+    lake = Mock()
+    lake.read_json.return_value = None
     entries.get_with_etag.return_value = (copy.deepcopy(DRAFT), "etag-1")
     services = SimpleNamespace(
         config=load_config(),
@@ -69,6 +74,9 @@ def harness(monkeypatch):
         entries=entries,
         paths=SimpleNamespace(draft=lambda draft_id: f"Files/drafts/{draft_id}.json"),
         projects=SimpleNamespace(validate=lambda values, partial: SimpleNamespace(values=values, issues=[])),
+    )
+    services.options = OptionsStore(
+        lake=lake, contract=services.config.data_entry, path=services.config.api.oneLake.lookupsFile, ttl_seconds=0,
     )
     post = Mock(return_value=agent_reply(copy.deepcopy(REPLY), onelake=False))
     monkeypatch.setattr("app.agent.httpx.post", post)

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from app.container import Services
 from app.contracts import OptionLists, SkillOption
 from app.problems import ProblemError
-from app.routes.deps import get_services
+from app.routes.deps import get_fresh_services, get_services
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -152,7 +152,7 @@ def _weights_from_rows(rows: list[dict[str, Any]]) -> tuple[dict[str, float], di
     operation_id="getLookups",
     summary="Get all configurable dropdown lookup lists",
 )
-def get_lookups(services: Services = Depends(get_services)) -> OptionLists:
+def get_lookups(services: Services = Depends(get_fresh_services)) -> OptionLists:
     return services.config.data_entry.options
 
 
@@ -163,7 +163,7 @@ def get_lookups(services: Services = Depends(get_services)) -> OptionLists:
     summary="Update configurable dropdown lookup lists",
 )
 def update_lookups(
-    body: LookupUpdateRequest, services: Services = Depends(get_services)
+    body: LookupUpdateRequest, services: Services = Depends(get_fresh_services)
 ) -> OptionLists:
     current = services.config.data_entry.model_copy(deep=True)
     options = current.options

@@ -11,6 +11,7 @@ from app.ids import IdentifierExhausted, new_identifier, next_project_id
 from app.lake_paths import LakePaths
 from app.onelake import LakeConflict, OneLakeClient
 from app.problems import FieldIssue, ProblemError
+from app.project_changes import ProjectChanges
 from app.store import EntryStore
 from app.validation import FieldValidator, RecordResult
 
@@ -27,6 +28,7 @@ class ProjectService:
         validation: ValidationSettings,
         project_settings: ProjectSettings,
         upload_settings: UploadSettings,
+        changes: ProjectChanges,
     ) -> None:
         self._lake = lake
         self._entries = entries
@@ -36,6 +38,7 @@ class ProjectService:
         self._validation = validation
         self._project_settings = project_settings
         self._upload_settings = upload_settings
+        self._changes = changes
 
     @property
     def contract(self) -> DataEntryContract:
@@ -92,6 +95,39 @@ class ProjectService:
         if found is None:
             raise ProblemError(404, f"Project {project_id} was not found.", slug="not-found")
         return found
+
+    def update_fields(self, project_id: str, body: Mapping[str, Any]) -> dict[str, Any]:
+        """Change project fields and/or soft delete or restore a project. Fields follow the data-entry rules."""
+        current = self.require_project(project_id)
+        issues: list[FieldIssue] = []
+        if "isDeleted" in body and not isinstance(body["isDeleted"], bool):
+            issues.append(FieldIssue("isDeleted", "must be true or false"))
+        values = {key: value for key, value in body.items() if key != "isDeleted"}
+        known = {rule.key for rule in self._contract.projectFields}
+        issues.extend(FieldIssue(key, "is not a project field") for key in values if key not in known)
+        if "portfolioKey" in values and "programKey" not in values:
+            issues.append(FieldIssue("programKey", "is required when the portfolio changes"))
+        result = self.validate(
+            {key: value for key, value in values.items() if key in known},
+            partial=True,
+            context={"portfolioKey": current.get("portfolioKey")},
+        )
+        issues.extend(result.issues)
+        if issues:
+            raise ProblemError(422, "Some fields are not valid.", slug="validation-failed", errors=issues)
+        is_deleted = body["isDeleted"] if "isDeleted" in body else None
+        if result.values or is_deleted is not None:
+            self._changes.save(project_id, values=result.values, is_deleted=is_deleted)
+        updated = self._catalog.get_project(project_id)
+        if updated is None:
+            raise ProblemError(404, f"Project {project_id} was not found.", slug="not-found")
+        return updated
+
+    def remove(self, project_id: str) -> dict[str, Any]:
+        """Remove a project from every view. The entry stays in OneLake for audit."""
+        self.require_project(project_id)
+        self._changes.save(project_id, deleted=True)
+        return {"projectId": project_id, "deleted": True}
 
     def list_uploads(self, project_id: str) -> list[dict[str, Any]]:
         self.require_project(project_id)

@@ -125,6 +125,7 @@
     },
     {
       "key": "sponsorName",
+      "exportKey": "executiveSponsor",
       "label": "Executive sponsor",
       "type": "text",
       "required": true,

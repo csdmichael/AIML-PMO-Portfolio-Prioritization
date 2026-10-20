@@ -97,7 +97,7 @@ interface FieldSpec {
                     <span class="pill-name explicit">Explicit (90%)</span>
                     <span class="pill-score">Score: 0.90</span>
                   </div>
-                  <div class="pill-desc">The text explicitly states the exact value (e.g., "$1.85M budget"). Direct quote preserved in audit provenance.</div>
+                  <div class="pill-desc">The text explicitly states the exact value (e.g., a stated budget amount). Direct quote preserved in audit provenance.</div>
                 </div>
                 <div class="evidence-pill-item">
                   <div class="pill-head">
@@ -1081,7 +1081,7 @@ export class DocsAiPrefillConfidencePageComponent {
       prefilledByAi: true,
       aiExtractionLogic: 'Maps scope to standard portfolio taxonomy; security and compliance mapped to IT InfoSec.',
       humanInputAllowed: true,
-      humanInputMethod: 'Dropdown selector matching registered portfolios in OneLake.',
+      humanInputMethod: 'Dropdown selector matching registered portfolios in OneLake. A proposed portfolio that is not listed appears as a suggestion to create it with one click.',
       defaultConfidence: 'Inferred (0.60)',
     },
     {
@@ -1105,7 +1105,7 @@ export class DocsAiPrefillConfidencePageComponent {
       prefilledByAi: true,
       aiExtractionLogic: 'Detects sponsoring organizational division or plant mentions (e.g., Fab Operations).',
       humanInputAllowed: true,
-      humanInputMethod: 'Standard business unit dropdown picker.',
+      humanInputMethod: 'Standard business unit dropdown picker. A proposed unit that is not listed appears as a suggestion to add it with one click.',
       defaultConfidence: 'Explicit (0.90) or Inferred (0.60)',
     },
     {
@@ -1117,7 +1117,7 @@ export class DocsAiPrefillConfidencePageComponent {
       prefilledByAi: true,
       aiExtractionLogic: 'Extracts physical facility name or defaults to Global Remote if cross-regional.',
       humanInputAllowed: true,
-      humanInputMethod: 'Site dropdown picker.',
+      humanInputMethod: 'Site dropdown picker. A proposed site that is not listed appears as a suggestion to add it with one click.',
       defaultConfidence: 'Explicit (0.90) or Inferred (0.60)',
     },
     {
@@ -1295,7 +1295,7 @@ export class DocsAiPrefillConfidencePageComponent {
       required: true,
       constraints: '$10,000 to $100,000,000',
       prefilledByAi: true,
-      aiExtractionLogic: 'Parses stated budget ($1.5M -> 1500000). If omitted, estimates from FTE effort.',
+      aiExtractionLogic: 'Parses the stated budget into a number. If omitted, estimates from FTE effort.',
       humanInputAllowed: true,
       humanInputMethod: 'Currency input field with currency prefix.',
       defaultConfidence: 'Explicit (0.90) or Estimated (0.30)',

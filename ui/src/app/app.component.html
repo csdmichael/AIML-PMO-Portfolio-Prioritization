@@ -80,6 +80,11 @@
 
     <!-- Main Content Area with Header, Router Outlet, and Footer -->
     <div class="ion-page" id="main-content">
+      @if (demoMode()) {
+        <div class="demo-banner" role="status">
+          Portfolio data shown in this environment is synthetic demo data. Turn off the demo setting in Admin Settings for production.
+        </div>
+      }
       <app-header
         [asOfDate]="store.dataset()?.asOfDate ?? null"
         [navigationCollapsed]="navigationCollapsed()"

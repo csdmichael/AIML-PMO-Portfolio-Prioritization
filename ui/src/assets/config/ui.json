@@ -99,6 +99,16 @@
       "deprioritize": "#737373"
     }
   },
+  "copilot": {
+    "samplePrompts": [
+      { "id": "must-do", "title": "Top 5 Must-Do-Now Projects", "icon": "sparkles-outline", "prompt": "Show top 5 Must-do-now projects by priority score", "category": "priority" },
+      { "id": "budget-bu", "title": "Budget by Business Unit", "icon": "pie-chart-outline", "prompt": "Break down project budget and count by Business Unit", "category": "budget" },
+      { "id": "skills-gap", "title": "Skills Capacity Deficits", "icon": "people-outline", "prompt": "Which skills have capacity deficits compared to project demand?", "category": "skills" },
+      { "id": "explain-top", "title": "Explain the Top Project", "icon": "help-circle-outline", "prompt": "Explain the recorded ML drivers and rules for the top Must-do-now project", "category": "rules" },
+      { "id": "regulatory", "title": "Regulatory & Security Projects", "icon": "shield-checkmark-outline", "prompt": "List regulatory and security mandatory projects; state if the retrieved results are truncated", "category": "risk" },
+      { "id": "r5-blockers", "title": "Cross-Portfolio Dependencies", "icon": "git-network-outline", "prompt": "Show recorded dependency links for the top 5 Must-do-now projects; distinguish recorded links from inferred critical paths", "category": "rules" }
+    ]
+  },
   "footer": {
     "authorName": "Michael Yaacoub",
     "authorRole": "Sr Solution Engineer",

@@ -9,14 +9,15 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, File, Query, UploadFile
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.agent import clean_web_urls, is_web_url
 from app.agent_context import agent_options, render_lines
 from app.container import Services
+from app.contracts import static_option_values
 from app.files import utc_now
 from app.problems import FieldIssue, ProblemError
-from app.routes.deps import get_services
+from app.routes.deps import get_fresh_services, get_services
 
 router = APIRouter(tags=["intake"])
 TEXT_EXTENSIONS = {".txt", ".md", ".csv", ".json"}
@@ -48,6 +49,7 @@ class DraftView(BaseModel):
     createdAtUtc: str
     updatedAtUtc: str
     projectId: str | None = None
+    suggestions: dict[str, Any] = Field(default_factory=dict)
 
 
 class SubmitResult(BaseModel):
@@ -115,6 +117,31 @@ def _typed(rule: Any, raw: Any) -> Any:
     return raw
 
 
+def _allowed_values(services: Services, rule: Any) -> list[str] | None:
+    static = static_option_values(services.config.data_entry, rule)
+    if static is not None or not rule.source:
+        return static
+    return services.catalog.options().all_values(rule.source)
+
+
+def _matched_option(services: Services, rule: Any, value: Any) -> Any:
+    """A proposal that equals an allowed value, or a portfolio's display name, ignoring case, becomes that value."""
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    allowed = _allowed_values(services, rule) or []
+    match = next((item for item in allowed if item.casefold() == text.casefold()), None)
+    if match is None and rule.source:
+        match = services.catalog.options().key_for_name(rule.source, text)
+    return match if match is not None else value
+
+
+def _creatable_name(services: Services, creatable: Any, name: str, max_chars: int) -> bool:
+    if not 2 <= len(name) <= max_chars:
+        return False
+    return creatable.kind != "portfolio" or services.portfolios.can_create(name)
+
+
 def _field_issues(issues: list[FieldIssue]) -> dict[str, str]:
     messages: dict[str, list[str]] = {}
     for issue in issues:
@@ -177,6 +204,7 @@ class PrefillFieldAnswer(BaseModel):
     evidenceQuote: str | None = None
     rationale: str = ""
     sourceUrl: str | None = None
+    proposedValue: str | None = None
 
 
 class PrefillDraft(BaseModel):
@@ -188,7 +216,7 @@ class PrefillDraft(BaseModel):
 
 
 @router.post("/intake/drafts/{draftId}/prefill", response_model=DraftView, operation_id="prefillIntakeDraft", summary="AI prefill of every project field with evidence")
-def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[str, Any]:
+def prefill(draftId: str, services: Services = Depends(get_fresh_services)) -> dict[str, Any]:
     draft, etag = _load_draft(services, draftId)
     if draft["status"] not in ("draft", "prefilled"):
         raise ProblemError(409, "This draft has already been submitted.", slug="conflict")
@@ -215,6 +243,8 @@ def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[st
     proposals["projectName"] = PrefillFieldAnswer(
         value=draft["projectName"], evidence="explicit", evidenceQuote=draft["projectName"], rationale="Entered by the user.",
     )
+    for rule in contract.projectFields:
+        proposals[rule.key].value = _matched_option(services, rule, proposals[rule.key].value)
     typed: dict[str, Any] = {}
     for rule in contract.projectFields:
         value = _typed(rule, proposals[rule.key].value)
@@ -222,6 +252,23 @@ def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[st
             typed[rule.key] = value
     checked = services.projects.validate(typed, partial=True)
     problems = _field_issues(checked.issues)
+    suggestions: dict[str, Any] = {}
+    for key, creatable in prefill_settings.creatableFields.items():
+        if checked.values.get(key) is not None:
+            continue
+        item = proposals[key]
+        name = (item.proposedValue or (item.value if isinstance(item.value, str) else None) or "").strip()
+        if not _creatable_name(services, creatable, name, prefill_settings.suggestionMaxChars):
+            continue
+        rule = next(field for field in contract.projectFields if field.key == key)
+        label = (
+            f'Create the portfolio "{name}" with a program of the same name'
+            if creatable.kind == "portfolio"
+            else f'Add "{name}" as a new {rule.label}'
+        )
+        suggestions[key] = {
+            "field": key, "kind": creatable.kind, "proposedValue": name, "label": label, "rationale": item.rationale,
+        }
     previous = draft.get("fields") or {}
     fields: dict[str, Any] = {}
     for rule in contract.projectFields:
@@ -248,6 +295,7 @@ def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[st
         status="prefilled",
         fields=fields,
         missingRequired=_missing_required(services, fields),
+        suggestions=suggestions,
         model={
             "agentName": agent.agentName, "agentVersion": agent.agentVersion,
             "responseId": run.response_id, "queryIds": list(run.query_ids), "webSearches": run.web_searches,
@@ -258,8 +306,66 @@ def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[st
     return _draft_view(draft)
 
 
+@router.post(
+    "/intake/drafts/{draftId}/suggestions/{fieldKey}/apply",
+    response_model=DraftView,
+    operation_id="applyIntakeSuggestion",
+    summary="Create the suggested dropdown value and apply it to the draft",
+)
+def apply_suggestion(draftId: str, fieldKey: str, services: Services = Depends(get_fresh_services)) -> dict[str, Any]:
+    draft, etag = _load_draft(services, draftId)
+    if draft["status"] == "submitted":
+        raise ProblemError(409, "This draft has already been submitted.", slug="conflict")
+    suggestion = (draft.get("suggestions") or {}).get(fieldKey)
+    creatable = services.config.ai_prefill.creatableFields.get(fieldKey)
+    if suggestion is None or creatable is None:
+        raise ProblemError(404, f"There is no suggested value for {fieldKey}.", slug="not-found")
+    name = suggestion["proposedValue"]
+    if creatable.kind == "option":
+        rule = next(field for field in services.config.data_entry.projectFields if field.key == fieldKey)
+        values = {fieldKey: services.options.add_option(rule.source.removeprefix("options."), name)}
+    else:
+        portfolio_key, program_key = services.portfolios.ensure_named(name, creatable.role or "")
+        values = {fieldKey: portfolio_key}
+        if program_key is not None:
+            values["programKey"] = program_key
+    confidence = services.config.ai_prefill.evidenceToConfidence["inferred"]
+    for key, value in values.items():
+        draft["fields"][key] = {
+            "value": value,
+            "aiValue": name if key == fieldKey else None,
+            "source": "ai",
+            "evidence": "inferred",
+            "confidenceLevel": confidence.level,
+            "confidenceScore": confidence.score,
+            "evidenceQuote": None,
+            "rationale": "Created from the AI suggestion when a person chose to apply it.",
+            "updatedAtUtc": utc_now(),
+        }
+    draft["suggestions"] = {key: item for key, item in (draft.get("suggestions") or {}).items() if key != fieldKey}
+    draft["missingRequired"] = _missing_required(services, draft["fields"])
+    _save_draft(services, draftId, draft, etag)
+    return _draft_view(draft)
+
+
+@router.delete(
+    "/intake/drafts/{draftId}/suggestions/{fieldKey}",
+    response_model=DraftView,
+    operation_id="dismissIntakeSuggestion",
+    summary="Dismiss a suggested dropdown value",
+)
+def dismiss_suggestion(draftId: str, fieldKey: str, services: Services = Depends(get_services)) -> dict[str, Any]:
+    draft, etag = _load_draft(services, draftId)
+    suggestions = draft.get("suggestions") or {}
+    if fieldKey not in suggestions:
+        raise ProblemError(404, f"There is no suggested value for {fieldKey}.", slug="not-found")
+    draft["suggestions"] = {key: item for key, item in suggestions.items() if key != fieldKey}
+    _save_draft(services, draftId, draft, etag)
+    return _draft_view(draft)
+
+
 @router.patch("/intake/drafts/{draftId}/fields", response_model=DraftView, operation_id="editIntakeFields", summary="Human edits to prefilled fields")
-def edit_fields(draftId: str, body: dict[str, Any] = Body(...), services: Services = Depends(get_services)) -> dict[str, Any]:
+def edit_fields(draftId: str, body: dict[str, Any] = Body(...), services: Services = Depends(get_fresh_services)) -> dict[str, Any]:
     draft, etag = _load_draft(services, draftId)
     if draft["status"] == "submitted":
         raise ProblemError(409, "This draft has already been submitted.", slug="conflict")
@@ -283,7 +389,7 @@ def edit_fields(draftId: str, body: dict[str, Any] = Body(...), services: Servic
 
 
 @router.post("/intake/drafts/{draftId}/submit", status_code=201, response_model=SubmitResult, operation_id="submitIntakeDraft", summary="Create the project from the reviewed draft")
-def submit(draftId: str, runPipeline: bool = Query(True), services: Services = Depends(get_services)) -> dict[str, Any]:
+def submit(draftId: str, runPipeline: bool = Query(True), services: Services = Depends(get_fresh_services)) -> dict[str, Any]:
     draft, etag = _load_draft(services, draftId)
     if draft["status"] == "submitted":
         raise ProblemError(409, "This draft has already been submitted.", slug="conflict")

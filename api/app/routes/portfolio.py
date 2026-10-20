@@ -1,4 +1,4 @@
-"""Portfolio export (passthrough), portfolio list, and portfolio creation."""
+"""Portfolio export (the overlay of project changes applied), portfolio list, and portfolio creation."""
 
 from typing import Any
 
@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.container import Services
 from app.models import PortfolioList, PortfolioView
-from app.routes.deps import get_services
+from app.routes.deps import get_fresh_services, get_services
 
 router = APIRouter(tags=["portfolio"])
 
@@ -15,11 +15,12 @@ router = APIRouter(tags=["portfolio"])
 @router.get(
     "/portfolio",
     operation_id="getPortfolioExport",
-    summary="Portfolio export (contract v2), unchanged",
+    summary="Portfolio export (contract v2) with lifecycle changes applied",
     responses={404: {"description": "The export is missing. The problem names the OneLake path and the pipeline."}},
 )
 def get_portfolio(services: Services = Depends(get_services)) -> JSONResponse:
-    return JSONResponse(content=services.exports.read(services.paths.portfolio_export()))
+    export = services.exports.read(services.paths.portfolio_export())
+    return JSONResponse(content=services.changes.apply_export(export, portfolios=services.catalog.portfolio_index))
 
 
 @router.get("/portfolios", response_model=PortfolioList, operation_id="listPortfolios", summary="Portfolios from the export plus pending entries")
@@ -35,5 +36,5 @@ def list_portfolios(services: Services = Depends(get_services)) -> PortfolioList
     operation_id="createPortfolio",
     summary="Create a portfolio entry (pending until the pipeline runs)",
 )
-def create_portfolio(payload: dict[str, Any] = Body(...), services: Services = Depends(get_services)) -> PortfolioView:
+def create_portfolio(payload: dict[str, Any] = Body(...), services: Services = Depends(get_fresh_services)) -> PortfolioView:
     return PortfolioView.model_validate(services.portfolios.create(payload))

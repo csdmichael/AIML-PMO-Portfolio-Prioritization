@@ -473,7 +473,7 @@ export class DocsRulesGovernancePageComponent {
         'Statutory compliance, SOX controls, cybersecurity defenses, and environmental safety cleanroom standards cannot be sacrificed for purely financial or discretionary business value optimizations.',
       auditTag: 'R1',
       example:
-        'GIS-0012 Cleanroom ISO Audit classified by LightGBM as "Can wait" due to high capital budget ($4.8M). R1 promotes it to "Must-do-now" with priority floor 80.0.',
+        'An example cleanroom audit classified by LightGBM as "Can wait" due to a high capital budget. R1 promotes it to "Must-do-now" with priority floor 80.0.',
     },
     {
       id: 'R2',
@@ -485,7 +485,7 @@ export class DocsRulesGovernancePageComponent {
         'Protects high-value strategic commitments backed by C-level executives or Executive Committee sponsors from algorithmic deprioritization without formal committee escalation.',
       auditTag: 'R2',
       example:
-        'GIS-0034 Enterprise AI Platform sponsored by CIO with Business Value 5 was slated for deprioritization due to missing skills. R2 elevates tier to "Proceed".',
+        'An example enterprise AI platform sponsored by the CIO with Business Value 5 was slated for deprioritization due to missing skills. R2 elevates tier to "Proceed".',
     },
     {
       id: 'R3',
@@ -497,7 +497,7 @@ export class DocsRulesGovernancePageComponent {
         'Preserves board-mandated strategic initiatives (such as fab factory expansions or critical corporate divestitures) against short-term skill or budget deprioritization.',
       auditTag: 'R3',
       example:
-        'GIS-0055 Hsinchu Fab 4 Cleanroom Expansion tagged as protected program. Automatically guarded in "Must-do-now" tier.',
+        'An example fab cleanroom expansion tagged as a protected program. Automatically guarded in "Must-do-now" tier.',
     },
     {
       id: 'R4',
@@ -509,7 +509,7 @@ export class DocsRulesGovernancePageComponent {
         'Halting an in-flight project within 6 months of scheduled go-live incurs massive sunk-cost penalties and demoralizes operational teams. Requires VP-level review.',
       auditTag: 'R4',
       example:
-        'GIS-0078 SAP Supply Chain Connector is active with 4 months until go-live. R4 elevates it from deprioritize to "Can wait" pending executive review.',
+        'An example supply chain connector is active with four months until go-live. R4 elevates it from deprioritize to "Can wait" pending executive review.',
     },
     {
       id: 'R5',
@@ -521,7 +521,7 @@ export class DocsRulesGovernancePageComponent {
         'When an infrastructure or platform project is a hard technical prerequisite for 3 or more downstream initiatives in other portfolios, pausing it creates cascaded blockage.',
       auditTag: 'R5',
       example:
-        'GIS-0021 Identity Directory Synchronization blocks 5 dependent customer portal applications. R5 ensures the prerequisite remains active in "Proceed".',
+        'An example identity directory sync blocks five dependent customer portal applications. R5 ensures the prerequisite remains active in "Proceed".',
     },
   ];
 }

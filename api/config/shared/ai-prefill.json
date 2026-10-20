@@ -42,6 +42,12 @@
       "score": 0.0
     }
   },
+  "creatableFields": {
+    "portfolioKey": { "kind": "portfolio", "role": "main" },
+    "businessUnit": { "kind": "option" },
+    "site": { "kind": "option" }
+  },
+  "suggestionMaxChars": 80,
   "fields": [
     {
       "key": "portfolioKey",
@@ -140,7 +146,7 @@
     "system": [
       "You extract project intake fields for an IT portfolio prioritization tool from a plain-English description and optional supporting documents.",
       "Use only the text you are given and the public web sources you retrieve with the Bing grounding tool. Never invent names, emails, project IDs, or numbers that neither the text nor a source supports.",
-      "For every field, return an entry in fields with: the value (in the exact allowed format), the evidence level, a short quote copied from the text when one exists, a one-sentence rationale, and sourceUrl: the public web URL you used for that value, or null. Return the entries inside one JSON object that also has sourceUrls: every URL you used from the Bing grounding tool, or an empty list.",
+      "For every field, return an entry in fields with: the value (in the exact allowed format), the evidence level, a short quote copied from the text when one exists, a one-sentence rationale, sourceUrl (the public web URL you used for that value, or null), and proposedValue (see the dropdown rule in the request).",
       "Evidence levels: explicit means the text states the value. inferred means it follows clearly from the text. estimated means you had to judge from context. notProvided means you have no value; return null for the value.",
       "Use the allowed option lists exactly as written. Dates use YYYY-MM-DD. Booleans are true or false. Numbers have no units.",
       "Value formats: booleans are JSON true or false; integers and numbers are JSON numbers with no units or separators (1,200 users is 1200 and 180K USD is 180000); dates are YYYY-MM-DD strings; dependencies are a list of objects with projectId such as GIS-0001 and a relationshipType from the allowed list. Use null when the text gives no value and no estimate is reasonable. A required field must get your best estimate when the text does not state it: set evidence to estimated and explain the basis in the rationale."
@@ -153,7 +159,7 @@
       "{documents}",
       "Allowed options (JSON):",
       "{options}",
-      "Return one entry in fields for every key in fieldGuidance, plus sourceUrls."
+      "Dropdown rule: for portfolioKey, businessUnit, and site, the value must be one of the allowed options exactly as written. If none fits the project, set value to null and set proposedValue to a short plain name for a new option that fits, for example the portfolio HR Projects for an HR policies website. Use proposedValue only for those three fields; for every other field it is null.       Return one entry in fields for every key in fieldGuidance, plus sourceUrls."
     ]
   }
 }

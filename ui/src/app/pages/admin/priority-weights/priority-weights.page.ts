@@ -197,7 +197,7 @@ interface FieldWeightDef {
                   <ion-select
                     [value]="selectedProjectId()"
                     (ionChange)="selectedProjectId.set($event.detail.value)"
-                    placeholder="Choose project (e.g. GIS-0001)"
+                    placeholder="Choose a project"
                     interface="popover"
                   >
                     @for (p of allProjects(); track p.projectId) {

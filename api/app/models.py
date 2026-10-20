@@ -64,6 +64,7 @@ class ProjectListItem(BaseModel):
     priorityScore: float | None = None
     recommendedAction: str | None = None
     cluster: str | None = None
+    isDeleted: bool = False
 
 
 class ProjectRecord(BaseModel):
@@ -71,6 +72,23 @@ class ProjectRecord(BaseModel):
 
     projectId: str
     status: str
+
+
+class ProjectRemoved(BaseModel):
+    projectId: str
+    deleted: bool
+
+
+class ImportedProject(BaseModel):
+    projectId: str
+    projectName: str | None = None
+
+
+class ProjectImportResult(BaseModel):
+    created: list[ImportedProject]
+    count: int
+    pipelineRunId: str | None = None
+    warnings: list[str] = []
 
 
 class ProjectCreated(BaseModel):
@@ -142,6 +160,7 @@ class DecisionCreate(BaseModel):
     decision: str
     reason: str
     decidedBy: str | None = None
+    action: str | None = None
 
 
 class DecisionView(BaseModel):
@@ -150,6 +169,7 @@ class DecisionView(BaseModel):
     decision: str
     reason: str
     decidedBy: str | None = None
+    action: str | None = None
     recordedAtUtc: str
     oneLakePath: str | None = None
 

@@ -15,7 +15,9 @@ import {
 } from '@ionic/angular';
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
-import { LocalDecision, DecisionAction } from '../../models/portfolio.models';
+import { LocalDecision, DecisionAction, DecisionRequest } from '../../models/portfolio.models';
+import { ConfigService } from '../../services/config.service';
+import { problemMessage } from '../../core/problem-detail';
 import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 
@@ -75,6 +77,23 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-col">
+              <label class="input-label">Priority tier</label>
+              <select class="custom-select" [(ngModel)]="newDecisionTier">
+                <option value="">Keep the project's current tier</option>
+                @for (tier of tierOptions; track tier) {
+                  <option [value]="tier">{{ tier }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-col">
+              <label class="input-label">Decided by</label>
+              <input class="custom-input" type="text" maxlength="80" [(ngModel)]="newDecisionBy" />
+            </div>
+          </div>
+
           <div class="form-row reason-row">
             <div class="form-col full-width">
               <label class="input-label">Mandatory Justification / Reason</label>
@@ -89,12 +108,15 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
           <div class="actions-row">
             <ion-button
               color="primary"
-              [disabled]="!newDecisionProjectId || !newDecisionReason.trim() || isSubmitting()"
+              [disabled]="!newDecisionProjectId || !newDecisionReason.trim() || !newDecisionBy.trim() || isSubmitting()"
               (click)="onSubmitDecision()"
             >
               <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
               Save Decision to OneLake
             </ion-button>
+            @if (submitError(); as message) {
+              <span class="submit-error" role="alert">{{ message }}</span>
+            }
           </div>
         </ion-card-content>
       </ion-card>
@@ -117,17 +139,20 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
           ></app-empty-state>
         } @else {
           <div class="decisions-list">
-            @for (dec of decisions(); track dec.projectId + dec.timestamp) {
-              <ion-card class="decision-item-card" [class]="dec.action.toLowerCase()">
+            @for (dec of decisions(); track dec.decisionId ?? dec.timestamp) {
+              <ion-card class="decision-item-card" [class]="(dec.action ?? 'recorded').toLowerCase()">
                 <ion-card-content>
                   <div class="dec-header">
                     <div class="dec-title">
                       <span class="project-pill">{{ dec.projectId }}</span>
-                      <span class="action-tag" [class]="dec.action.toLowerCase()">{{ dec.action }}</span>
+                      <span class="action-tag" [class]="(dec.action ?? 'recorded').toLowerCase()">{{ dec.action ?? 'Recorded' }}</span>
+                      @if (dec.decision) {
+                        <span class="tier-tag">{{ dec.decision }}</span>
+                      }
                     </div>
                     <span class="dec-time">{{ dec.timestamp | date:'medium' }}</span>
                   </div>
-                  <div class="dec-reason-text">"{{ dec.reason }}"</div>
+                  <div class="dec-reason-text">"{{ dec.reason }}"{{ dec.decidedBy ? ' (' + dec.decidedBy + ')' : '' }}</div>
                 </ion-card-content>
               </ion-card>
             }
@@ -190,6 +215,26 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
         border: 1px solid var(--pmo-border, #e0e0e0);
         border-radius: 6px;
         font-size: 0.85rem;
+      }
+      .custom-input {
+        padding: 7px 10px;
+        border: 1px solid var(--pmo-border, #e0e0e0);
+        border-radius: 6px;
+        font-size: 0.85rem;
+      }
+      .submit-error {
+        color: #b91c1c;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: auto;
+      }
+      .tier-tag {
+        background: #eef2f7;
+        color: #334155;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
       }
       .actions-row {
         display: flex;
@@ -265,15 +310,20 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
 })
 export class DecisionsPageComponent implements OnInit {
   private readonly api = inject(DataApiService);
+  private readonly configService = inject(ConfigService);
   readonly store = inject(PortfolioStore);
 
   readonly decisions = signal<LocalDecision[]>([]);
   readonly isLoading = signal<boolean>(true);
   readonly error = signal<string | null>(null);
   readonly isSubmitting = signal<boolean>(false);
+  readonly submitError = signal<string | null>(null);
+  readonly tierOptions: string[] = Object.values(this.configService.config.tiers.labels);
 
   newDecisionProjectId: string | null = null;
   newDecisionAction: DecisionAction = 'Approve';
+  newDecisionTier = '';
+  newDecisionBy = '';
   newDecisionReason = '';
 
   ngOnInit(): void {
@@ -288,34 +338,40 @@ export class DecisionsPageComponent implements OnInit {
         this.decisions.set(data || []);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        this.error.set(err?.message ?? 'Failed to load decisions from OneLake');
+      error: (err: unknown) => {
+        this.error.set(problemMessage(err, 'Failed to load decisions from OneLake'));
         this.isLoading.set(false);
       },
     });
   }
 
   onSubmitDecision(): void {
-    if (!this.newDecisionProjectId || !this.newDecisionReason.trim()) return;
+    const projectId = this.newDecisionProjectId;
+    const reason = this.newDecisionReason.trim();
+    const decidedBy = this.newDecisionBy.trim();
+    if (!projectId || !reason || !decidedBy) return;
 
-    this.isSubmitting.set(true);
-    const decision: LocalDecision = {
-      projectId: this.newDecisionProjectId,
+    const project = this.store.rawProjects().find((p) => p.projectId === projectId);
+    const request: DecisionRequest = {
+      projectId,
+      decision: this.newDecisionTier || project?.finalTier || '',
       action: this.newDecisionAction,
-      reason: this.newDecisionReason.trim(),
-      timestamp: new Date().toISOString(),
+      reason,
+      decidedBy,
     };
 
-    this.api.createDecision(decision).subscribe({
+    this.isSubmitting.set(true);
+    this.submitError.set(null);
+    this.api.createDecision(request).subscribe({
       next: (created) => {
         this.isSubmitting.set(false);
         this.decisions.update((curr) => [created, ...curr]);
-        this.store.recordDecision(created);
         this.newDecisionReason = '';
+        this.newDecisionTier = '';
       },
-      error: (err) => {
+      error: (err: unknown) => {
         this.isSubmitting.set(false);
-        alert(`Failed to save decision: ${err?.message || 'Unknown error'}`);
+        this.submitError.set(problemMessage(err, 'Could not save the decision.'));
       },
     });
   }

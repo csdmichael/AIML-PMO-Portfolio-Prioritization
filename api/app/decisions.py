@@ -44,12 +44,15 @@ class DecisionService:
         decision = _as_text(body.get("decision"), "decision", issues)
         reason = _as_text(body.get("reason"), "reason", issues)
         decided_by = _as_text(body.get("decidedBy"), "decidedBy", issues)
+        action = _as_text(body.get("action"), "action", issues)
         if not self._project_id.fullmatch(project_id):
             issues.append(FieldIssue("projectId", "must be a valid project ID"))
         elif project_id not in self._catalog.project_ids():
             issues.append(FieldIssue("projectId", "does not match a known project"))
         if decision not in self._settings.tiers:
             issues.append(FieldIssue("decision", "must be one of: " + ", ".join(self._settings.tiers)))
+        if action and action not in self._settings.actions:
+            issues.append(FieldIssue("action", "must be one of: " + ", ".join(self._settings.actions)))
         if not self._settings.reasonMinLength <= len(reason) <= self._settings.reasonMaxLength:
             issues.append(FieldIssue("reason", f"must be {self._settings.reasonMinLength} to {self._settings.reasonMaxLength} characters"))
         if len(decided_by) > self._settings.decidedByMaxLength:
@@ -61,6 +64,7 @@ class DecisionService:
             "decisionId": decision_id,
             "projectId": project_id,
             "decision": decision,
+            "action": action or None,
             "reason": reason,
             "decidedBy": decided_by or None,
             "recordedAtUtc": utc_now(),

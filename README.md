@@ -33,7 +33,7 @@ Prioritize about 100 GIS and BU projects transparently, using existing enterpris
 
 | Agent (Foundry name, version) | Role | Tools it uses | What it does |
 |---|---|---|---|
-| `pmo-intake-agent` (v2) | Project intake prefill | Bing grounding (public web) | Fills the Data Entry fields from a project name and a plain-English description. Each value carries an evidence level, a quote, a rationale, and a source URL. |
+| `pmo-intake-agent` (v2) | Project intake prefill | Bing grounding (public web) | Fills the Data Entry fields from a project name and a plain-English description. Each value carries an evidence level, a quote, a rationale, and a source URL. A dropdown value that its list does not have becomes a suggestion, and the user can create and apply it with one click. |
 | `pmo-recommendation-agent` (v2) | Portfolio researcher | `query_portfolio` on OneLake through APIM, plus Bing grounding | Recommends new projects for each portfolio and changes to existing projects. Each item cites approved project IDs and public URLs. A person adds the project or records the decision. |
 | `pmo-portfolio-copilot` (v1) | Portfolio chat | `query_portfolio` on OneLake through APIM | Answers portfolio questions from approved OneLake records and lists the project IDs it used. |
 
@@ -179,9 +179,9 @@ Not part of this build. The planned report is **PMO Portfolio Prioritization** o
 - **Browser / Desktop (1200 px and up)**: 3-column architecture featuring collapsible left navigation, sticky facet filter panel, live KPI row, interactive ECharts (Tier Donut, Confidence Distribution, Cost Treemap, Hierarchy Sunburst, Skill Capacity), Board, Hierarchy and sortable Table views, and a slide-out Project Detail Inspector with SHAP waterfalls.
 - **Tablet (768 to 1199 px)**: 2-column responsive layout with slide-in filter drawer, 2x2 touch-friendly KPI cards, and bottom-sheet project inspector.
 - **Mobile (below 768 px)**: Single-column fluid stack with mobile drawer menu, touch-optimized filter button, swipeable board cards, and full-screen detail sheets.
-- **100% Data Guarantee**: All screens (Overview, Prioritization, Hierarchy, Power BI, Quick Add, Data Entry, Decisions, and Detail) are populated with rich, realistic data across 100 projects (`GIS-0001` to `GIS-0100`).
+- **No mock data in the UI**: every screen reads portfolio data, options, decisions, and lifecycle changes through the API from OneLake. The demo dataset is synthetic (100 projects, `GIS-0001` to `GIS-0100`), and every page shows a banner saying so while the Demo Environment setting is on (Admin Settings).
 - **AI Portfolio Copilot (Agent FAB)**: Floating Action Button in the lower-right corner with a gradient glow and pulse effect. Clicking opens the Copilot chat drawer with:
-  - Pre-saved sample prompts (*Top 5 Must-Do-Now Projects*, *Budget by Business Unit*, *Skills Capacity Deficits*, *Explain GIS-0042 Deprioritization*, *Regulatory & Security Projects*, *R5 Critical Path Dependencies*).
+  - Starter prompts set in `ui/src/assets/config/ui.json` (`copilot.samplePrompts`), for example *Top 5 Must-Do-Now Projects*, *Budget by Business Unit*, and *Skills Capacity Deficits*.
   - Multi-view answers: seamlessly switch between **Data Table** and **Interactive Chart**.
   - Chart type switcher: toggle between **Bar**, **Line**, **Pie / Donut**, and **Radar / Spider** charts.
   - Multi-format document export buttons: export any result directly to **Word (.docx)**, **Excel (.xlsx)**, or **PowerPoint (.pptx)**.

@@ -1,19 +1,43 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom, map } from 'rxjs';
 import { ConfigService } from './config.service';
-import { PortfolioDataset, Project, LocalDecision, CapacityBySkill } from '../models/portfolio.models';
+import {
+  PortfolioDataset,
+  Project,
+  LocalDecision,
+  CapacityBySkill,
+  DecisionList,
+  DecisionRequest,
+  DecisionView,
+} from '../models/portfolio.models';
 import { RecommendationReport } from '../models/recommendation.models';
 import { OneLakeDatasetList, OneLakeDatasetView } from '../models/onelake.models';
 import {
   OptionsResponse,
   PortfolioItem,
+  PortfolioList,
+  ProjectImportResult,
+  ProjectRemoved,
   CreateProjectResponse,
   ProjectUploadMetadata,
   PipelineRunStatus,
   IntakeDraft,
   DraftFieldProvenance,
 } from '../models/api.models';
+
+/** Maps the API's decision record to the shape the decision screens use. */
+function toLocalDecision(view: DecisionView): LocalDecision {
+  return {
+    decisionId: view.decisionId,
+    projectId: view.projectId,
+    decision: view.decision,
+    action: view.action ?? null,
+    reason: view.reason,
+    decidedBy: view.decidedBy ?? null,
+    timestamp: view.recordedAtUtc,
+  };
+}
 
 @Injectable({
   providedIn: 'root',
@@ -35,7 +59,7 @@ export class DataApiService {
   }
 
   getPortfolios(): Observable<PortfolioItem[]> {
-    return this.http.get<PortfolioItem[]>(`${this.base}/portfolios`);
+    return this.http.get<PortfolioList>(`${this.base}/portfolios`).pipe(map((list) => list.items));
   }
 
   createPortfolio(data: Partial<PortfolioItem>): Observable<PortfolioItem> {
@@ -73,6 +97,23 @@ export class DataApiService {
     return this.http.post<CreateProjectResponse>(`${this.base}/projects`, projectData, { params });
   }
 
+  /** Changes a project's fields, or soft deletes or restores it (isDeleted). The API validates every field. */
+  updateProject(projectId: string, changes: Record<string, unknown>): Observable<Project> {
+    return this.http.patch<Project>(`${this.base}/projects/${encodeURIComponent(projectId)}`, changes);
+  }
+
+  /** Removes a project from every view. Its entry stays in OneLake for audit. */
+  deleteProject(projectId: string): Observable<ProjectRemoved> {
+    return this.http.delete<ProjectRemoved>(`${this.base}/projects/${encodeURIComponent(projectId)}`);
+  }
+
+  importProjects(file: File, runPipeline = true): Observable<ProjectImportResult> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const params = new HttpParams().set('runPipeline', runPipeline.toString());
+    return this.http.post<ProjectImportResult>(`${this.base}/projects/import`, formData, { params });
+  }
+
   uploadProjectFile(projectId: string, sourceKey: string, file: File): Observable<ProjectUploadMetadata> {
     const formData = new FormData();
     formData.append('sourceKey', sourceKey);
@@ -100,11 +141,13 @@ export class DataApiService {
   getDecisions(projectId?: string): Observable<LocalDecision[]> {
     let params = new HttpParams();
     if (projectId) params = params.set('projectId', projectId);
-    return this.http.get<LocalDecision[]>(`${this.base}/decisions`, { params });
+    return this.http
+      .get<DecisionList>(`${this.base}/decisions`, { params })
+      .pipe(map((list) => list.items.map(toLocalDecision)));
   }
 
-  createDecision(decision: LocalDecision): Observable<LocalDecision> {
-    return this.http.post<LocalDecision>(`${this.base}/decisions`, decision);
+  createDecision(decision: DecisionRequest): Observable<LocalDecision> {
+    return this.http.post<DecisionView>(`${this.base}/decisions`, decision).pipe(map(toLocalDecision));
   }
 
   getIntakeTemplateUrl(): string {
@@ -142,6 +185,19 @@ export class DataApiService {
     return this.http.patch<{ fields: DraftFieldProvenance[] }>(
       `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/fields`,
       fields,
+    );
+  }
+
+  applyIntakeSuggestion(draftId: string, fieldKey: string): Observable<IntakeDraft> {
+    return this.http.post<IntakeDraft>(
+      `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/suggestions/${encodeURIComponent(fieldKey)}/apply`,
+      {},
+    );
+  }
+
+  dismissIntakeSuggestion(draftId: string, fieldKey: string): Observable<IntakeDraft> {
+    return this.http.delete<IntakeDraft>(
+      `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/suggestions/${encodeURIComponent(fieldKey)}`,
     );
   }
 
@@ -212,17 +268,17 @@ export class DataApiService {
     return this.http.put<OneLakeDatasetView>(`${this.base}/onelake/datasets/${encodeURIComponent(key)}`, data, { headers });
   }
 
-  async downloadExcelTemplate(filename = 'project_intake_template.xlsx'): Promise<void> {
+  async downloadProjectImportTemplate(): Promise<void> {
     try {
-      const blob = await this.http
-        .get(`${this.base}/templates/intake.xlsx`, { responseType: 'blob' })
-        .toPromise();
-      if (blob) {
-        this.triggerBlobDownload(blob, filename);
-      }
+      const blob = await firstValueFrom(this.http.get(this.getProjectImportTemplateUrl(), { responseType: 'blob' }));
+      this.triggerBlobDownload(blob, 'project_import_template.xlsx');
     } catch (e) {
-      console.error('Failed to download Excel template from API:', e);
+      console.error('Failed to download the project import template from the API:', e);
     }
+  }
+
+  getProjectImportTemplateUrl(): string {
+    return `${this.base}/templates/project-import.xlsx`;
   }
 
   private triggerBlobDownload(blob: Blob, filename: string): void {

@@ -1,4 +1,5 @@
 import { Injectable, computed, signal, inject } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 import {
   PortfolioDataset,
   Project,
@@ -9,9 +10,9 @@ import {
   GroupByOption,
   ConfidenceLevel,
   PriorityTier,
-  LocalDecision,
   SavedView,
 } from '../models/portfolio.models';
+import { PortfolioItem } from '../models/api.models';
 import {
   DEFAULT_FILTER_CRITERIA,
   filterProjects,
@@ -20,65 +21,24 @@ import {
   buildHierarchyTree,
   exportProjectsToCsv,
 } from '../core/portfolio-filter';
-import { recalculateDatasetRollups } from '../core/portfolio-normalizer';
 import { PortfolioService } from './portfolio.service';
+import { DataApiService } from './data-api.service';
 
 const SAVED_VIEWS_STORAGE_KEY = 'pmo_portfolio_saved_views_v1';
-const DECISIONS_STORAGE_KEY = 'pmo_portfolio_decisions_v1';
 const PINNED_STORAGE_KEY = 'pmo_portfolio_pinned_v1';
-const PORTFOLIOS_STORAGE_KEY = 'pmo_portfolio_definitions_v3';
 
 export interface PortfolioDefinition {
   name: string;
   code?: string;
-  description?: string;
-  color?: string;
   role?: 'main' | 'coupled';
 }
-
-const DEFAULT_PORTFOLIO_DEFINITIONS: PortfolioDefinition[] = [
-  {
-    name: 'IT - InfoSec',
-    code: 'INFOSEC',
-    description: 'Zero Trust architecture, identity, SOC operations, compliance, and cleanroom cyber defense.',
-    color: '#0078D4',
-    role: 'main',
-  },
-  {
-    name: 'IT Software Development',
-    code: 'SWDEV',
-    description: 'Core business application platforms, microservices, enterprise APIs, and supplier portals.',
-    color: '#107C10',
-    role: 'coupled',
-  },
-  {
-    name: 'IT Infrastructure',
-    code: 'INFRA',
-    description: 'Global fab networks, hybrid cloud landing zones, datacenter compute, and unified communications.',
-    color: '#0284C7',
-    role: 'coupled',
-  },
-  {
-    name: 'AI Team',
-    code: 'AI',
-    description: 'Microsoft Foundry AI agents, wafer defect computer vision, and predictive yield models.',
-    color: '#8B5CF6',
-    role: 'coupled',
-  },
-  {
-    name: 'Data and Analytics',
-    code: 'DATA',
-    description: 'Microsoft Fabric OneLake medallion lakehouse, Delta lake ETL pipelines, and Direct Lake Power BI.',
-    color: '#D97706',
-    role: 'coupled',
-  },
-];
 
 @Injectable({
   providedIn: 'root',
 })
 export class PortfolioStore {
   private readonly portfolioService = inject(PortfolioService);
+  private readonly api = inject(DataApiService);
 
   // Raw dataset signal
   readonly dataset = signal<PortfolioDataset | null>(null);
@@ -101,7 +61,6 @@ export class PortfolioStore {
 
   // Local storage state signals
   readonly savedViews = signal<SavedView[]>(this.loadSavedViews());
-  readonly decisions = signal<Record<string, LocalDecision>>(this.loadDecisions());
   readonly pinnedProjectIds = signal<string[]>(this.loadPinned());
 
   // Available unique facet values derived from dataset
@@ -120,7 +79,10 @@ export class PortfolioStore {
     this.activeProjects().filter((p) => p.projectStatus === 'Backlog')
   );
 
-  readonly portfolioDefinitions = signal<PortfolioDefinition[]>(this.loadPortfolioDefinitions());
+  readonly portfolioItems = signal<PortfolioItem[]>([]);
+  readonly portfolioDefinitions = computed<PortfolioDefinition[]>(() =>
+    this.portfolioItems().map((item) => ({ name: item.displayName, code: item.code, role: item.role })),
+  );
 
   readonly availablePortfolios = computed<string[]>(() => {
     const list = this.portfolioDefinitions().map((p) => p.name);
@@ -240,6 +202,19 @@ export class PortfolioStore {
     this.loadError.set(null);
     this.problemDetail.set(null);
 
+    this.api.getPortfolios().subscribe({
+      next: (items) => this.portfolioItems.set(items),
+      error: () => this.portfolioItems.set([]),
+    });
+    this.loadDataset();
+  }
+
+  /** Reloads the dataset after a change, keeping the current view and selection. */
+  refresh(): void {
+    this.loadDataset();
+  }
+
+  private loadDataset(): void {
     const normalizePf = (p: Project): Project =>
       p.portfolio === 'IT InfoSec' ? { ...p, portfolio: 'IT - InfoSec' } : p;
 
@@ -337,20 +312,7 @@ export class PortfolioStore {
     return this.pinnedProjectIds().includes(projectId);
   }
 
-  // Decision actions
-  recordDecision(decision: LocalDecision): void {
-    this.decisions.update((curr) => {
-      const updated = { ...curr, [decision.projectId]: decision };
-      this.persistDecisions(updated);
-      return updated;
-    });
-  }
-
-  getDecision(projectId: string): LocalDecision | undefined {
-    return this.decisions()[projectId];
-  }
-
-  // Saved Views
+  // Saved views are browser preferences, kept in localStorage.
   saveCurrentView(name: string): SavedView {
     const view: SavedView = {
       id: 'view_' + Date.now(),
@@ -384,146 +346,29 @@ export class PortfolioStore {
     });
   }
 
-  // Lifecycle & Deletion operations
-  updateDatasetProjects(updatedProjects: Project[]): void {
-    const current = this.dataset();
-    if (!current) return;
-    const normProjects = updatedProjects.map((p) =>
-      p.portfolio === 'IT InfoSec' ? { ...p, portfolio: 'IT - InfoSec' } : p
-    );
-    const rollups = recalculateDatasetRollups(normProjects);
-    const updated: PortfolioDataset = {
-      ...current,
-      projects: normProjects,
-      capacityBySkill: rollups.capacityBySkill,
-      clusters: rollups.clusters,
-      asOfDate: new Date().toISOString().slice(0, 10),
-    };
-    this.dataset.set(updated);
-
-    // If current selected project is deleted or removed, pick first active
-    const active = normProjects.filter((p) => !p.isDeleted);
-    const selId = this.selectedProjectId();
-    if (!selId || !active.some((p) => p.projectId === selId)) {
-      this.selectedProjectId.set(active[0]?.projectId ?? null);
-    }
+  // Lifecycle changes go through the API. The dataset is reloaded afterwards, so the screen shows what was saved.
+  updateProject(projectId: string, changes: Record<string, unknown>): Observable<unknown> {
+    return this.api.updateProject(projectId, changes).pipe(tap(() => this.refresh()));
   }
 
-  addPortfolio(def: PortfolioDefinition): void {
-    const name = def.name.trim();
-    if (!name) return;
-    const current = this.portfolioDefinitions();
-    if (current.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
-      return;
-    }
-    const updated = [...current, { ...def, name }];
-    this.portfolioDefinitions.set(updated);
-    this.persistPortfolioDefinitions(updated);
+  setProjectStatus(projectId: string, status: ProjectStatus): Observable<unknown> {
+    return this.updateProject(projectId, { projectStatus: status });
   }
 
-  deletePortfolio(portfolioName: string, deleteAssociatedProjects = true): void {
-    const current = this.portfolioDefinitions();
-    const updated = current.filter((p) => p.name.toLowerCase() !== portfolioName.toLowerCase());
-    this.portfolioDefinitions.set(updated);
-    this.persistPortfolioDefinitions(updated);
-
-    if (deleteAssociatedProjects) {
-      this.deleteByPortfolio(portfolioName, true);
-    }
+  setSoftDeleted(projectId: string, isDeleted: boolean): Observable<unknown> {
+    return this.updateProject(projectId, { isDeleted });
   }
 
-  setProjectStatus(projectIds: string | string[], status: ProjectStatus): void {
-    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
-    const projects = this.rawProjects().map((p) =>
-      ids.includes(p.projectId) ? { ...p, projectStatus: status } : p
-    );
-    this.updateDatasetProjects(projects);
+  permanentlyDelete(projectId: string): Observable<unknown> {
+    return this.api.deleteProject(projectId).pipe(tap(() => this.refresh()));
   }
 
-  markAsBacklog(projectIds: string | string[]): void {
-    this.setProjectStatus(projectIds, 'Backlog');
-  }
-
-  softDeleteProjects(projectIds: string | string[]): void {
-    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
-    const now = new Date().toISOString();
-    const projects = this.rawProjects().map((p) =>
-      ids.includes(p.projectId) ? { ...p, isDeleted: true, deletedAt: now } : p
-    );
-    this.updateDatasetProjects(projects);
-  }
-
-  restoreProjects(projectIds: string | string[]): void {
-    const ids = Array.isArray(projectIds) ? projectIds : [projectIds];
-    const projects = this.rawProjects().map((p) =>
-      ids.includes(p.projectId) ? { ...p, isDeleted: false, deletedAt: undefined } : p
-    );
-    this.updateDatasetProjects(projects);
-  }
-
-  permanentDeleteProjects(projectIds: string | string[]): void {
-    const ids = new Set(Array.isArray(projectIds) ? projectIds : [projectIds]);
-    const projects = this.rawProjects().filter((p) => !ids.has(p.projectId));
-    this.updateDatasetProjects(projects);
-  }
-
-  deleteByPortfolio(portfolio: string, permanent = false): void {
-    if (permanent) {
-      const projects = this.rawProjects().filter((p) => p.portfolio !== portfolio);
-      this.updateDatasetProjects(projects);
-    } else {
-      const now = new Date().toISOString();
-      const projects = this.rawProjects().map((p) =>
-        p.portfolio === portfolio ? { ...p, isDeleted: true, deletedAt: now } : p
-      );
-      this.updateDatasetProjects(projects);
-    }
-  }
-
-  clearAllProjects(): void {
-    this.updateDatasetProjects([]);
-  }
-
-  resetToDefaultData(): void {
-    this.init();
-  }
-
-  importProjects(
-    newProjects: Project[],
-    mode: 'append' | 'replacePortfolio' | 'replaceAll' = 'append'
-  ): { added: number; updated: number; total: number } {
-    let resultProjects: Project[] = [];
-    let added = 0;
-    let updated = 0;
-
-    if (mode === 'replaceAll') {
-      resultProjects = [...newProjects];
-      added = newProjects.length;
-    } else if (mode === 'replacePortfolio') {
-      const importedPortfolios = new Set(newProjects.map((p) => p.portfolio));
-      const kept = this.rawProjects().filter((p) => !importedPortfolios.has(p.portfolio));
-      resultProjects = [...kept, ...newProjects];
-      added = newProjects.length;
-    } else {
-      // Append / Merge
-      const existingMap = new Map<string, Project>();
-      for (const p of this.rawProjects()) {
-        existingMap.set(p.projectId, p);
-      }
-      for (const p of newProjects) {
-        if (existingMap.has(p.projectId)) {
-          existingMap.set(p.projectId, p);
-          updated++;
-        } else {
-          existingMap.set(p.projectId, p);
-          added++;
-        }
-      }
-      resultProjects = Array.from(existingMap.values());
-    }
-
-    this.updateDatasetProjects(resultProjects);
-    return { added, updated, total: resultProjects.length };
+  /** Reloads the portfolio list after a portfolio is created elsewhere in the app. */
+  reloadPortfolioItems(): void {
+    this.api.getPortfolios().subscribe({
+      next: (items) => this.portfolioItems.set(items),
+      error: () => this.portfolioItems.set([]),
+    });
   }
 
   // CSV export
@@ -531,24 +376,6 @@ export class PortfolioStore {
     return exportProjectsToCsv(this.sortedFilteredProjects());
   }
 
-  private loadPortfolioDefinitions(): PortfolioDefinition[] {
-    try {
-      const raw = localStorage.getItem(PORTFOLIOS_STORAGE_KEY);
-      if (!raw) return DEFAULT_PORTFOLIO_DEFINITIONS;
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PORTFOLIO_DEFINITIONS;
-    } catch {
-      return DEFAULT_PORTFOLIO_DEFINITIONS;
-    }
-  }
-
-  private persistPortfolioDefinitions(defs: PortfolioDefinition[]): void {
-    try {
-      localStorage.setItem(PORTFOLIOS_STORAGE_KEY, JSON.stringify(defs));
-    } catch {
-      // Storage unavailable or quota exceeded
-    }
-  }
   private loadSavedViews(): SavedView[] {
     try {
       const raw = localStorage.getItem(SAVED_VIEWS_STORAGE_KEY);
@@ -561,23 +388,6 @@ export class PortfolioStore {
   private persistSavedViews(views: SavedView[]): void {
     try {
       localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, JSON.stringify(views));
-    } catch {
-      // Storage unavailable or quota exceeded
-    }
-  }
-
-  private loadDecisions(): Record<string, LocalDecision> {
-    try {
-      const raw = localStorage.getItem(DECISIONS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  }
-
-  private persistDecisions(decisions: Record<string, LocalDecision>): void {
-    try {
-      localStorage.setItem(DECISIONS_STORAGE_KEY, JSON.stringify(decisions));
     } catch {
       // Storage unavailable or quota exceeded
     }

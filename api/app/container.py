@@ -11,8 +11,11 @@ from app.decisions import DecisionService
 from app.fabric import FabricClient
 from app.lake_paths import LakePaths
 from app.onelake import OneLakeClient
+from app.options_store import OptionsStore
 from app.pipeline import PipelineService
 from app.portfolios import PortfolioService
+from app.project_changes import ProjectChanges
+from app.project_import import ProjectImport
 from app.projects import ProjectService
 from app.store import EntryStore, ExportReader
 
@@ -28,9 +31,12 @@ class Services:
     entries: EntryStore
     catalog: Catalog
     projects: ProjectService
+    changes: ProjectChanges
+    imports: ProjectImport
     portfolios: PortfolioService
     decisions: DecisionService
     pipeline: PipelineService
+    options: OptionsStore
     agent: FoundryAgentClient
     recommendation_agent: FoundryAgentClient
     intake_agent: FoundryAgentClient
@@ -58,7 +64,10 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
     paths = LakePaths(config)
     entries = EntryStore(lake)
     exports = ExportReader(lake=lake, cache=TtlCache(api.cache.ttlSeconds), pipeline_name=values.pipeline_display_name)
-    catalog = Catalog(exports=exports, entries=entries, paths=paths, statuses=api.projects, contract=config.data_entry)
+    changes = ProjectChanges(entries=entries, paths=paths, contract=config.data_entry, cache=TtlCache(api.cache.ttlSeconds))
+    catalog = Catalog(
+        exports=exports, entries=entries, paths=paths, statuses=api.projects, contract=config.data_entry, changes=changes,
+    )
     projects = ProjectService(
         lake=lake,
         entries=entries,
@@ -68,6 +77,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         validation=api.validation,
         project_settings=api.projects,
         upload_settings=api.uploads,
+        changes=changes,
     )
     portfolios = PortfolioService(
         entries=entries,
@@ -77,6 +87,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         validation=api.validation,
         statuses=api.projects,
     )
+    imports = ProjectImport(settings=api.projectImport, contract=config.data_entry, catalog=catalog, projects=projects)
     decisions = DecisionService(
         entries=entries,
         paths=paths,
@@ -92,6 +103,9 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         workspace_name=values.workspace_name,
         accepted_status=api.pipeline.acceptedStatus,
     )
+    options = OptionsStore(
+        lake=lake, contract=config.data_entry, path=api.oneLake.lookupsFile, ttl_seconds=api.cache.ttlSeconds,
+    )
     return Services(
         config=config,
         credentials=credentials,
@@ -102,9 +116,12 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         entries=entries,
         catalog=catalog,
         projects=projects,
+        changes=changes,
+        imports=imports,
         portfolios=portfolios,
         decisions=decisions,
         pipeline=pipeline,
+        options=options,
         agent=FoundryAgentClient(load_agent_settings("portfolio-agent.json"), credentials),
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
         intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),

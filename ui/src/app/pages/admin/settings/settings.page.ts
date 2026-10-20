@@ -73,9 +73,8 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
               <div class="setting-info">
                 <div class="setting-title">Is Demo Environment</div>
                 <div class="setting-description">
-                  When enabled (<strong>Yes</strong>), demonstration controls in <strong>Data Entry</strong> are active,
-                  allowing users to load preconfigured sample portfolios and reset portfolio datasets.
-                  When disabled (<strong>No</strong>), sample loading and portfolio clearing are locked out for production safety.
+                  When enabled (<strong>Yes</strong>), every page shows a banner saying the portfolio data is synthetic demo data.
+                                    When disabled (<strong>No</strong>), the banner is hidden.
                 </div>
               </div>
               <div class="setting-control">
@@ -95,8 +94,8 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
                 <strong>{{ isDemo() ? 'Demo Mode Active' : 'Production Guardrails Active' }}</strong>
                 <p>
                   {{ isDemo() 
-                    ? 'Users can test ingestion with sample files and clear test projects from Data Entry.' 
-                    : 'Portfolio records and data entries are protected. Sample loading actions are disabled.' }}
+                    ? 'Every page shows a synthetic demo data banner. Portfolio data is read from OneLake through the API.' 
+                    : 'Portfolio records and data entries are protected. The demo banner is hidden.' }}
                 </p>
               </div>
             </div>

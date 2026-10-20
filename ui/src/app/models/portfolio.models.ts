@@ -45,6 +45,9 @@ export interface Project {
   projectId: string;
   projectName: string;
   portfolio: string;
+  portfolioKey?: string;
+  program?: string;
+  programKey?: string;
   businessUnit: string;
   site: string;
   projectManager: string;
@@ -132,10 +135,38 @@ export interface PortfolioDataset {
 }
 
 export interface LocalDecision {
+  decisionId?: string;
   projectId: string;
+  /** The priority tier the decision sets. */
+  decision?: string;
+  /** Approve, Adjust, or Reject. Recommendation decisions have no action. */
+  action?: DecisionAction | null;
+  reason: string;
+  decidedBy?: string | null;
+  timestamp: string; // ISO
+}
+
+export interface DecisionRequest {
+  projectId: string;
+  decision: string;
   action: DecisionAction;
   reason: string;
-  timestamp: string; // ISO
+  decidedBy: string;
+}
+
+export interface DecisionView {
+  decisionId: string;
+  projectId: string;
+  decision: string;
+  action?: DecisionAction | null;
+  reason: string;
+  decidedBy?: string | null;
+  recordedAtUtc: string;
+}
+
+export interface DecisionList {
+  items: DecisionView[];
+  count: number;
 }
 
 export type SortField = 'priority' | 'confidence' | 'goLive' | 'cost' | 'sources' | 'name';

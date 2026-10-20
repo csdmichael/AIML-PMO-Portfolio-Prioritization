@@ -39,6 +39,7 @@ class FieldRule(Contract):
     minDate: str | None = None
     maxDate: str | None = None
     source: str | None = None
+    exportKey: str | None = None
     options: list[str] | None = None
     minItems: int | None = None
     maxItems: int | None = None
@@ -146,6 +147,11 @@ class PromptTemplates(Contract):
     userTemplate: list[str]
 
 
+class CreatableField(Contract):
+    kind: Literal["option", "portfolio"]
+    role: str | None = None
+
+
 class AiPrefillSettings(Contract):
     schemaVersion: int
     description: str
@@ -153,6 +159,8 @@ class AiPrefillSettings(Contract):
     evidenceLevels: list[str]
     evidenceToConfidence: dict[str, ConfidenceMapping]
     fields: list[PrefillFieldGuidance]
+    creatableFields: dict[str, CreatableField] = Field(default_factory=dict)
+    suggestionMaxChars: int = 80
     prompt: PromptTemplates
 
 

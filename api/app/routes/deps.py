@@ -2,7 +2,7 @@
 
 import re
 
-from fastapi import Request
+from fastapi import Depends, Request
 
 from app.container import Services
 from app.problems import FieldIssue, ProblemError
@@ -12,6 +12,12 @@ GUID_PATTERN = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-
 
 def get_services(request: Request) -> Services:
     services: Services = request.app.state.services
+    return services
+
+
+def get_fresh_services(services: Services = Depends(get_services)) -> Services:
+    """Services whose option lists are current, for routes that validate against them."""
+    services.options.current()
     return services
 
 

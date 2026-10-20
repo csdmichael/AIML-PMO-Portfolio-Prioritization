@@ -24,7 +24,7 @@ describe('PortfolioAgentService', () => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(), provideHttpClientTesting(),
-        { provide: ConfigService, useValue: { config: { api: { basePath: '/api/v1' } } } },
+        { provide: ConfigService, useValue: { config: { api: { basePath: '/api/v1' }, copilot: { samplePrompts: [{ id: 'a', title: 'A', icon: 'x', prompt: 'p', category: 'priority' }] } } } },
         { provide: FileExportService, useValue: exports },
       ],
     });
@@ -36,7 +36,7 @@ describe('PortfolioAgentService', () => {
   it('has a neutral welcome without generated records or live claims', () => {
     expect(service.messages()[0].tableData.rows).toEqual([]);
     expect(service.messages()[0].provenance).toBeUndefined();
-    expect(service.samplePrompts).toHaveLength(6);
+    expect(service.samplePrompts).toHaveLength(1);
     service.toggleOpen();
     expect(service.isOpen()).toBe(true);
   });

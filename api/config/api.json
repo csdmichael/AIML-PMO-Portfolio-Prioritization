@@ -65,6 +65,7 @@
   "oneLake": {
     "dfsEndpoint": { "file": "fabricItems", "path": "oneLake.dfsEndpoint" },
     "itemSuffix": ".Lakehouse",
+    "lookupsFile": "Files/config/data-entry.json",
     "rawRoot": { "file": "fabricItems", "path": "lakehouse.rawRoot" },
     "exportsRoot": { "file": "fabricItems", "path": "lakehouse.exportsRoot" },
     "exportFiles": {
@@ -73,7 +74,8 @@
     },
     "uiEntryFolders": {
       "decisions": "ui_entries/decisions",
-      "drafts": "ui_entries/drafts"
+      "drafts": "ui_entries/drafts",
+      "projectChanges": "ui_entries/project_changes"
     }
   },
   "openApi": {
@@ -100,9 +102,46 @@
   "decisions": {
     "idPrefix": "DEC-",
     "tiers": ["Must-do-now", "Proceed", "Can wait", "Candidate to deprioritize"],
+    "actions": ["Approve", "Adjust", "Reject"],
     "reasonMinLength": 10,
     "reasonMaxLength": 1000,
     "decidedByMaxLength": 80
+  },
+  "projectImport": {
+    "fileName": "project_import_template.xlsx",
+    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "sheetName": null,
+    "headerRow": 1,
+    "maxRows": 200,
+    "booleanWords": {
+      "true": ["yes", "y", "true", "1"],
+      "false": ["no", "n", "false", "0"]
+    },
+    "columns": [
+      { "header": "Project name", "fieldKey": "projectName", "required": true },
+      { "header": "Portfolio", "fieldKey": "portfolioKey", "required": true, "lookup": "portfolioName" },
+      { "header": "Program", "fieldKey": "programKey", "required": true, "lookup": "programName" },
+      { "header": "Business unit", "fieldKey": "businessUnit", "required": true },
+      { "header": "Site", "fieldKey": "site", "required": true },
+      { "header": "Executive sponsor", "fieldKey": "sponsorName", "required": true },
+      { "header": "Sponsor email", "fieldKey": "sponsorEmail" },
+      { "header": "Project manager", "fieldKey": "projectManager" },
+      { "header": "Sponsor level", "fieldKey": "sponsorLevel", "required": true },
+      { "header": "Status", "fieldKey": "projectStatus", "required": true },
+      { "header": "Go-live date", "fieldKey": "goLiveDate", "required": true },
+      { "header": "Business value estimate (1 to 5)", "fieldKey": "businessValue", "required": true },
+      { "header": "User base (number of users)", "fieldKey": "userBase", "required": true },
+      { "header": "Estimated annual benefit (USD)", "fieldKey": "estimatedAnnualBenefitUsd" },
+      { "header": "Regulatory or security driven", "fieldKey": "regulatorySecurity", "required": true },
+      { "header": "Digital transformation aligned", "fieldKey": "dtAlignment", "required": true },
+      { "header": "Protected program", "fieldKey": "protectedProgram" },
+      { "header": "Primary skill", "fieldKey": "primarySkill", "required": true, "lookup": "skillName" },
+      { "header": "Skill demand (FTE)", "fieldKey": "skillDemandFte", "required": true },
+      { "header": "Cost estimate (USD)", "fieldKey": "costEstimateUsd", "required": true },
+      { "header": "Risk rating", "fieldKey": "riskRating", "required": true },
+      { "header": "Effort (person-weeks)", "fieldKey": "effortPersonWeeks", "required": true },
+      { "header": "Notes", "fieldKey": "notes" }
+    ]
   },
   "pipeline": {
     "acceptedStatus": "Accepted"

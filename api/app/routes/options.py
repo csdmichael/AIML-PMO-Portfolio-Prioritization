@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from app.container import Services
 from app.models import OptionsResponse
-from app.routes.deps import get_services
+from app.routes.deps import get_fresh_services
 
 router = APIRouter(tags=["options"])
 
@@ -18,5 +18,5 @@ router = APIRouter(tags=["options"])
     operation_id="getOptions",
     summary="Data-entry contract: option lists, field rules, and upload rules",
 )
-def get_options(services: Services = Depends(get_services)) -> dict[str, Any]:
+def get_options(services: Services = Depends(get_fresh_services)) -> dict[str, Any]:
     return services.config.data_entry.model_dump(exclude_none=True)

@@ -20,6 +20,7 @@ REPO_ROOT = API_ROOT.parent
 API_SETTINGS_FILE = API_ROOT / "config" / "api.json"
 
 _DYNAMIC_SELECT_SOURCES = frozenset({"portfolios", "programsOfPortfolio"})
+_IMPORT_LOOKUPS = frozenset({"portfolioName", "programName", "skillName"})
 _OPTIONS_PREFIX = "options."
 
 
@@ -100,12 +101,14 @@ class ExportFileNames(Settings):
 
 class UiEntryFolders(Settings):
     decisions: str
+    projectChanges: str
     drafts: str
 
 
 class OneLakeSettings(Settings):
     dfsEndpoint: FileRef
     itemSuffix: str
+    lookupsFile: str
     rawRoot: FileRef
     exportsRoot: FileRef
     exportFiles: ExportFileNames
@@ -145,6 +148,7 @@ class UploadSettings(Settings):
 class DecisionSettings(Settings):
     idPrefix: str
     tiers: list[str]
+    actions: list[str]
     reasonMinLength: int
     reasonMaxLength: int
     decidedByMaxLength: int
@@ -190,6 +194,23 @@ class IntakeSettings(Settings):
     statuses: IntakeStatuses
 
 
+class ProjectImportColumn(Settings):
+    header: str
+    fieldKey: str
+    required: bool = False
+    lookup: str | None = None
+
+
+class ProjectImportSettings(Settings):
+    fileName: str
+    contentType: str
+    sheetName: str | None = None
+    headerRow: int
+    maxRows: int
+    booleanWords: dict[str, list[str]]
+    columns: list[ProjectImportColumn]
+
+
 class ApiSettings(Settings):
     api: ApiInfo
     hosting: HostingSettings
@@ -204,6 +225,7 @@ class ApiSettings(Settings):
     projects: ProjectSettings
     uploads: UploadSettings
     decisions: DecisionSettings
+    projectImport: ProjectImportSettings
     pipeline: PipelineSettings
     problems: ProblemSettings
     templates: TemplateSettings
@@ -289,6 +311,27 @@ def _check_contract(api: ApiSettings, data_entry: DataEntryContract, ai: AiPrefi
         raise ConfigError(f"ai-prefill.json fields must match data-entry.json projectFields (except '{name_field}'); missing {missing}, extra {extra}")
     if set(ai.evidenceToConfidence) != set(ai.evidenceLevels):
         raise ConfigError("ai-prefill.json evidenceToConfidence must have one entry per evidence level")
+    for name, creatable in ai.creatableFields.items():
+        rule = next((item for item in data_entry.projectFields if item.key == name), None)
+        if rule is None:
+            raise ConfigError(f"ai-prefill.json creatableFields names '{name}', which is not a projectFields key")
+        source = rule.source or ""
+        if creatable.kind == "option":
+            list_name = source.removeprefix("options.")
+            if not source.startswith("options.") or list_name == "skills" or list_name not in OptionLists.model_fields:
+                raise ConfigError(f"'{name}' can be created as an option only when it reads a static list other than skills")
+        else:
+            role_rule = next((item for item in data_entry.portfolioFields if item.key == "role"), None)
+            if source != "portfolios" or role_rule is None or creatable.role not in (role_rule.options or []):
+                raise ConfigError(f"'{name}' can be created as a portfolio only when it reads the portfolio list and has a valid role")
+    importing = api.projectImport
+    for column in importing.columns:
+        if column.fieldKey not in keys:
+            raise ConfigError(f"api.json projectImport column '{column.header}' names '{column.fieldKey}', which is not a projectFields key")
+        if column.lookup is not None and column.lookup not in _IMPORT_LOOKUPS:
+            raise ConfigError(f"api.json projectImport column '{column.header}' uses an unknown lookup '{column.lookup}'")
+    if set(importing.booleanWords) != {"true", "false"}:
+        raise ConfigError("api.json projectImport booleanWords must have exactly the lists true and false")
     source_keys = {source.key for source in sources.sources}
     unknown = sorted(set(data_entry.uploads.acceptedBySource) - source_keys)
     if unknown:

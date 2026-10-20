@@ -16,6 +16,7 @@ class LakePaths:
         self._portfolios = lake.manualPortfoliosFolder.strip("/")
         self._decisions = f"{self.raw_root}/{onelake.uiEntryFolders.decisions}"
         self._drafts = f"{self.raw_root}/{onelake.uiEntryFolders.drafts}"
+        self._project_changes = f"{self.raw_root}/{onelake.uiEntryFolders.projectChanges}"
         self._upload_folder_template = uploads.oneLakeFolderTemplate
         self._file_name_template = uploads.fileNameTemplate
         self._source_folders = {source.key: source.folder for source in config.data_sources.sources}
@@ -55,6 +56,12 @@ class LakePaths:
 
     def draft_documents_folder(self, draft_id: str) -> str:
         return f"{self._drafts}/{draft_id}/documents"
+
+    def project_changes_folder(self) -> str:
+        return self._project_changes
+
+    def project_change(self, project_id: str) -> str:
+        return f"{self._project_changes}/{project_id}.json"
 
     def source_folder(self, source_key: str) -> str:
         try:

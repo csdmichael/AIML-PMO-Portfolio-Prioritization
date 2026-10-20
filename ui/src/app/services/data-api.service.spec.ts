@@ -77,6 +77,68 @@ describe('DataApiService', () => {
     httpController = TestBed.inject(HttpTestingController);
   });
 
+  it('sends a project edit as a PATCH with only the changed fields', () => {
+    service.updateProject('GIS-0001', { sponsorName: 'Ruth Okafor' }).subscribe();
+
+    const request = httpController.expectOne('/api/v1/projects/GIS-0001');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ sponsorName: 'Ruth Okafor' });
+    request.flush({});
+  });
+
+  it('posts a decision with its tier, action, reason, and decider, and maps the saved record', () => {
+    let saved: unknown;
+    service
+      .createDecision({
+        projectId: 'GIS-0001',
+        decision: 'Proceed',
+        action: 'Approve',
+        reason: 'Funding is confirmed for the quarter.',
+        decidedBy: 'PMO lead',
+      })
+      .subscribe((decision) => (saved = decision));
+
+    const request = httpController.expectOne('/api/v1/decisions');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      projectId: 'GIS-0001',
+      decision: 'Proceed',
+      action: 'Approve',
+      reason: 'Funding is confirmed for the quarter.',
+      decidedBy: 'PMO lead',
+    });
+    request.flush({
+      decisionId: 'dec-1',
+      projectId: 'GIS-0001',
+      decision: 'Proceed',
+      action: 'Approve',
+      reason: 'Funding is confirmed for the quarter.',
+      decidedBy: 'PMO lead',
+      recordedAtUtc: '2026-10-01T12:00:00Z',
+    });
+
+    expect(saved).toEqual({
+      decisionId: 'dec-1',
+      projectId: 'GIS-0001',
+      decision: 'Proceed',
+      action: 'Approve',
+      reason: 'Funding is confirmed for the quarter.',
+      decidedBy: 'PMO lead',
+      timestamp: '2026-10-01T12:00:00Z',
+    });
+  });
+
+  it('loads the decisions for one project from the list endpoint', () => {
+    let loaded: unknown[] = [];
+    service.getDecisions('GIS-0001').subscribe((decisions) => (loaded = decisions));
+
+    const request = httpController.expectOne((req) => req.url === '/api/v1/decisions');
+    expect(request.request.params.get('projectId')).toBe('GIS-0001');
+    request.flush({ items: [], count: 0 });
+
+    expect(loaded).toEqual([]);
+  });
+
   it('should call GET /options under configured basePath', () => {
     service.getOptions().subscribe();
     const req = httpController.expectOne('/api/v1/options');
@@ -104,6 +166,20 @@ describe('DataApiService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ projectName: 'Test Name', description: 'Test Desc' });
     req.flush({ draftId: 'draft-123', status: 'draft' });
+  });
+
+  it('should call POST /intake/drafts/{draftId}/suggestions/{fieldKey}/apply', () => {
+    service.applyIntakeSuggestion('DRF-1', 'businessUnit').subscribe();
+    const req = httpController.expectOne('/api/v1/intake/drafts/DRF-1/suggestions/businessUnit/apply');
+    expect(req.request.method).toBe('POST');
+    req.flush({ draftId: 'DRF-1', status: 'prefilled' });
+  });
+
+  it('should call DELETE /intake/drafts/{draftId}/suggestions/{fieldKey} to dismiss a suggestion', () => {
+    service.dismissIntakeSuggestion('DRF-1', 'site').subscribe();
+    const req = httpController.expectOne('/api/v1/intake/drafts/DRF-1/suggestions/site');
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ draftId: 'DRF-1', status: 'prefilled' });
   });
 
   it('should call GET /pipeline/runs/{runId}', () => {

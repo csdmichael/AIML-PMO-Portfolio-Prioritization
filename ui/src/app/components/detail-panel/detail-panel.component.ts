@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -23,6 +23,9 @@ import { DataApiService } from '../../services/data-api.service';
 import { ConfidenceRingComponent } from '../confidence-ring/confidence-ring.component';
 import { Project, DecisionAction, LocalDecision } from '../../models/portfolio.models';
 import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
+import { ConfigService } from '../../services/config.service';
+import { problemMessage } from '../../core/problem-detail';
+import { Observable } from 'rxjs';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
@@ -106,17 +109,26 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                 Edit Project & AI Signals
               </button>
               @if (p.projectStatus !== 'Backlog') {
-                <button type="button" class="life-btn backlog" (click)="store.markAsBacklog(p.projectId)">
+                <button type="button" class="life-btn backlog" (click)="runLifecycle(store.setProjectStatus(p.projectId, 'Backlog'))">
                   Mark as Backlog
                 </button>
               } @else {
-                <button type="button" class="life-btn active" (click)="store.setProjectStatus(p.projectId, 'Active')">
+                <button type="button" class="life-btn active" (click)="runLifecycle(store.setProjectStatus(p.projectId, 'Active'))">
                   Move to Active
                 </button>
               }
-              <button type="button" class="life-btn soft" (click)="store.softDeleteProjects(p.projectId)">
-                Soft Delete (Trash)
-              </button>
+              @if (p.isDeleted) {
+                <button type="button" class="life-btn active" (click)="runLifecycle(store.setSoftDeleted(p.projectId, false))">
+                  Restore
+                </button>
+              } @else {
+                <button type="button" class="life-btn soft" (click)="runLifecycle(store.setSoftDeleted(p.projectId, true))">
+                  Soft Delete (Trash)
+                </button>
+              }
+              @if (lifecycleError(); as message) {
+                <div class="panel-error" role="alert">{{ message }}</div>
+              }
               <button type="button" class="life-btn hard" (click)="onPermanentDelete(p)">
                 Permanent Delete
               </button>
@@ -247,17 +259,35 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
             <div class="detail-section decision-controls-section">
               <div class="section-heading">PMO Decision Capture</div>
 
-              @if (store.getDecision(p.projectId); as dec) {
-                <div class="recorded-decision-box" [class]="dec.action.toLowerCase()">
+              @if (latestDecision(); as dec) {
+                <div class="recorded-decision-box" [class]="(dec.action ?? 'recorded').toLowerCase()">
                   <div class="dec-header">
-                    <strong>Recorded: {{ dec.action }}</strong>
+                    <strong>Recorded: {{ dec.action ?? 'Decision' }} · {{ dec.decision }}</strong>
                     <span class="dec-time">{{ dec.timestamp | date:'short' }}</span>
                   </div>
-                  <div class="dec-reason">"{{ dec.reason }}"</div>
+                  <div class="dec-reason">"{{ dec.reason }}"{{ dec.decidedBy ? ' (' + dec.decidedBy + ')' : '' }}</div>
                 </div>
               }
 
               <div class="decision-form">
+                <div class="decision-meta-row">
+                  <label class="decision-field">
+                    <span>Priority tier</span>
+                    <select class="decision-select" [(ngModel)]="decisionTier" aria-label="Decision priority tier">
+                      <option value="">{{ p.finalTier }} (current)</option>
+                      @for (tier of tierOptions; track tier) {
+                        <option [value]="tier">{{ tier }}</option>
+                      }
+                    </select>
+                  </label>
+                  <label class="decision-field">
+                    <span>Decided by</span>
+                    <input class="decision-select" type="text" maxlength="80" [(ngModel)]="decidedBy" aria-label="Decided by" />
+                  </label>
+                </div>
+                @if (decisionError(); as message) {
+                  <div class="panel-error" role="alert">{{ message }}</div>
+                }
                 <div class="reason-input-wrap">
                   <ion-textarea
                     [(ngModel)]="decisionReason"
@@ -270,8 +300,8 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                   <ion-button
                     color="success"
                     size="small"
-                    [disabled]="!decisionReason.trim()"
-                    (click)="submitDecision(p.projectId, 'Approve')"
+                    [disabled]="!decisionReason.trim() || !decidedBy.trim()"
+                    (click)="submitDecision(p, 'Approve')"
                     aria-label="Approve recommendation"
                   >
                     Approve
@@ -279,8 +309,8 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                   <ion-button
                     color="warning"
                     size="small"
-                    [disabled]="!decisionReason.trim()"
-                    (click)="submitDecision(p.projectId, 'Adjust')"
+                    [disabled]="!decisionReason.trim() || !decidedBy.trim()"
+                    (click)="submitDecision(p, 'Adjust')"
                     aria-label="Adjust project tier"
                   >
                     Adjust
@@ -288,8 +318,8 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                   <ion-button
                     color="danger"
                     size="small"
-                    [disabled]="!decisionReason.trim()"
-                    (click)="submitDecision(p.projectId, 'Reject')"
+                    [disabled]="!decisionReason.trim() || !decidedBy.trim()"
+                    (click)="submitDecision(p, 'Reject')"
                     aria-label="Reject recommendation"
                   >
                     Reject
@@ -303,8 +333,9 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
         @if (isEditing()) {
           <app-edit-project-modal
             [project]="p"
+            [error]="editError()"
             (save)="onSaveEditedProject($event)"
-            (cancel)="isEditing.set(false)"
+            (dismiss)="isEditing.set(false)"
           ></app-edit-project-modal>
         }
       </div>
@@ -693,19 +724,99 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
         background: #ef4444;
         color: #ffffff;
       }
+      .decision-meta-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .decision-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        min-width: 160px;
+        font-size: 0.72rem;
+        color: #475569;
+      }
+      .decision-select {
+        padding: 6px 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        background: #ffffff;
+      }
+      .panel-error {
+        color: #b91c1c;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin: 6px 0;
+      }
     `,
   ],
 })
 export class DetailPanelComponent {
   readonly store = inject(PortfolioStore);
   private readonly api = inject(DataApiService);
+  private readonly configService = inject(ConfigService);
+  private readonly selectedId = computed(() => this.store.selectedProject()?.projectId ?? null);
+
   readonly isEditing = signal<boolean>(false);
+  readonly editError = signal<string | null>(null);
+  readonly lifecycleError = signal<string | null>(null);
+  readonly latestDecision = signal<LocalDecision | null>(null);
+  readonly decisionError = signal<string | null>(null);
+  readonly tierOptions: string[] = Object.values(this.configService.config.tiers.labels);
+  decisionTier = '';
+  decidedBy = '';
   decisionReason = '';
 
-  onSaveEditedProject(updated: Project): void {
-    const list = this.store.rawProjects().map((p) => (p.projectId === updated.projectId ? updated : p));
-    this.store.updateDatasetProjects(list);
+  constructor() {
+    effect(() => {
+      const projectId = this.selectedId();
+      untracked(() => this.resetFor(projectId));
+    });
+  }
+
+  runLifecycle(change: Observable<unknown>): void {
+    this.lifecycleError.set(null);
+    change.subscribe({
+      error: (err: unknown) => this.lifecycleError.set(problemMessage(err, 'Could not update the project. Try again.')),
+    });
+  }
+
+  onSaveEditedProject(changes: Record<string, unknown>): void {
+    const projectId = this.selectedId();
+    if (!projectId) return;
+    if (Object.keys(changes).length === 0) {
+      this.isEditing.set(false);
+      return;
+    }
+    this.editError.set(null);
+    this.store.updateProject(projectId, changes).subscribe({
+      next: () => this.isEditing.set(false),
+      error: (err: unknown) => this.editError.set(problemMessage(err, 'Could not save the project changes.')),
+    });
+  }
+
+  private resetFor(projectId: string | null): void {
     this.isEditing.set(false);
+    this.lifecycleError.set(null);
+    this.decisionError.set(null);
+    this.latestDecision.set(null);
+    this.decisionTier = '';
+    this.decisionReason = '';
+    if (!projectId) return;
+    this.api.getDecisions(projectId).subscribe({
+      next: (decisions) => {
+        if (this.selectedId() === projectId) this.latestDecision.set(decisions[0] ?? null);
+      },
+      error: (err: unknown) => {
+        if (this.selectedId() === projectId) {
+          this.decisionError.set(problemMessage(err, 'Could not load the recorded decision.'));
+        }
+      },
+    });
   }
 
   getSourcesList(p: Project): Array<{ name: string; present: boolean }> {
@@ -773,29 +884,31 @@ export class DetailPanelComponent {
     };
   }
 
-  submitDecision(projectId: string, action: DecisionAction): void {
-    if (!this.decisionReason.trim()) return;
-    const decision: LocalDecision = {
-      projectId,
-      action,
-      reason: this.decisionReason.trim(),
-      timestamp: new Date().toISOString(),
-    };
-    this.api.createDecision(decision).subscribe({
-      next: (saved: LocalDecision) => {
-        this.store.recordDecision(saved);
-      },
-      error: () => {
-        // Fallback to storing locally
-        this.store.recordDecision(decision);
-      },
-    });
-    this.decisionReason = '';
+  submitDecision(project: Project, action: DecisionAction): void {
+    const reason = this.decisionReason.trim();
+    const decidedBy = this.decidedBy.trim();
+    if (!reason || !decidedBy) return;
+    this.decisionError.set(null);
+    this.api
+      .createDecision({
+        projectId: project.projectId,
+        decision: this.decisionTier || project.finalTier,
+        action,
+        reason,
+        decidedBy,
+      })
+      .subscribe({
+        next: (saved) => {
+          this.latestDecision.set(saved);
+          this.decisionReason = '';
+          this.decisionTier = '';
+        },
+        error: (err: unknown) => this.decisionError.set(problemMessage(err, 'Could not record the decision.')),
+      });
   }
 
   onPermanentDelete(p: Project): void {
-    if (confirm(`Are you sure you want to PERMANENTLY delete project ${p.projectId} (${p.projectName})? This action cannot be undone.`)) {
-      this.store.permanentDeleteProjects(p.projectId);
-    }
+    if (!confirm(`Are you sure you want to PERMANENTLY delete project ${p.projectId} (${p.projectName})? This action cannot be undone.`)) return;
+    this.runLifecycle(this.store.permanentlyDelete(p.projectId));
   }
 }

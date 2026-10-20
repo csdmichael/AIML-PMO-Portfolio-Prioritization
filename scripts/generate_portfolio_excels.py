@@ -1,6 +1,6 @@
 """
 Generates per-portfolio Excel files and minimal Project Intake Template.
-Outputs to data/portfolios/ and ui/src/assets/data/portfolios/.
+Outputs to data/portfolios/.
 Highlights Mandatory (* [MANDATORY]) and Optional ([OPTIONAL]) columns with distinct styling.
 """
 
@@ -89,7 +89,6 @@ def main():
 
     out_dirs = [
         os.path.join(root_dir, "data", "portfolios"),
-        os.path.join(root_dir, "ui", "src", "assets", "data", "portfolios"),
     ]
     for d in out_dirs:
         os.makedirs(d, exist_ok=True)
@@ -313,7 +312,6 @@ def main():
         make_excel("../it_infosec_sample_projects.xlsx", infosec_projects, "IT - InfoSec")
         make_xls(os.path.join(root_dir, "data", "it_infosec_sample_projects.xls"), infosec_projects, "IT - InfoSec", headers)
         make_xls(os.path.join(root_dir, "data", "portfolios", "it_infosec_sample_projects.xls"), infosec_projects, "IT - InfoSec", headers)
-        make_xls(os.path.join(root_dir, "ui", "src", "assets", "data", "portfolios", "it_infosec_sample_projects.xls"), infosec_projects, "IT - InfoSec", headers)
         print("Generated it_infosec_sample_projects.xls and .xlsx in data/ and data/portfolios/")
 
     make_excel("portfolio_all_100_projects.xlsx", projects, "All Portfolios")

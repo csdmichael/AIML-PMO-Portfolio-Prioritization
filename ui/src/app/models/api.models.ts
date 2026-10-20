@@ -34,6 +34,7 @@ export interface DataEntryOptions {
 
 export interface ProjectFieldDef {
   key: string;
+  exportKey?: string;
   label: string;
   type: string;
   required: boolean;
@@ -101,8 +102,30 @@ export interface PortfolioItem {
   role: 'main' | 'coupled';
   jiraProjectKey?: string;
   adoAreaRoot?: string;
-  programs: Array<{ key: string; name: string }>;
+  programs: Array<{ key: string; name?: string; displayName?: string }>;
   status?: 'processed' | 'pending';
+}
+
+export interface PortfolioList {
+  items: PortfolioItem[];
+  count: number;
+}
+
+export interface ImportedProject {
+  projectId: string;
+  projectName?: string | null;
+}
+
+export interface ProjectImportResult {
+  created: ImportedProject[];
+  count: number;
+  pipelineRunId?: string | null;
+  warnings: string[];
+}
+
+export interface ProjectRemoved {
+  projectId: string;
+  deleted: boolean;
 }
 
 export interface ProjectUploadMetadata {
@@ -162,4 +185,14 @@ export interface IntakeDraft {
   pipelineRunId?: string | null;
   projectId?: string;
   warnings?: string[];
+  suggestions?: Record<string, IntakeSuggestion>;
+}
+
+/** A dropdown value the AI proposed that its list does not have. Applying it creates the value. */
+export interface IntakeSuggestion {
+  field: string;
+  kind: 'option' | 'portfolio';
+  proposedValue: string;
+  label: string;
+  rationale: string;
 }

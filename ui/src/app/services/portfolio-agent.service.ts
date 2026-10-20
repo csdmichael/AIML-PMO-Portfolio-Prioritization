@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { FileExportService, ExportTableData } from './file-export.service';
 import { ConfigService } from './config.service';
+import { CopilotSamplePrompt } from '../models/ui-config.models';
 import { EChartsOption } from 'echarts';
 
 export type AgentChartType = 'bar' | 'line' | 'pie' | 'radar';
@@ -37,13 +38,7 @@ export interface AgentStructuredResponse {
   provenance?: AgentProvenance;
 }
 
-export interface SamplePrompt {
-  id: string;
-  title: string;
-  icon: string;
-  prompt: string;
-  category: 'priority' | 'budget' | 'skills' | 'rules' | 'risk';
-}
+export type SamplePrompt = CopilotSamplePrompt;
 
 @Injectable({ providedIn: 'root' })
 export class PortfolioAgentService {
@@ -59,14 +54,10 @@ export class PortfolioAgentService {
     tableData: { title: '', headers: [], rows: [] }, activeView: 'table', activeChartType: 'bar',
     timestamp: '', sourceRecordCount: 0,
   }]);
-  readonly samplePrompts: SamplePrompt[] = [
-    { id: 'must-do', title: 'Top 5 Must-Do-Now Projects', icon: 'sparkles-outline', prompt: 'Show top 5 Must-do-now projects by priority score', category: 'priority' },
-    { id: 'budget-bu', title: 'Budget by Business Unit', icon: 'pie-chart-outline', prompt: 'Break down project budget and count by Business Unit', category: 'budget' },
-    { id: 'skills-gap', title: 'Skills Capacity Deficits', icon: 'people-outline', prompt: 'Which skills have capacity deficits compared to project demand?', category: 'skills' },
-    { id: 'explain-gis42', title: 'Explain GIS-0042', icon: 'help-circle-outline', prompt: 'Explain the recorded ML drivers and rules for GIS-0042', category: 'rules' },
-    { id: 'regulatory', title: 'Regulatory & Security Projects', icon: 'shield-checkmark-outline', prompt: 'List regulatory and security mandatory projects; state if the retrieved results are truncated', category: 'risk' },
-    { id: 'r5-blockers', title: 'Cross-Portfolio Dependencies', icon: 'git-network-outline', prompt: 'Show recorded dependency links for the top 5 Must-do-now projects; distinguish recorded links from inferred critical paths', category: 'rules' },
-  ];
+  /** Starter questions are configured in ui.json (copilot.samplePrompts). */
+  get samplePrompts(): SamplePrompt[] {
+    return this.config.config.copilot?.samplePrompts ?? [];
+  }
 
   toggleOpen(): void { this.isOpen.update(value => !value); }
   setOpen(open: boolean): void { this.isOpen.set(open); }

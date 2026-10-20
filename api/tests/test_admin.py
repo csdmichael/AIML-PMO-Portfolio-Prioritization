@@ -3,6 +3,7 @@ from unittest.mock import Mock
 from fastapi.testclient import TestClient
 from app.main import create_app
 from app.container import build_services
+from app.options_store import OptionsStore
 from app.routes.deps import get_services
 
 
@@ -12,7 +13,12 @@ def get_test_services():
     mock_lake.read_table.return_value = None
     mock_lake.write_table.return_value = "etag"
     mock_lake.write_json.return_value = "etag"
+    mock_lake.write_json.return_value = "etag"
+    mock_lake.read_json.return_value = None
     services.lake = mock_lake
+    services.options = OptionsStore(
+        lake=mock_lake, contract=services.config.data_entry, path=services.config.api.oneLake.lookupsFile, ttl_seconds=0,
+    )
     return services
 
 

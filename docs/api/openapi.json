@@ -53,7 +53,7 @@
         "tags": [
           "portfolio"
         ],
-        "summary": "Portfolio export (contract v2), unchanged",
+        "summary": "Portfolio export (contract v2) with lifecycle changes applied",
         "operationId": "getPortfolioExport",
         "responses": {
           "200": {
@@ -654,6 +654,61 @@
         }
       }
     },
+    "/v1/projects/import": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Create projects from an Excel register; every row is checked before any project is saved",
+        "operationId": "importProjects",
+        "parameters": [
+          {
+            "name": "runPipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Start the pipeline after the projects are written",
+              "default": true,
+              "title": "Runpipeline"
+            },
+            "description": "Start the pipeline after the projects are written"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importProjects"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{projectId}": {
       "get": {
         "tags": [
@@ -679,6 +734,98 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Change a project's fields, or soft delete and restore it",
+        "operationId": "updateProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Remove a project from every view; its entry stays in OneLake for audit",
+        "operationId": "deleteProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRemoved"
                 }
               }
             }
@@ -963,6 +1110,26 @@
         }
       }
     },
+    "/v1/templates/project-import.xlsx": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "Project import workbook (header row and allowed values, no data rows)",
+        "operationId": "getProjectImportTemplate",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          }
+        }
+      }
+    },
     "/v1/templates/intake.xlsx": {
       "get": {
         "tags": [
@@ -1133,6 +1300,108 @@
             "schema": {
               "type": "string",
               "title": "Draftid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}/suggestions/{fieldKey}/apply": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Create the suggested dropdown value and apply it to the draft",
+        "operationId": "applyIntakeSuggestion",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          },
+          {
+            "name": "fieldKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Fieldkey"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/intake/drafts/{draftId}/suggestions/{fieldKey}": {
+      "delete": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Dismiss a suggested dropdown value",
+        "operationId": "dismissIntakeSuggestion",
+        "parameters": [
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draftid"
+            }
+          },
+          {
+            "name": "fieldKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Fieldkey"
             }
           }
         ],
@@ -1903,6 +2172,20 @@
         ],
         "title": "Body_addIntakeDocument"
       },
+      "Body_importProjects": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_importProjects"
+      },
       "Body_uploadProjectFile": {
         "properties": {
           "sourceKey": {
@@ -2171,6 +2454,17 @@
               }
             ],
             "title": "Decidedby"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
           }
         },
         "additionalProperties": false,
@@ -2231,6 +2525,17 @@
               }
             ],
             "title": "Decidedby"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
           },
           "recordedAtUtc": {
             "type": "string",
@@ -2381,6 +2686,11 @@
               }
             ],
             "title": "Projectid"
+          },
+          "suggestions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Suggestions"
           }
         },
         "type": "object",
@@ -2493,6 +2803,17 @@
             ],
             "title": "Source"
           },
+          "exportKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exportkey"
+          },
           "options": {
             "anyOf": [
               {
@@ -2604,6 +2925,30 @@
           "lake"
         ],
         "title": "HealthResponse"
+      },
+      "ImportedProject": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "projectName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId"
+        ],
+        "title": "ImportedProject"
       },
       "LakeFileStatus": {
         "properties": {
@@ -3385,6 +3730,46 @@
         ],
         "title": "ProjectCreated"
       },
+      "ProjectImportResult": {
+        "properties": {
+          "created": {
+            "items": {
+              "$ref": "#/components/schemas/ImportedProject"
+            },
+            "type": "array",
+            "title": "Created"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "pipelineRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pipelinerunid"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "count"
+        ],
+        "title": "ProjectImportResult"
+      },
       "ProjectListItem": {
         "properties": {
           "projectId": {
@@ -3614,6 +3999,11 @@
               }
             ],
             "title": "Cluster"
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "title": "Isdeleted",
+            "default": false
           }
         },
         "type": "object",
@@ -3641,6 +4031,24 @@
           "status"
         ],
         "title": "ProjectRecord"
+      },
+      "ProjectRemoved": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "deleted": {
+            "type": "boolean",
+            "title": "Deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId",
+          "deleted"
+        ],
+        "title": "ProjectRemoved"
       },
       "RecommendationAction": {
         "properties": {

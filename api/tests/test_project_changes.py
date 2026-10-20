@@ -1,0 +1,257 @@
+from types import SimpleNamespace
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.cache import TtlCache
+from app.catalog import Catalog
+from app.config import load_config
+from app.lake_paths import LakePaths
+from app.main import create_app
+from app.options_store import OptionsStore
+from app.project_changes import ProjectChanges
+from app.projects import ProjectService
+from app.routes.deps import get_services
+from app.store import EntryStore, ExportReader
+from tests.lake_doubles import MemoryLake
+
+
+def export_document(config):
+    options = config.data_entry.options
+    return {
+        "portfolios": [
+            {
+                "key": "it-infosec",
+                "displayName": "IT InfoSec",
+                "code": "INFOSEC",
+                "role": "main",
+                "programs": [
+                    {"key": "zero-trust-identity", "displayName": "Zero Trust and Identity", "code": "ZTI"},
+                    {"key": "security-operations", "displayName": "Security Operations", "code": "SOC"},
+                ],
+            },
+            {
+                "key": "data-analytics",
+                "displayName": "Data and Analytics",
+                "code": "DATA",
+                "role": "coupled",
+                "programs": [{"key": "data-platform", "displayName": "Data Platform and Lakehouse", "code": "DPL"}],
+            },
+        ],
+        "capacityBySkill": [{"skill": "UC", "supply": 4.0, "demand": 6.0}],
+        "projects": [
+            {
+                "projectId": "GIS-0001",
+                "projectName": "Edge Network Segmentation",
+                "portfolioKey": "it-infosec",
+                "portfolio": "IT InfoSec",
+                "portfolioCode": "INFOSEC",
+                "portfolioRole": "main",
+                "program": "Zero Trust and Identity",
+                "businessUnit": options.businessUnits[0],
+                "site": options.sites[0],
+                "projectManager": "Sam Rivera",
+                "executiveSponsor": "Ana Lopez",
+                "sponsorLevel": options.sponsorLevels[0],
+                "projectStatus": options.projectStatuses[0],
+                "goLiveDate": "2027-06-30",
+                "businessValue": 4,
+                "userBase": 1500,
+                "regulatorySecurity": False,
+                "dtAlignment": False,
+                "primarySkill": options.skills[0].key,
+                "skillDemandFte": 2.0,
+                "costEstimateUsd": 1200000,
+                "riskRating": options.riskRatings[0],
+                "effortPersonWeeks": 26,
+                "priorityScore": 60.0,
+                "finalTier": "Proceed",
+                "confidenceScore": 80.0,
+                "confidenceLevel": "High",
+                "cluster": "Core Enterprise IT",
+                "recommendedAction": "Proceed",
+            },
+        ],
+    }
+
+
+def pending_entry(config):
+    options = config.data_entry.options
+    return {
+        "projectId": "GIS-0002",
+        "projectName": "Pending Identity Review",
+        "portfolioKey": "it-infosec",
+        "programKey": "zero-trust-identity",
+        "businessUnit": options.businessUnits[0],
+        "site": options.sites[0],
+        "sponsorName": "Dana Park",
+        "sponsorLevel": options.sponsorLevels[0],
+        "projectStatus": options.projectStatuses[0],
+        "goLiveDate": "2027-09-30",
+        "businessValue": 3,
+        "userBase": 400,
+        "regulatorySecurity": True,
+        "dtAlignment": False,
+        "primarySkill": options.skills[0].key,
+        "skillDemandFte": 1.0,
+        "costEstimateUsd": 300000,
+        "riskRating": options.riskRatings[0],
+        "effortPersonWeeks": 10,
+        "projectManager": "Lee Chen",
+        "submittedAtUtc": "2026-10-01T00:00:00Z",
+    }
+
+
+@pytest.fixture
+def harness():
+    config = load_config()
+    lake = MemoryLake()
+    paths = LakePaths(config)
+    lake.files[paths.portfolio_export()] = (export_document(config), "etag-export")
+    lake.files[paths.project_entry("GIS-0002")] = (pending_entry(config), "etag-entry")
+    entries = EntryStore(lake)
+    changes = ProjectChanges(entries=entries, paths=paths, contract=config.data_entry, cache=TtlCache(600))
+    exports = ExportReader(lake=lake, cache=TtlCache(0), pipeline_name="PMO pipeline")
+    catalog = Catalog(
+        exports=exports, entries=entries, paths=paths, statuses=config.api.projects, contract=config.data_entry, changes=changes,
+    )
+    projects = ProjectService(
+        lake=lake,
+        entries=entries,
+        paths=paths,
+        catalog=catalog,
+        contract=config.data_entry,
+        validation=config.api.validation,
+        project_settings=config.api.projects,
+        upload_settings=config.api.uploads,
+        changes=changes,
+    )
+    services = SimpleNamespace(
+        config=config,
+        paths=paths,
+        exports=exports,
+        catalog=catalog,
+        projects=projects,
+        changes=changes,
+        options=OptionsStore(lake=lake, contract=config.data_entry, path=config.api.oneLake.lookupsFile, ttl_seconds=0),
+    )
+    app = create_app()
+    app.dependency_overrides[get_services] = lambda: services
+    with TestClient(app) as client:
+        yield SimpleNamespace(client=client, services=services, lake=lake, config=config)
+
+
+def export_project(client, project_id):
+    export = client.get("/v1/portfolio").json()
+    return next((item for item in export["projects"] if item["projectId"] == project_id), None)
+
+
+def test_a_status_change_shows_in_the_export_at_once_and_leaves_the_rollups_alone(harness):
+    status = harness.config.data_entry.options.projectStatuses[-1]
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"projectStatus": status})
+    assert response.status_code == 200
+    assert response.json()["projectStatus"] == status
+    assert export_project(harness.client, "GIS-0001")["projectStatus"] == status
+    export = harness.client.get("/v1/portfolio").json()
+    assert export["capacityBySkill"] == [{"skill": "UC", "supply": 4.0, "demand": 6.0}]
+
+
+def test_the_sponsor_is_saved_under_the_export_key_and_found_by_search(harness):
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"sponsorName": "Ruth Okafor"})
+    assert response.status_code == 200
+    assert response.json()["executiveSponsor"] == "Ruth Okafor"
+    listed = harness.client.get("/v1/projects", params={"q": "Ruth Okafor"}).json()["items"]
+    assert [item["projectId"] for item in listed] == ["GIS-0001"]
+
+
+def test_a_skill_change_is_saved_as_its_key_and_shows_its_name_in_the_export(harness):
+    skill = harness.config.data_entry.options.skills[-1]
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"primarySkill": skill.key})
+    assert response.status_code == 200
+    assert response.json()["primarySkill"] == skill.displayName
+    assert export_project(harness.client, "GIS-0001")["primarySkill"] == skill.displayName
+
+
+def test_a_portfolio_change_needs_its_program_and_updates_the_names(harness):
+    missing_program = harness.client.patch("/v1/projects/GIS-0001", json={"portfolioKey": "data-analytics"})
+    assert missing_program.status_code == 422
+    response = harness.client.patch(
+        "/v1/projects/GIS-0001", json={"portfolioKey": "data-analytics", "programKey": "data-platform"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["portfolioKey"], body["portfolio"], body["program"]) == ("data-analytics", "Data and Analytics", "Data Platform and Lakehouse")
+
+
+def test_a_program_must_belong_to_the_portfolio_it_is_changed_with(harness):
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"programKey": "data-platform"})
+    assert response.status_code == 422
+    assert "programKey" in response.text
+
+
+def test_unknown_fields_and_bad_values_are_reported(harness):
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"projectStatus": "Nonsense", "notAField": 1})
+    assert response.status_code == 422
+    assert "projectStatus" in response.text
+    assert "notAField" in response.text
+
+
+def test_soft_delete_and_restore_flag_the_project_without_removing_it(harness):
+    deleted = harness.client.patch("/v1/projects/GIS-0001", json={"isDeleted": True}).json()
+    assert deleted["isDeleted"] is True
+    assert export_project(harness.client, "GIS-0001")["isDeleted"] is True
+    assert export_project(harness.client, "GIS-0001")["deletedAt"]
+    listed = harness.client.get("/v1/projects").json()["items"]
+    assert next(item for item in listed if item["projectId"] == "GIS-0001")["isDeleted"] is True
+    restored = harness.client.patch("/v1/projects/GIS-0001", json={"isDeleted": False}).json()
+    assert restored["isDeleted"] is False
+    assert export_project(harness.client, "GIS-0001")["deletedAt"] is None
+
+
+def test_a_soft_delete_flag_must_be_true_or_false(harness):
+    assert harness.client.patch("/v1/projects/GIS-0001", json={"isDeleted": "yes"}).status_code == 422
+
+
+def test_permanent_delete_removes_the_project_from_every_view(harness):
+    assert harness.client.delete("/v1/projects/GIS-0001").json() == {"projectId": "GIS-0001", "deleted": True}
+    assert harness.client.get("/v1/projects/GIS-0001").status_code == 404
+    assert export_project(harness.client, "GIS-0001") is None
+    listed = harness.client.get("/v1/projects").json()["items"]
+    assert "GIS-0001" not in {item["projectId"] for item in listed}
+    assert harness.client.patch("/v1/projects/GIS-0001", json={"isDeleted": True}).status_code == 404
+
+
+def test_a_pending_entry_keeps_its_change_when_it_is_read(harness):
+    status = harness.config.data_entry.options.projectStatuses[-1]
+    assert harness.client.patch("/v1/projects/GIS-0002", json={"projectStatus": status}).status_code == 200
+    body = harness.client.get("/v1/projects/GIS-0002").json()
+    assert body["projectStatus"] == status
+    assert body["status"] == harness.config.api.projects.statusPending
+
+
+def test_a_pending_entry_can_be_removed_and_stays_in_oneLake(harness):
+    assert harness.client.delete("/v1/projects/GIS-0002").status_code == 200
+    assert harness.client.get("/v1/projects/GIS-0002").status_code == 404
+    assert harness.lake.read_json(harness.services.paths.project_entry("GIS-0002")) is not None
+
+
+def test_changes_to_unknown_projects_are_not_found(harness):
+    status = harness.config.data_entry.options.projectStatuses[-1]
+    assert harness.client.patch("/v1/projects/GIS-9999", json={"projectStatus": status}).status_code == 404
+    assert harness.client.delete("/v1/projects/GIS-9999").status_code == 404
+
+
+def test_a_change_that_lost_a_race_is_a_conflict_and_is_not_saved(harness, monkeypatch):
+    entries = harness.services.changes._entries
+    original_replace = entries.replace
+    harness.services.changes.save("GIS-0001", values={"projectStatus": harness.config.data_entry.options.projectStatuses[-1]})
+
+    def another_instance_writes_first(path, value, etag):
+        stored, _ = harness.lake.files[path]
+        harness.lake.files[path] = (stored, "newer")
+        return original_replace(path, value, etag)
+
+    monkeypatch.setattr(entries, "replace", another_instance_writes_first)
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"sponsorName": "Late Change"})
+    assert response.status_code == 409
+    assert "executiveSponsor" not in harness.lake.files[harness.services.paths.project_change("GIS-0001")][0].get("values", {})

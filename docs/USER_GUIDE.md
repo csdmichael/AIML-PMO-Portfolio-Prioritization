@@ -23,6 +23,8 @@ Welcome to the **AI-Powered PMO Portfolio Prioritization** solution user manual.
 
 The **Overview** screen surfaces cross-dimensional machine learning insights, strategic priority tier allocations, confidence distributions, and workforce capacity analytics across all 100 enterprise projects.
 
+Portfolio data is read from OneLake through the API. While the Demo Environment setting is on (Admin Settings), every page shows a banner saying the data is synthetic demo data.
+
 ![Executive Portfolio Overview Desktop](images/user-guide/01-overview-desktop.png)
 
 ### Key Capabilities:
@@ -107,7 +109,7 @@ The **Quick Add** wizard allows business sponsors and PMs to submit project prop
 ![Quick Add AI Prefill](images/user-guide/06-quick-add-prefill.png)
 
 ### Workflow:
-1. **Pre-saved Sample Prompts**: One-click prompt chips populate realistic semiconductor, IoT, and cybersecurity proposals.
+1. **Describe the project**: Enter the project name and a plain-English description. Every field starts blank.
 2. **AI Pre-fill (Missing only)**: the intake agent fills the fields that are still empty, using public web sources through Bing grounding. It covers Business Value, Regulatory Flag, Primary Skill, Cost Estimate, Risk Rating, and Effort person-weeks. A value you entered is never replaced.
 3. **Signal Provenance & Confidence**: Each field displays an extracted confidence score, evidence quote from the source text, and allows human overrides before OneLake submission.
 
@@ -120,9 +122,11 @@ The **Data Entry** module allows direct ingestion, portfolio management, and mon
 ![Data Entry & Ingestion Sources](images/user-guide/07-data-entry-ingestion.png)
 
 ### Key Capabilities:
-- **Create Project**: Form-based creation with "Quick Fill Sample Values" for rapid testing.
+- **Create Project**: Form-based creation. Every field starts blank, and numbers are never filled with example values.
+- **Dropdown suggestions**: when the AI proposes a Portfolio, Business Unit, or Site that its list does not have (for example, a new portfolio "HR Projects" for an HR policies website), the form shows the proposal under the dropdown. **Create and apply** adds it to the list and sets the field in one click; a new portfolio gets one program with the same name. **Dismiss** hides the proposal. A dropdown is never set to a value its list does not show.
+- **Program**: lists the programs of the selected portfolio. Changing the portfolio clears a program that belongs to another portfolio.
 - **Create Portfolio**: Register new portfolios and program taxonomies.
-- **OneLake Ingestion Activity**: Status table detailing synchronization health, target schemas, formats, and record counts across Planview, ADO, JIRA, SAP Cost, and HR Roster.
+- **Import Excel**: Upload a workbook that follows the import template. Download the template from the same screen; its *Allowed values* sheet lists the portfolios, programs, skills, and statuses the workbook must use. Every row is checked first. If any row is invalid, nothing is saved and each problem is listed by row and column (for example, row 4, Sponsor). A valid workbook saves its projects and starts a pipeline run, so scores and dashboards update when the run finishes.
 
 ---
 
@@ -133,7 +137,8 @@ The **Decisions** screen enforces the proposal principle: *"Keep people in contr
 ![PMO Human Governance Log](images/user-guide/08-pmo-decisions-log.png)
 
 ### Features:
-- **Record Governance Action**: Choose Action (*Approve*, *Adjust*, *Reject*), select target project, and enter mandatory justification.
+- **Record Governance Action**: Choose the action (*Approve*, *Adjust*, *Reject*), the project, the priority tier (it defaults to the project's current tier), who decided ("Decided by"), and a mandatory justification.
+- **Latest decision in the detail panel**: Opening a project shows its most recent decision with its action, tier, decider, and justification.
 - **Immutable Audit Trail**: Chronological log recording reviewer timestamps, action pills, and justification notes stored in OneLake.
 
 ---
@@ -147,6 +152,8 @@ Clicking any project opens the **Detail Inspector** displaying all 10 canonical 
 ### Key Elements:
 - **Confidence Ring Gauge**: Visual breakdown of Completeness, Quality, and Model Certainty.
 - **SHAP Feature Importance Waterfall**: Explains *why* the model scored the project high or low (e.g. high business value increasing score by +0.72; high cost reducing score by -0.18).
+- **Lifecycle actions**: *Mark as Backlog* or *Move to Active*, *Soft Delete (Trash)* and *Restore*, and *Permanent Delete* (asks for confirmation). Each action is saved through the API and the screen reloads from OneLake.
+- **Edit Project**: Changes to project inputs (portfolio and program, business unit, site, sponsor, status, go-live date, value, skill, cost, risk, and effort) save through the API. The lists come from the configuration. Model outputs (tiers, priority and confidence scores, clusters) are read-only and come from the pipeline.
 - **Rule Overrides Badge**: Transparent indicators showing which deterministic business rules (R1 Regulatory First, R2 Executive Sponsorship, R3 Protected Programs, R4 Deprioritize Guard, R5 Cross-Portfolio Critical Path) altered the machine learning rank.
 - **Cross-Source Provenance**: Checkmarks showing which of the 11 enterprise systems contributed data.
 
@@ -160,13 +167,13 @@ The **AI Portfolio Copilot** is accessible from any screen via the Floating Acti
 
 ### Copilot Features:
 - **Pulsing FAB**: High-visibility floating button with gradient styling and "Ask AI Agent" indicator.
-- **Pre-Saved Prompts**: Clickable chips that send real requests to the Foundry agent:
+- **Pre-Saved Prompts**: Clickable chips that send real requests to the Foundry agent. The list is set in `ui/src/assets/config/ui.json` under `copilot.samplePrompts`:
   - 💡 *Top 5 Must-Do-Now Projects*
   - 📊 *Budget by Business Unit*
   - 👥 *Skills Capacity Deficits*
-  - 🔍 *Explain GIS-0042 Deprioritization*
+  - 🔍 *Explain the Top Project*
   - 🛡️ *Regulatory & Security Projects*
-  - ⚡ *R5 Critical Path Dependencies*
+  - ⚡ *Cross-Portfolio Dependencies*
 - **Table vs Chart Switcher**: Seamlessly toggle any Copilot response between a structured data table and an interactive chart.
 - **Chart Type Selector**: Switch between **Bar**, **Line**, **Pie / Donut**, and **Radar / Spider** charts with a single click.
 - **Multi-Format Export**: Export any Copilot answer directly to:

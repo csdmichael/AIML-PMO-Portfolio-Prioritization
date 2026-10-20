@@ -1,12 +1,13 @@
-import { Component, ChangeDetectionStrategy, input, output, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, input, output, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  IonIcon,
-} from '@ionic/angular';
-import { Project, ProjectStatus, SponsorLevel, RiskRating, PriorityTier, ConfidenceLevel, RecommendedAction } from '../../models/portfolio.models';
-import { PortfolioStore } from '../../services/portfolio.store';
-import { PortfolioImportService } from '../../services/portfolio-import.service';
+import { forkJoin } from 'rxjs';
+import { IonIcon } from '@ionic/angular';
+import { OptionsResponse, PortfolioItem } from '../../models/api.models';
+import { Project } from '../../models/portfolio.models';
+import { changedProjectFields } from '../../core/project-changes';
+import { problemMessage } from '../../core/problem-detail';
+import { DataApiService } from '../../services/data-api.service';
 
 @Component({
   selector: 'app-edit-project-modal',
@@ -30,7 +31,7 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
               Review and adjust core inputs or fine-tune AI-predicted tiers, priority scores, and resource signals.
             </p>
           </div>
-          <button type="button" class="close-modal-btn" (click)="cancel.emit()">&times;</button>
+          <button type="button" class="close-modal-btn" (click)="dismiss.emit()">&times;</button>
         </div>
 
         <!-- Section Switcher Tabs -->
@@ -49,11 +50,14 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
             [class.active]="activeTab() === 'ai'"
             (click)="activeTab.set('ai')"
           >
-            2. AI Signals & Scoring (Governed)
+            2. Model Signals (Read-only)
           </button>
         </div>
 
         <div class="modal-body">
+          @if (!ready()) {
+            <p class="loading-note">Loading options from the API…</p>
+          } @else {
           <!-- TAB 1: CORE INPUTS -->
           @if (activeTab() === 'core') {
             <div class="form-grid">
@@ -64,9 +68,18 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
 
               <div class="form-field col-half">
                 <label class="field-label">Portfolio <span class="req">*</span></label>
-                <select class="field-select" [(ngModel)]="form().portfolio">
-                  @for (pf of store.availablePortfolios(); track pf) {
-                    <option [value]="pf">{{ pf }}</option>
+                <select class="field-select" [ngModel]="form().portfolioKey" (ngModelChange)="onPortfolioChange($event)">
+                  @for (item of portfolioItems(); track item.key) {
+                    <option [value]="item.key">{{ item.displayName }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-field col-half">
+                <label class="field-label">Program <span class="req">*</span></label>
+                <select class="field-select" [(ngModel)]="form().programKey">
+                  @for (pr of programsOf(form().portfolioKey); track pr.key) {
+                    <option [value]="pr.key">{{ pr.displayName ?? pr.name ?? pr.key }}</option>
                   }
                 </select>
               </div>
@@ -74,7 +87,7 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
               <div class="form-field col-half">
                 <label class="field-label">Business Unit <span class="req">*</span></label>
                 <select class="field-select" [(ngModel)]="form().businessUnit">
-                  @for (bu of availableBusinessUnits; track bu) {
+                  @for (bu of lists()?.businessUnits ?? []; track bu) {
                     <option [value]="bu">{{ bu }}</option>
                   }
                 </select>
@@ -83,7 +96,7 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
               <div class="form-field col-half">
                 <label class="field-label">Site Location</label>
                 <select class="field-select" [(ngModel)]="form().site">
-                  @for (s of availableSites; track s) {
+                  @for (s of lists()?.sites ?? []; track s) {
                     <option [value]="s">{{ s }}</option>
                   }
                 </select>
@@ -92,8 +105,8 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
               <div class="form-field col-half">
                 <label class="field-label">Primary Skill Domain <span class="req">*</span></label>
                 <select class="field-select" [(ngModel)]="form().primarySkill">
-                  @for (sk of availableSkills; track sk) {
-                    <option [value]="sk">{{ sk }}</option>
+                  @for (sk of lists()?.skills ?? []; track sk.key) {
+                    <option [value]="sk.key">{{ sk.displayName }}</option>
                   }
                 </select>
               </div>
@@ -111,10 +124,9 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
               <div class="form-field col-half">
                 <label class="field-label">Project Status</label>
                 <select class="field-select" [(ngModel)]="form().projectStatus">
-                  <option value="Active">Active</option>
-                  <option value="Planning">Planning</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Backlog">Backlog</option>
+                  @for (st of lists()?.projectStatuses ?? []; track st) {
+                    <option [value]="st">{{ st }}</option>
+                  }
                 </select>
               </div>
 
@@ -131,10 +143,9 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
               <div class="form-field col-half">
                 <label class="field-label">Sponsor Level</label>
                 <select class="field-select" [(ngModel)]="form().sponsorLevel">
-                  <option value="Executive">Executive</option>
-                  <option value="Director">Director</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Individual">Individual</option>
+                  @for (lvl of lists()?.sponsorLevels ?? []; track lvl) {
+                    <option [value]="lvl">{{ lvl }}</option>
+                  }
                 </select>
               </div>
 
@@ -162,84 +173,54 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
                 <div class="callout-left">
                   <ion-icon name="sparkles" class="callout-sparkle"></ion-icon>
                   <div>
-                    <strong>AI Signal Synthesis & Governance Controls</strong>
-                    <p>You can manually adjust any calculated attribute below, or click &ldquo;Recalculate AI Signals&rdquo; to re-run LightGBM, R1-R5 rules, and TreeSHAP feature attributions.</p>
+                    <strong>Model outputs are read-only</strong>
+                    <p>Tiers, scores, and clusters come from the prioritization pipeline. Risk rating, skill demand, and effort are project inputs and save with the project.</p>
                   </div>
                 </div>
-                <button type="button" class="recalc-btn" (click)="onRecalculateAi()">
-                  <ion-icon name="flash-outline"></ion-icon>
-                  Recalculate AI Signals
-                </button>
               </div>
 
               <div class="form-grid">
                 <div class="form-field col-half">
                   <label class="field-label">Final Prioritized Tier</label>
-                  <select class="field-select" [(ngModel)]="form().finalTier">
-                    <option value="Must-do-now">Must-do-now</option>
-                    <option value="Proceed">Proceed</option>
-                    <option value="Can wait">Can wait</option>
-                    <option value="Candidate to deprioritize">Candidate to deprioritize</option>
-                  </select>
+                  <div class="readonly-value">{{ form().finalTier }}</div>
                 </div>
 
                 <div class="form-field col-half">
                   <label class="field-label">ML Predicted Tier</label>
-                  <select class="field-select" [(ngModel)]="form().mlTier">
-                    <option value="Must-do-now">Must-do-now</option>
-                    <option value="Proceed">Proceed</option>
-                    <option value="Can wait">Can wait</option>
-                    <option value="Candidate to deprioritize">Candidate to deprioritize</option>
-                  </select>
+                  <div class="readonly-value">{{ form().mlTier }}</div>
                 </div>
 
                 <div class="form-field col-half">
-                  <label class="field-label">Priority Score (0 - 100): {{ form().priorityScore }}</label>
-                  <input type="number" step="0.1" min="0" max="100" class="field-input" [(ngModel)]="form().priorityScore" />
+                  <label class="field-label">Priority Score (0 - 100)</label>
+                  <div class="readonly-value">{{ form().priorityScore }}</div>
                 </div>
 
                 <div class="form-field col-half">
-                  <label class="field-label">Confidence Score (0 - 100): {{ form().confidenceScore }}%</label>
-                  <input type="number" step="0.1" min="0" max="100" class="field-input" [(ngModel)]="form().confidenceScore" />
+                  <label class="field-label">Confidence Score (0 - 100)</label>
+                  <div class="readonly-value">{{ form().confidenceScore }}%</div>
                 </div>
 
                 <div class="form-field col-half">
                   <label class="field-label">Confidence Tier</label>
-                  <select class="field-select" [(ngModel)]="form().confidenceLevel">
-                    <option value="High">High (&ge; 75%)</option>
-                    <option value="Medium">Medium (50 - 74%)</option>
-                    <option value="Low">Low (&lt; 50%)</option>
-                  </select>
+                  <div class="readonly-value">{{ form().confidenceLevel }}</div>
                 </div>
 
                 <div class="form-field col-half">
                   <label class="field-label">Recommended Action</label>
-                  <select class="field-select" [(ngModel)]="form().recommendedAction">
-                    <option value="Protect slot">Protect slot</option>
-                    <option value="Proceed">Proceed</option>
-                    <option value="Re-sequence">Re-sequence</option>
-                    <option value="Pause or divert skills">Pause or divert skills</option>
-                    <option value="Add capacity">Add capacity</option>
-                  </select>
+                  <div class="readonly-value">{{ form().recommendedAction }}</div>
                 </div>
 
                 <div class="form-field col-half">
                   <label class="field-label">Strategic Cluster</label>
-                  <select class="field-select" [(ngModel)]="form().cluster">
-                    <option value="Platform">Platform</option>
-                    <option value="Analytics & AI">Analytics & AI</option>
-                    <option value="Security & Identity">Security & Identity</option>
-                    <option value="Core Enterprise IT">Core Enterprise IT</option>
-                  </select>
+                  <div class="readonly-value">{{ form().cluster }}</div>
                 </div>
 
                 <div class="form-field col-half">
                   <label class="field-label">Risk Rating</label>
                   <select class="field-select" [(ngModel)]="form().riskRating">
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Critical">Critical</option>
+                    @for (rr of lists()?.riskRatings ?? []; track rr) {
+                      <option [value]="rr">{{ rr }}</option>
+                    }
                   </select>
                 </div>
 
@@ -255,31 +236,29 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
 
                 <div class="form-field col-half">
                   <label class="field-label">Months to Go-Live</label>
-                  <input type="number" step="0.5" class="field-input" [(ngModel)]="form().monthsToGoLive" />
+                  <div class="readonly-value">{{ form().monthsToGoLive }}</div>
                 </div>
 
                 <div class="form-field col-half">
                   <label class="field-label">Dependency Count</label>
-                  <input type="number" step="1" class="field-input" [(ngModel)]="form().dependencyCount" />
+                  <div class="readonly-value">{{ form().dependencyCount }}</div>
                 </div>
               </div>
             </div>
+          }
           }
         </div>
 
         <div class="modal-footer">
           <div class="footer-left">
-            @if (activeTab() === 'core') {
-              <button type="button" class="btn-recalc" (click)="onRecalculateAi()">
-                <ion-icon name="flash-outline"></ion-icon>
-                Auto-Fill AI Signals
-              </button>
+            @if (error() ?? loadError(); as message) {
+              <span class="modal-error" role="alert">{{ message }}</span>
             }
           </div>
 
           <div class="footer-right">
-            <button type="button" class="btn-cancel" (click)="cancel.emit()">Cancel</button>
-            <button type="button" class="btn-save" (click)="onSave()">Save Changes</button>
+            <button type="button" class="btn-cancel" (click)="dismiss.emit()">Cancel</button>
+            <button type="button" class="btn-save" [disabled]="!ready()" (click)="onSave()">Save Changes</button>
           </div>
         </div>
       </div>
@@ -503,22 +482,6 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
         color: #6b21a8;
         line-height: 1.35;
       }
-      .recalc-btn {
-        background: #7e22ce;
-        color: #ffffff;
-        border: none;
-        border-radius: 6px;
-        padding: 7px 12px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .recalc-btn:hover {
-        background: #6b21a8;
-      }
 
       .modal-footer {
         display: flex;
@@ -558,21 +521,24 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
       .btn-save:hover {
         background: var(--pmo-primary-dark, #004578);
       }
-      .btn-recalc {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: var(--pmo-primary, #0078d4);
-        padding: 7px 14px;
+      .readonly-value {
+        padding: 8px 10px;
         border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        font-size: 0.85rem;
+        color: #334155;
       }
-      .btn-recalc:hover {
-        background: #dbeafe;
+      .loading-note,
+      .modal-error {
+        font-size: 0.8rem;
+      }
+      .loading-note {
+        color: #64748b;
+      }
+      .modal-error {
+        color: #b91c1c;
+        font-weight: 600;
       }
 
       @media (max-width: 650px) {
@@ -585,66 +551,67 @@ import { PortfolioImportService } from '../../services/portfolio-import.service'
   ],
 })
 export class EditProjectModalComponent implements OnInit {
-  readonly store = inject(PortfolioStore);
-  private readonly importService = inject(PortfolioImportService);
+  private readonly api = inject(DataApiService);
 
   readonly project = input.required<Project>();
-  readonly save = output<Project>();
-  readonly cancel = output<void>();
+  readonly error = input<string | null>(null);
+  /** The PATCH body: only the contract fields that changed. */
+  readonly save = output<Record<string, unknown>>();
+  readonly dismiss = output<void>();
 
   readonly activeTab = signal<'core' | 'ai'>('core');
   readonly form = signal<Project>({} as Project);
-
-  readonly availableBusinessUnits = [
-    'Semiconductor Process Equipment',
-    'Fab Operations',
-    'Global Supply Chain',
-    'Digital Transformation',
-    'Finance and Controls',
-    'Human Resources',
-    'Information Security',
-    'Manufacturing Engineering',
-    'Customer Services',
-    'Corporate IT',
-  ];
-
-  readonly availableSites = [
-    'Fremont',
-    'Tualatin',
-    'Singapore',
-    'Penang',
-    'Hsinchu',
-    'Global Remote',
-  ];
-
-  readonly availableSkills = [
-    'Application Development',
-    'Cloud and Infrastructure',
-    'Data Engineering',
-    'Cybersecurity',
-    'Network Engineering',
-    'Unified Communications',
-    'Integration (iPaaS)',
-    'Project Management',
-  ];
+  readonly baseline = signal<Project | null>(null);
+  readonly options = signal<OptionsResponse | null>(null);
+  readonly portfolioItems = signal<PortfolioItem[]>([]);
+  readonly loadError = signal<string | null>(null);
+  readonly ready = computed(() => this.options() !== null);
+  readonly lists = computed(() => this.options()?.options ?? null);
 
   ngOnInit(): void {
-    // Clone project into editable form signal
-    this.form.set(JSON.parse(JSON.stringify(this.project())));
+    forkJoin({ options: this.api.getOptions(), portfolios: this.api.getPortfolios() }).subscribe({
+      next: ({ options, portfolios }) => {
+        const project = this.project();
+        const portfolioKey =
+          project.portfolioKey ?? portfolios.find((item) => item.displayName === project.portfolio)?.key ?? '';
+        const programKey =
+          project.programKey ??
+          portfolios
+            .find((item) => item.key === portfolioKey)
+            ?.programs.find((pr) => (pr.displayName ?? pr.name) === project.program)?.key ??
+          '';
+        const skillKey =
+          options.options.skills.find((sk) => sk.key === project.primarySkill || sk.displayName === project.primarySkill)
+            ?.key ?? project.primarySkill;
+        const resolved: Project = { ...structuredClone(project), portfolioKey, programKey, primarySkill: skillKey };
+        this.portfolioItems.set(portfolios);
+        this.form.set(structuredClone(resolved));
+        this.baseline.set(structuredClone(resolved));
+        this.options.set(options);
+      },
+      error: (err: unknown) => this.loadError.set(problemMessage(err, 'Could not load the form options from the API.')),
+    });
   }
 
-  onRecalculateAi(): void {
-    const updated = this.importService.recalculateAiSignals(this.form());
-    this.form.set(updated);
+  programsOf(portfolioKey: string | undefined): PortfolioItem['programs'] {
+    return this.portfolioItems().find((item) => item.key === portfolioKey)?.programs ?? [];
+  }
+
+  onPortfolioChange(portfolioKey: string): void {
+    const programKey = this.programsOf(portfolioKey)[0]?.key ?? '';
+    this.form.update((current) => ({ ...current, portfolioKey, programKey }));
   }
 
   onSave(): void {
-    this.save.emit(this.form());
+    const baseline = this.baseline();
+    const options = this.options();
+    if (!baseline || !options) return;
+    this.save.emit(changedProjectFields(baseline, this.form(), options.projectFields));
   }
 
   onBackdropClick(event: MouseEvent): void {
     if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
-      this.cancel.emit();
+      this.dismiss.emit();
     }
   }
 }

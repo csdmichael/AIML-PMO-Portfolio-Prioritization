@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import {
   IonContent,
   IonCard,
@@ -25,28 +26,30 @@ import {
 } from '@ionic/angular';
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
-import { PortfolioImportService } from '../../services/portfolio-import.service';
-import { OptionsResponse, PortfolioItem, ProjectUploadMetadata } from '../../models/api.models';
+import { problemMessage } from '../../core/problem-detail';
+import { IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem, ProblemDetail, ProjectImportResult, ProjectUploadMetadata } from '../../models/api.models';
 import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 
+/** Blank numbers stay null until typed, so no example value is ever submitted. */
 export interface ProjectFormFields {
   portfolioKey?: string;
+  programKey?: string;
   businessUnit?: string;
   site?: string;
   sponsorName: string;
   sponsorLevel?: string;
-  projectStatus: string;
-  userBase: number;
-  businessValue: number;
-  goLiveDate: string;
+  projectStatus?: string;
+  userBase: number | null;
+  businessValue: number | null;
+  goLiveDate?: string;
   regulatorySecurity: boolean;
   dtAlignment: boolean;
-  riskRating: string;
-  primarySkill: string;
-  skillDemandFte: number;
-  costEstimateUsd: number;
-  effortPersonWeeks: number;
+  riskRating?: string;
+  primarySkill?: string;
+  skillDemandFte: number | null;
+  costEstimateUsd: number | null;
+  effortPersonWeeks: number | null;
 }
 
 @Component({
@@ -153,26 +156,12 @@ export interface ProjectFormFields {
               </ion-card-header>
 
               <ion-card-content>
-                <!-- Sample Prompts -->
-                <div class="sample-prompts-bar">
-                  <span class="prompt-hint-label">Quick Sample Prompts:</span>
-                  <button type="button" class="prompt-chip" (click)="applySamplePrompt('iot')">
-                    Fab Sensor IoT Pipeline
-                  </button>
-                  <button type="button" class="prompt-chip" (click)="applySamplePrompt('iam')">
-                    Zero Trust IAM Modernization
-                  </button>
-                  <button type="button" class="prompt-chip" (click)="applySamplePrompt('yield')">
-                    Autonomous Wafer Yield AI
-                  </button>
-                </div>
-
                 <div class="field-group">
                   <ion-label class="input-label">Project Name <span class="required">*</span></ion-label>
                   <input
                     type="text"
                     class="text-input"
-                    placeholder="e.g. Advanced Wafer Inspection Analytics"
+                    placeholder="Name the project"
                     [(ngModel)]="projectName"
                     maxlength="120"
                   />
@@ -245,6 +234,23 @@ export interface ProjectFormFields {
                   </div>
                 }
 
+                <ng-template #suggestionRow let-key="key">
+                  @if (suggestionFor(key); as suggestion) {
+                    <div class="suggestion-row" role="status">
+                      <div class="suggestion-text">
+                        <strong>{{ suggestion.label }}</strong>
+                        <span>{{ suggestion.rationale }}</span>
+                      </div>
+                      <div class="suggestion-actions">
+                        <button type="button" class="suggestion-apply" [disabled]="applyingSuggestion() !== null" (click)="applySuggestion(key)">
+                          {{ applyingSuggestion() === key ? 'Creating...' : 'Create and apply' }}
+                        </button>
+                        <button type="button" class="suggestion-dismiss" [disabled]="applyingSuggestion() !== null" (click)="dismissSuggestion(key)">Dismiss</button>
+                      </div>
+                    </div>
+                  }
+                </ng-template>
+
                 <form (ngSubmit)="onSubmitProject()">
                   <!-- SECTION A: ORGANIZATION -->
                   <h4 class="section-heading">Organization & Governance</h4>
@@ -256,10 +262,25 @@ export interface ProjectFormFields {
                           @if (isAiFilled('portfolioKey')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('portfolioKey')" title="Clear field">&times;</button>
                         </div>
-                        <select class="form-select" [(ngModel)]="projectFields.portfolioKey" name="portfolioKey" required>
+                        <select class="form-select" [(ngModel)]="projectFields.portfolioKey" (ngModelChange)="onPortfolioChanged($event)" name="portfolioKey" required>
                           <option [ngValue]="undefined">-- Select Portfolio --</option>
                           @for (p of portfolios(); track p.key) {
                             <option [value]="p.key">{{ p.displayName }}</option>
+                          }
+                        </select>
+                        <ng-container *ngTemplateOutlet="suggestionRow; context: { key: 'portfolioKey' }"></ng-container>
+                      </div>
+
+                      <div class="field-item">
+                        <div class="field-label-row">
+                          <label>Program <span class="required">*</span></label>
+                          @if (isAiFilled('programKey')) { <span class="ai-badge">AI</span> }
+                          <button type="button" class="clear-btn" (click)="clearField('programKey')" title="Clear field">&times;</button>
+                        </div>
+                        <select class="form-select" [(ngModel)]="projectFields.programKey" name="programKey" required [disabled]="!projectFields.portfolioKey">
+                          <option [ngValue]="undefined">-- Select Program --</option>
+                          @for (program of programsOf(projectFields.portfolioKey); track program.key) {
+                            <option [value]="program.key">{{ programLabel(program) }}</option>
                           }
                         </select>
                       </div>
@@ -276,6 +297,7 @@ export interface ProjectFormFields {
                             <option [value]="bu">{{ bu }}</option>
                           }
                         </select>
+                        <ng-container *ngTemplateOutlet="suggestionRow; context: { key: 'businessUnit' }"></ng-container>
                       </div>
 
                       <div class="field-item">
@@ -290,6 +312,7 @@ export interface ProjectFormFields {
                             <option [value]="s">{{ s }}</option>
                           }
                         </select>
+                        <ng-container *ngTemplateOutlet="suggestionRow; context: { key: 'site' }"></ng-container>
                       </div>
                     </div>
 
@@ -300,7 +323,7 @@ export interface ProjectFormFields {
                           @if (isAiFilled('sponsorName')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('sponsorName')" title="Clear field">&times;</button>
                         </div>
-                        <input type="text" class="form-input" [(ngModel)]="projectFields.sponsorName" name="sponsorName" placeholder="e.g. Dmitri Nakamura" required />
+                        <input type="text" class="form-input" [(ngModel)]="projectFields.sponsorName" name="sponsorName" placeholder="Full name of the executive sponsor" required />
                       </div>
 
                       <div class="field-item">
@@ -532,7 +555,7 @@ export interface ProjectFormFields {
           <ion-card class="form-card">
             <ion-card-header>
               <ion-card-title>Import Projects from Excel (.xlsx)</ion-card-title>
-              <ion-card-subtitle>Upload Excel files or load sample datasets to populate portfolio dashboards.</ion-card-subtitle>
+              <ion-card-subtitle>Each row is checked first. If any row is invalid, nothing is saved and every problem is listed.</ion-card-subtitle>
             </ion-card-header>
 
             <ion-card-content>
@@ -547,41 +570,30 @@ export interface ProjectFormFields {
                 </ion-button>
               </div>
 
-              <!-- DEMO CONTROLS (ONLY IF IS DEMO ENVIRONMENT = YES) -->
-              @if (isDemoEnvironment()) {
-                <div class="demo-section">
-                  <div class="demo-header">
-                    <ion-badge color="warning">Demo Environment Active</ion-badge>
-                    <h4>Preconfigured Sample Datasets</h4>
-                    <p>Quickly populate portfolios for testing. Available only in Demo Mode.</p>
-                  </div>
+              @if (importing()) {
+                <p class="import-note">Checking and saving the workbook…</p>
+              }
 
-                  <div class="sample-grid">
-                    @for (sample of sampleFiles; track sample.id) {
-                      <div class="sample-card" [style.border-left-color]="sample.color">
-                        <div class="sample-head">
-                          <span class="sample-tag">{{ sample.code }}</span>
-                          <span class="sample-count">{{ sample.projectCount }} Projects</span>
-                        </div>
-                        <div class="sample-name">{{ sample.portfolioName }}</div>
-                        <div class="sample-desc">{{ sample.description }}</div>
-                        <ion-button size="small" color="primary" fill="outline" (click)="loadSampleDataset(sample)">
-                          Load {{ sample.projectCount }} Projects
-                        </ion-button>
-                      </div>
+              @if (importError(); as message) {
+                <div class="error-banner" role="alert">
+                  <div>{{ message }}</div>
+                  @for (issue of importIssues(); track issue) {
+                    <div class="import-issue">{{ issue }}</div>
+                  }
+                </div>
+              }
+
+              @if (importResult(); as result) {
+                <div class="import-result" role="status">
+                  <div>Saved {{ result.count }} project{{ result.count === 1 ? '' : 's' }}. Scores and dashboards update when the pipeline run finishes.</div>
+                  <div class="import-ids">
+                    @for (item of result.created; track item.projectId) {
+                      <span class="project-pill">{{ item.projectId }}</span>
                     }
                   </div>
-
-                  <div class="danger-zone">
-                    <div class="danger-info">
-                      <strong>Clear All Portfolio Data</strong>
-                      <p>Wipe all projects in the portfolio store to start fresh with an empty state.</p>
-                    </div>
-                    <ion-button color="danger" fill="outline" (click)="onClearAllData()">
-                      <ion-icon name="trash-outline" slot="start"></ion-icon>
-                      Clear All Projects
-                    </ion-button>
-                  </div>
+                  @for (warning of result.warnings; track warning) {
+                    <div class="import-issue">{{ warning }}</div>
+                  }
                 </div>
               }
             </ion-card-content>
@@ -802,6 +814,54 @@ export interface ProjectFormFields {
     .clear-btn:hover {
       color: #ef4444;
     }
+    .suggestion-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 12px;
+      background: #fffbeb;
+      border: 1px dashed #f59e0b;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #78350f;
+    }
+    .suggestion-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .suggestion-text span {
+      color: #92400e;
+    }
+    .suggestion-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .suggestion-apply,
+    .suggestion-dismiss {
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .suggestion-apply {
+      background: #0078d4;
+      border: 1px solid #0078d4;
+      color: #ffffff;
+    }
+    .suggestion-dismiss {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+    .suggestion-apply:disabled,
+    .suggestion-dismiss:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
     .field-helper {
       font-size: 11px;
       color: #64748b;
@@ -958,28 +1018,44 @@ export interface ProjectFormFields {
       flex-wrap: wrap;
       gap: 12px;
     }
-    .danger-info strong {
-      color: #b91c1c;
-      font-size: 14px;
+    .import-note {
+      color: #475569;
+      font-size: 13px;
     }
-    .danger-info p {
-      color: #7f1d1d;
+    .import-result {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-size: 13px;
+    }
+    .import-ids {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .import-issue {
       font-size: 12px;
-      margin: 2px 0 0 0;
+      margin-top: 4px;
     }
   `],
 })
 export class DataEntryPageComponent implements OnInit {
   private readonly dataApi = inject(DataApiService);
   readonly store = inject(PortfolioStore);
-  readonly importService = inject(PortfolioImportService);
 
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly options = signal<OptionsResponse | null>(null);
   readonly lookups = signal<any | null>(null);
   readonly portfolios = signal<PortfolioItem[]>([]);
-  readonly isDemoEnvironment = signal(true);
+  readonly importing = signal(false);
+  readonly importResult = signal<ProjectImportResult | null>(null);
+  readonly importError = signal<string | null>(null);
+  readonly importIssues = signal<string[]>([]);
 
   activeTab = 'project';
   projectStep = signal<number>(1);
@@ -1000,19 +1076,23 @@ export class DataEntryPageComponent implements OnInit {
     sponsorName: '',
     sponsorLevel: undefined,
     projectStatus: 'Planning',
-    userBase: 1500,
-    businessValue: 4,
-    goLiveDate: '2027-06-30',
+    userBase: null,
+    businessValue: null,
+    goLiveDate: '',
     regulatorySecurity: false,
     dtAlignment: false,
-    riskRating: 'Medium',
-    primarySkill: 'UC',
-    skillDemandFte: 2.0,
-    costEstimateUsd: 1200000,
-    effortPersonWeeks: 26,
+    riskRating: undefined,
+    primarySkill: undefined,
+    skillDemandFte: null,
+    costEstimateUsd: null,
+    effortPersonWeeks: null,
   };
 
   aiFilledSet = signal<Set<string>>(new Set());
+  readonly draftId = signal<string | null>(null);
+  readonly suggestions = signal<Record<string, IntakeSuggestion>>({});
+  readonly applyingSuggestion = signal<string | null>(null);
+  private draftFields: Record<string, { value?: unknown } | undefined> = {};
 
   portfolioForm: { displayName: string; code: string; role: 'coupled' | 'main' } = {
     displayName: '',
@@ -1020,8 +1100,6 @@ export class DataEntryPageComponent implements OnInit {
     role: 'coupled',
   };
   isSubmittingPf = signal(false);
-
-  readonly sampleFiles = this.importService.sampleFiles;
 
   ngOnInit(): void {
     this.loadOptions();
@@ -1046,30 +1124,13 @@ export class DataEntryPageComponent implements OnInit {
     this.dataApi.getPortfolios().subscribe({
       next: (pfs) => this.portfolios.set(pfs),
     });
-
-    this.dataApi.getAdminSettings().subscribe({
-      next: (settings) => this.isDemoEnvironment.set(settings.isDemoEnvironment ?? true),
-    });
   }
 
   onDownloadExcelTemplate(): void {
-    this.dataApi.downloadExcelTemplate('project_intake_template.xlsx');
-  }
-
-  applySamplePrompt(type: 'iot' | 'iam' | 'yield'): void {
-    if (type === 'iot') {
-      this.projectName = 'Fab Sensor IoT Pipeline Modernization';
-      this.projectDescription =
-        'Deploy resilient edge telemetry and IoT data collection across Singapore cleanroom chambers. Expected to impact 4,200 operations and engineering users. Go-live target 2027-11-15, sponsor Dmitri Nakamura (Executive). Key driver is semiconductor operational yield and equipment compliance.';
-    } else if (type === 'iam') {
-      this.projectName = 'Zero Trust IAM Modernization';
-      this.projectDescription =
-        'Consolidate enterprise identity and privileged access management into Entra ID. Impacts 12,000 corporate and factory users globally. Regulatory and cybersecurity compliance mandate. Target completion 2028-03-31, sponsored by Information Security.';
-    } else {
-      this.projectName = 'Autonomous Wafer Yield AI Engine';
-      this.projectDescription =
-        'Real-time anomaly detection and predictive defect classification using automated machine learning models. Directly impacts 850 process engineers at Fremont and Hsinchu sites.';
-    }
+    this.importError.set(null);
+    this.dataApi
+      .downloadProjectImportTemplate()
+      .catch(() => this.importError.set('The template could not be downloaded. Try again.'));
   }
 
   goToStep2(): void {
@@ -1084,13 +1145,19 @@ export class DataEntryPageComponent implements OnInit {
   onPrefillWithAi(): void {
     this.isPrefilling.set(true);
     this.submitError.set(null);
+    this.draftId.set(null);
+    this.suggestions.set({});
 
     // Call draft AI prefill endpoint on Python API
     this.dataApi.createIntakeDraft(this.projectName, this.projectDescription).subscribe({
       next: (draft) => {
-        this.dataApi.prefillIntakeDraft(draft.draftId).subscribe({
+        this.draftId.set(draft.draftId);
+        this.dataApi.prefillIntakeDraft(draft.draftId).pipe(
+          switchMap((prefilled) => this.refreshLists().pipe(map(() => prefilled))),
+        ).subscribe({
           next: (prefilled) => {
             this.applyAiPrefillData(prefilled);
+            this.rememberDraft(prefilled);
             this.isPrefilling.set(false);
           },
           error: (err) => {
@@ -1127,9 +1194,8 @@ export class DataEntryPageComponent implements OnInit {
   private applySingleField(key: string, value: any): void {
     if (value === undefined || value === null) return;
     const current = (this.projectFields as any)[key];
-    const isBlank = current === undefined || current === null || current === '' || current === 0;
     // CRITICAL: Only fill missing/blank fields, never overwrite manual entries!
-    if (isBlank) {
+    if (this.isBlankValue(current) && this.isListed(key, value)) {
       (this.projectFields as any)[key] = value;
       this.aiFilledSet.update((s) => new Set([...s, key]));
     }
@@ -1144,6 +1210,7 @@ export class DataEntryPageComponent implements OnInit {
     const s = new Set(this.aiFilledSet());
     s.delete(key);
     this.aiFilledSet.set(s);
+    if (key === 'portfolioKey') this.onPortfolioChanged(undefined);
   }
 
   onSubmitProject(): void {
@@ -1159,13 +1226,22 @@ export class DataEntryPageComponent implements OnInit {
     this.dataApi.createProject(payload, true).subscribe({
       next: (res) => {
         this.isSubmitting.set(false);
+        this.suggestions.set({});
         this.createdProjectId.set(res.projectId);
       },
-      error: () => {
+      error: (err: unknown) => {
         this.isSubmitting.set(false);
-        this.createdProjectId.set(`GIS-${Math.floor(100 + Math.random() * 900)}`);
+        this.submitError.set(this.describeError(err, 'The project could not be created.'));
       },
     });
+  }
+
+  /** The API's message, followed by each invalid field it names. */
+  private describeError(err: unknown, fallback: string): string {
+    const message = problemMessage(err, fallback);
+    const invalid = (err as { error?: ProblemDetail } | null)?.error?.invalidFields ?? {};
+    const issues = Object.entries(invalid).map(([field, text]) => `${field} ${text}`);
+    return issues.length ? `${message} ${issues.join('; ')}` : message;
   }
 
   resetWizard(): void {
@@ -1174,6 +1250,149 @@ export class DataEntryPageComponent implements OnInit {
     this.projectDescription = '';
     this.projectStep.set(1);
     this.aiFilledSet.set(new Set());
+    this.draftId.set(null);
+    this.suggestions.set({});
+    this.draftFields = {};
+  }
+
+  /** The suggestion for a dropdown that is still blank: a value the AI proposed that the list does not have yet. */
+  suggestionFor(key: string): IntakeSuggestion | null {
+    const suggestion = this.suggestions()[key];
+    return suggestion && this.isBlankValue((this.projectFields as any)[key]) ? suggestion : null;
+  }
+
+  applySuggestion(key: string): void {
+    const draftId = this.draftId();
+    if (!draftId || this.applyingSuggestion() !== null) return;
+    this.applyingSuggestion.set(key);
+    this.submitError.set(null);
+    this.dataApi
+      .applyIntakeSuggestion(draftId, key)
+      .pipe(
+        switchMap((draft) =>
+          this.refreshLists().pipe(
+            catchError(() => {
+              this.submitError.set('The value was saved, but the dropdown lists could not be refreshed. Reload the page to see it.');
+              return of(null);
+            }),
+            map(() => draft),
+          ),
+        ),
+      )
+      .subscribe({
+        next: (draft) => {
+          this.applyChangedFields(draft, this.trustedKeysFor(key));
+          this.rememberDraft(draft);
+          this.applyingSuggestion.set(null);
+        },
+        error: (err) => {
+          this.applyingSuggestion.set(null);
+          this.submitError.set(err?.error?.detail || err?.message || 'Unable to create the suggested value.');
+        },
+      });
+  }
+
+  dismissSuggestion(key: string): void {
+    this.suggestions.update((current) => Object.fromEntries(Object.entries(current).filter(([field]) => field !== key)));
+    const draftId = this.draftId();
+    if (!draftId) return;
+    this.dataApi.dismissIntakeSuggestion(draftId, key).subscribe({
+      next: (draft) => this.rememberDraft(draft),
+      error: (err) => {
+        if (err?.status !== 404) {
+          this.submitError.set(err?.error?.detail || err?.message || 'Unable to dismiss the suggestion.');
+        }
+      },
+    });
+  }
+
+  onPortfolioChanged(portfolioKey: string | undefined): void {
+    if (!this.programsOf(portfolioKey).some((program) => program.key === this.projectFields.programKey)) {
+      this.clearField('programKey');
+    }
+  }
+
+  programsOf(portfolioKey: string | undefined): PortfolioItem['programs'] {
+    return this.portfolios().find((portfolio) => portfolio.key === portfolioKey)?.programs ?? [];
+  }
+
+  programLabel(program: PortfolioItem['programs'][number]): string {
+    return program.displayName || program.name || program.key;
+  }
+
+  private refreshLists(): Observable<unknown> {
+    return forkJoin({
+      options: this.dataApi.getOptions(),
+      lookups: this.dataApi.getLookups(),
+      portfolios: this.dataApi.getPortfolios(),
+    }).pipe(
+      tap(({ options, lookups, portfolios }) => {
+        this.options.set(options);
+        this.lookups.set(lookups);
+        this.portfolios.set(portfolios);
+      }),
+    );
+  }
+
+  private rememberDraft(draft: IntakeDraft): void {
+    this.suggestions.set(draft.suggestions ?? {});
+    this.draftFields = this.fieldValues(draft);
+  }
+
+  /** The API keys draft fields by name, but IntakeDraft types them as a list for the Quick Add page. */
+  private fieldValues(draft: IntakeDraft): Record<string, { value?: unknown } | undefined> {
+    return (draft.fields ?? {}) as unknown as Record<string, { value?: unknown } | undefined>;
+  }
+
+  /** Sets the fields that an applied suggestion changed. The server already saved the suggested keys, so they are trusted even if a list refresh failed. */
+  private applyChangedFields(draft: IntakeDraft, trusted: string[] = []): void {
+    for (const [key, field] of Object.entries(this.fieldValues(draft))) {
+      const value = field?.value;
+      if (value === undefined || value === null || this.draftFields[key]?.value === value) continue;
+      if (this.isBlankValue((this.projectFields as any)[key]) && (trusted.includes(key) || this.isListed(key, value))) {
+        (this.projectFields as any)[key] = value;
+        this.aiFilledSet.update((s) => new Set([...s, key]));
+      }
+    }
+  }
+
+  private trustedKeysFor(key: string): string[] {
+    return this.suggestions()[key]?.kind === 'portfolio' ? [key, 'programKey'] : [key];
+  }
+
+  /** A dropdown can show only the values in its list. Fields without a list accept any value. */
+  private isListed(key: string, value: unknown): boolean {
+    const source = this.options()?.projectFields.find((field) => field.key === key)?.source;
+    const listed = source ? this.listedValues(source) : null;
+    return listed === null || listed.includes(value);
+  }
+
+  private listedValues(source: string): unknown[] | null {
+    const lists = this.lookups();
+    switch (source) {
+      case 'portfolios':
+        return this.portfolios().map((portfolio) => portfolio.key);
+      case 'programsOfPortfolio':
+        return this.programsOf(this.projectFields.portfolioKey).map((program) => program.key);
+      case 'options.businessUnits':
+        return lists?.businessUnits ?? [];
+      case 'options.sites':
+        return lists?.sites ?? [];
+      case 'options.sponsorLevels':
+        return lists?.sponsorLevels ?? [];
+      case 'options.projectStatuses':
+        return lists?.projectStatuses ?? [];
+      case 'options.riskRatings':
+        return lists?.riskRatings ?? [];
+      case 'options.skills':
+        return (lists?.skills ?? []).map((skill: { key: unknown }) => skill.key);
+      default:
+        return null;
+    }
+  }
+
+  private isBlankValue(current: unknown): boolean {
+    return current === undefined || current === null || current === '' || current === 0;
   }
 
   onCreatePortfolio(): void {
@@ -1182,6 +1401,7 @@ export class DataEntryPageComponent implements OnInit {
       next: () => {
         this.isSubmittingPf.set(false);
         this.loadOptions();
+        this.store.reloadPortfolioItems();
       },
       error: () => this.isSubmittingPf.set(false),
     });
@@ -1189,22 +1409,26 @@ export class DataEntryPageComponent implements OnInit {
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.importService.parseExcelFile(input.files[0]).then((parsed) => {
-        this.store.importProjects(parsed.projects, 'append');
-      });
-    }
-  }
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
 
-  loadSampleDataset(sample: any): void {
-    this.importService.fetchAndParseSample(sample.filename).then((res) => {
-      this.store.importProjects(res.projects, 'append');
+    this.importing.set(true);
+    this.importResult.set(null);
+    this.importError.set(null);
+    this.importIssues.set([]);
+    this.dataApi.importProjects(file, true).subscribe({
+      next: (result) => {
+        this.importing.set(false);
+        this.importResult.set(result);
+        this.store.refresh();
+      },
+      error: (err: unknown) => {
+        this.importing.set(false);
+        this.importError.set(problemMessage(err, 'The workbook could not be imported.'));
+        const invalid = (err as { error?: ProblemDetail } | null)?.error?.invalidFields ?? {};
+        this.importIssues.set(Object.entries(invalid).map(([field, text]) => `${field}: ${text}`));
+      },
     });
-  }
-
-  onClearAllData(): void {
-    if (confirm('Are you sure you want to clear all projects? This will reset the portfolio state.')) {
-      this.store.clearAllProjects();
-    }
   }
 }

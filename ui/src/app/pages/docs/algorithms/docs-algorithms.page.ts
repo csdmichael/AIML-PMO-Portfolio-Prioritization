@@ -917,7 +917,7 @@ export class DocsAlgorithmsPageComponent {
         },
       ],
       example: {
-        scenario: 'Classifying GIS-0001 (Edge Network Segmentation Refresh for Singapore Fab Expansion).',
+        scenario: 'Classifying an example project (an edge network refresh for a fab expansion).',
         inputs: {
           business_value: 3.0,
           timing_urgency: 0.52,
@@ -976,7 +976,7 @@ export class DocsAlgorithmsPageComponent {
         },
       ],
       example: {
-        scenario: 'Calibrating raw overconfident margin for GIS-0042.',
+        scenario: 'Calibrating a raw, overconfident margin for an example project.',
         inputs: {
           raw_tree_margin_score: 0.94,
           empirical_bin_accuracy: 0.73,
@@ -1027,9 +1027,9 @@ export class DocsAlgorithmsPageComponent {
         },
       ],
       example: {
-        scenario: 'Explaining why GIS-0001 received a Must-do-now prediction.',
+        scenario: 'Explaining why an example project received a Must-do-now prediction.',
         inputs: {
-          project_id: 'GIS-0001',
+          project_id: 'EXAMPLE-001',
           predicted_tier: 'Must-do-now',
           expected_base_value: 0.25,
         },
@@ -1038,7 +1038,7 @@ export class DocsAlgorithmsPageComponent {
           'Driver 1: regulatory_security == True (+0.32 SHAP contribution).',
           'Driver 2: timing_urgency == 0.52 (+0.18 SHAP contribution).',
           'Driver 3: business_value == 3 (+0.08 SHAP contribution).',
-          'Driver 4: cost_usd == $2.63M (-0.08 SHAP contribution).',
+          'Driver 4: cost_usd is a high example value (-0.08 SHAP contribution).',
           'Sum of contributions: 0.25 + 0.32 + 0.18 + 0.08 - 0.08 = 0.75 (exact final probability).',
         ],
         result: 'Top Drivers: Regulatory/Security (+0.32), Timing Urgency (+0.18), High Cost (-0.08).',
@@ -1077,7 +1077,7 @@ sklearn.cluster.KMeans(
         },
       ],
       example: {
-        scenario: 'Assigning GIS-0086 (Enterprise OneLake Migration) to a strategic cluster.',
+        scenario: 'Assigning an example project (an enterprise data migration) to a strategic cluster.',
         inputs: {
           business_value: 5,
           dt_alignment: true,
@@ -1142,7 +1142,7 @@ sklearn.cluster.KMeans(
         },
       ],
       example: {
-        scenario: 'Evaluating confidence for GIS-0001.',
+        scenario: 'Evaluating confidence for an example project.',
         inputs: {
           signals_present: 6,
           total_signals: 10,
@@ -1203,12 +1203,12 @@ System guidance: config/ai-prefill.json (prompt.system)`,
         scenario: 'Extracting signals from plain-English IoT fab proposal.',
         inputs: {
           raw_text:
-            'Deploy 500 edge IoT sensor nodes in Fremont fab by Q4 2027 to monitor thermal dissipation. Total budget is $1.85M with sponsor VP Sarah Jenkins. Highly aligned with digital transformation modernization.',
+            'Deploy edge IoT sensor nodes at an example fab to monitor thermal dissipation. The total budget and a named executive sponsor are stated in the source text. Highly aligned with digital transformation modernization.',
         },
         executionSteps: [
           'LLM validates text against config/shared/data-entry.json schema.',
           'Extracts site: "Fremont" (Evidence: explicit quote "Fremont fab", Conf: 0.90).',
-          'Extracts costEstimateUsd: 1850000 (Evidence: explicit quote "$1.85M", Conf: 0.90).',
+          'Extracts costEstimateUsd from the stated amount (Evidence: explicit quote of the amount, Conf: 0.90).',
           'Extracts goLiveDate: "2027-12-31" (Evidence: inferred quote "Q4 2027", Conf: 0.60).',
           'Extracts dtAlignment: true (Evidence: explicit quote "digital transformation modernization", Conf: 0.90).',
         ],
@@ -1284,7 +1284,7 @@ Priority Floors: R1=80.0, R2=60.0, R3=75.0`,
         },
       ],
       example: {
-        scenario: 'Overriding statistical prediction for GIS-0012 (Semiconductor Cleanroom ISO Audit).',
+        scenario: 'Overriding statistical prediction for an example cleanroom audit project.',
         inputs: {
           ml_tier: 'Can wait',
           raw_priority_score: 48.2,
@@ -1299,7 +1299,7 @@ Priority Floors: R1=80.0, R2=60.0, R3=75.0`,
           'Audit override tag "R1" appended to rule_overrides.',
         ],
         result: 'final_tier: "Must-do-now", priority_score: 80.0, rule_overrides: "R1".',
-        businessImpact: 'Prevents $15M semiconductor cleanroom shutdown fine by enforcing audit compliance.',
+        businessImpact: 'Prevents a costly compliance fine by enforcing audit compliance.',
       },
     },
     {

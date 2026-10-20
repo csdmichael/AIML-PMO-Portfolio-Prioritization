@@ -20,6 +20,7 @@ import {
 } from '@ionic/angular';
 import { ConfigService } from './services/config.service';
 import { PortfolioStore } from './services/portfolio.store';
+import { DataApiService } from './services/data-api.service';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { AgentFabComponent } from './components/agent-fab/agent-fab.component';
@@ -187,12 +188,20 @@ export class AppComponent implements OnInit {
   private readonly configService = inject(ConfigService);
   private readonly titleService = inject(Title);
   private readonly router = inject(Router);
+  private readonly dataApi = inject(DataApiService);
   readonly store = inject(PortfolioStore);
   readonly navigationCollapsed = signal(false);
   readonly expandedCategories = signal<Record<string, boolean>>({});
+  /** True while the environment is flagged as demo, so every page says the portfolio data is synthetic. */
+  readonly demoMode = signal(false);
 
   ngOnInit(): void {
     this.titleService.setTitle('PMO Portfolio Prioritization');
+
+    this.dataApi.getAdminSettings().subscribe({
+      next: (settings) => this.demoMode.set(settings.isDemoEnvironment),
+      error: () => this.demoMode.set(false),
+    });
 
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))

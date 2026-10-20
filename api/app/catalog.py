@@ -9,6 +9,7 @@ from app.config import ProjectSettings
 from app.contracts import DataEntryContract
 from app.lake_paths import LakePaths
 from app.problems import ProblemError
+from app.project_changes import ProjectChanges
 from app.store import EntryStore, ExportReader
 
 T = TypeVar("T")
@@ -63,6 +64,17 @@ class CatalogOptions:
             return self.all_programs()
         return None
 
+    def key_for_name(self, source: str, name: str) -> str | None:
+        """The key whose display name equals name ignoring case. Only the portfolio list has display names."""
+        if source != _DYNAMIC_PORTFOLIOS:
+            return None
+        wanted = name.casefold()
+        match = next(
+            (item for item in self._all_portfolios() if item.get("key") and str(item.get("displayName", "")).casefold() == wanted),
+            None,
+        )
+        return str(match["key"]) if match is not None else None
+
     def all_programs(self) -> list[str]:
         keys: list[str] = []
         for portfolio in self._all_portfolios():
@@ -93,15 +105,20 @@ class Catalog:
         paths: LakePaths,
         statuses: ProjectSettings,
         contract: DataEntryContract,
+        changes: ProjectChanges,
     ) -> None:
         self._exports = exports
         self._entries = entries
         self._paths = paths
         self._statuses = statuses
         self._contract = contract
+        self._changes = changes
 
     def options(self) -> CatalogOptions:
         return CatalogOptions(contract=self._contract, catalog=self)
+
+    def portfolio_index(self) -> dict[str, dict[str, Any]]:
+        return {str(item["key"]): item for item in self.portfolios() if item.get("key")}
 
     def _export(self) -> dict[str, Any]:
         value = self._exports.read(self._paths.portfolio_export())
@@ -133,14 +150,22 @@ class Catalog:
         return frozenset(processed | pending)
 
     def list_projects(self, filters: ProjectFilters) -> list[dict[str, Any]]:
-        portfolios = {str(item["key"]): item for item in self.portfolios() if item.get("key")}
+        portfolios = self.portfolio_index()
         processed = self._export_projects()
         processed_ids = {item.get("projectId") for item in processed}
-        items = [self._summary_from_export(item) for item in processed if item.get("projectId")]
+        items: list[dict[str, Any]] = []
+        for item in processed:
+            if not item.get("projectId"):
+                continue
+            record = self._changes.apply(item, shape="export", portfolios=self.portfolio_index)
+            if record is not None:
+                items.append(self._summary_from_export(record))
         for _, entry in self._entries.list(self._paths.project_entries_folder()):
             project_id = entry.get("projectId")
             if project_id and project_id not in processed_ids:
-                items.append(self._summary_from_entry({**entry, "projectId": project_id}, portfolios))
+                record = self._changes.apply({**entry, "projectId": project_id}, shape="entry", portfolios=self.portfolio_index)
+                if record is not None:
+                    items.append(self._summary_from_entry(record, portfolios))
         matching = [item for item in items if _matches(item, filters)]
         return sorted(matching, key=lambda item: str(item["projectId"]))
 
@@ -149,14 +174,16 @@ class Catalog:
         try:
             for record in self._export_projects():
                 if record.get("projectId") == project_id:
-                    return {**record, "status": self._statuses.statusProcessed}
+                    applied = self._changes.apply(record, shape="export", portfolios=self.portfolio_index)
+                    return None if applied is None else {**applied, "status": self._statuses.statusProcessed}
         except ProblemError as error:
             if error.slug != "lake-data-missing":
                 raise
             missing = error
         entry = self._entries.get(self._paths.project_entry(project_id))
         if entry is not None:
-            return {**entry, "projectId": project_id, "status": self._statuses.statusPending}
+            applied = self._changes.apply({**entry, "projectId": project_id}, shape="entry", portfolios=self.portfolio_index)
+            return None if applied is None else {**applied, "projectId": project_id, "status": self._statuses.statusPending}
         if missing is not None:
             raise missing
         return None
@@ -185,6 +212,7 @@ class Catalog:
             "priorityScore": record.get("priorityScore"),
             "recommendedAction": record.get("recommendedAction"),
             "cluster": record.get("cluster"),
+            "isDeleted": bool(record.get("isDeleted", False)),
         }
 
     def _summary_from_entry(self, entry: dict[str, Any], portfolios: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -213,6 +241,7 @@ class Catalog:
             "priorityScore": None,
             "recommendedAction": None,
             "cluster": None,
+            "isDeleted": bool(entry.get("isDeleted", False)),
         }
 
 

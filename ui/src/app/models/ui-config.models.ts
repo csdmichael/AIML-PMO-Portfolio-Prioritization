@@ -98,6 +98,18 @@ export interface ChartSettingsConfig {
   donutRadiusOuter: string;
 }
 
+export interface CopilotSamplePrompt {
+  id: string;
+  title: string;
+  icon: string;
+  prompt: string;
+  category: 'priority' | 'budget' | 'skills' | 'rules' | 'risk';
+}
+
+export interface CopilotConfig {
+  samplePrompts: CopilotSamplePrompt[];
+}
+
 export interface UiConfig {
   api: ApiConfig;
   brand: BrandConfig;
@@ -106,6 +118,7 @@ export interface UiConfig {
   breakpoints: BreakpointsConfig;
   confidence: ConfidenceConfig;
   tiers: TiersConfig;
+  copilot?: CopilotConfig;
   footer: FooterConfig;
   table: TableConfig;
   charts: ChartSettingsConfig;
