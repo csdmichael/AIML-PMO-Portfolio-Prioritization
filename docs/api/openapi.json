@@ -1367,7 +1367,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Get global admin settings including demo environment flag",
+        "summary": "Get global admin settings from OneLake system_settings table",
         "operationId": "getAdminSettings",
         "responses": {
           "200": {
@@ -1386,7 +1386,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Update global admin settings including demo environment flag",
+        "summary": "Update global admin settings and write to OneLake system_settings table",
         "operationId": "updateAdminSettings",
         "requestBody": {
           "content": {
@@ -1487,7 +1487,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Get configurable priority weights and per-project overrides",
+        "summary": "Get configurable priority weights from OneLake priority_field_weights table",
         "operationId": "getPriorityWeights",
         "responses": {
           "200": {
@@ -1506,7 +1506,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Update configurable priority weights and per-project overrides",
+        "summary": "Update priority weights and write to OneLake priority_field_weights table",
         "operationId": "updatePriorityWeights",
         "requestBody": {
           "content": {
