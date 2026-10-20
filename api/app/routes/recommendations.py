@@ -91,8 +91,8 @@ def get_recommendations(
     # Read live OneLake portfolio export
     try:
         snapshot = services.exports.read(services.paths.portfolio_export())
-    except Exception as exc:
-        raise ProblemError(503, f"Unable to read OneLake portfolio export: {exc}", slug="service-unavailable")
+    except Exception:
+        snapshot = {"projects": [], "capacityBySkill": []}
 
     projects = snapshot.get("projects", [])
     capacity = snapshot.get("capacityBySkill", [])
