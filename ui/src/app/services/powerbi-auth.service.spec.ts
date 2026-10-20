@@ -16,15 +16,21 @@ const { msalMock } = vi.hoisted(() => ({
     setActiveAccount: vi.fn(),
     acquireTokenSilent: vi.fn(),
     acquireTokenPopup: vi.fn(),
+    logoutPopup: vi.fn(),
   },
 }));
 
-vi.mock('@azure/msal-browser', () => ({
-  InteractionRequiredAuthError: class InteractionRequiredAuthError extends Error {},
-  PublicClientApplication: vi.fn(function PublicClientApplicationMock() {
-    return msalMock;
-  }),
-}));
+vi.mock('@azure/msal-browser', () => {
+  class MockInteractionRequiredAuthError extends Error {}
+  class MockBrowserAuthError extends Error {}
+  return {
+    InteractionRequiredAuthError: MockInteractionRequiredAuthError,
+    BrowserAuthError: MockBrowserAuthError,
+    PublicClientApplication: vi.fn(function PublicClientApplicationMock() {
+      return msalMock;
+    }),
+  };
+});
 
 const CONFIG: PowerBiEmbedConfig = {
   tenantId: 'tenant-id',
