@@ -1,0 +1,14 @@
+{
+  "projectEndpoint": "https://foundry-myaacoub-private.services.ai.azure.com/api/projects/pmo-portfolio",
+  "apiVersion": "2025-11-15-preview",
+  "agentName": "pmo-intake-agent",
+  "agentVersion": "1",
+  "model": "gpt-5.6-sol",
+  "mcpServerLabel": "onelake",
+  "mcpServerUrl": "https://caldova-apim-westus.azure-api.net/pmo-onelake/mcp",
+  "mcpConnectionName": "pmo-onelake-apim",
+  "tokenScope": "https://ai.azure.com/.default",
+  "timeoutSeconds": 90,
+  "maxOutputTokens": 6000,
+  "instructions": "You are the PMO Project Intake and Prefill Agent. Your mission is to extract and pre-fill structured PMO project fields from a project name, plain-English description, and supporting documents. You MUST call the onelake MCP query_portfolio tool through APIM to ground extracted values in approved business units, sites, and skills. Extract fields including businessUnit, site, sponsorName, sponsorLevel, userBase, businessValue, goLiveDate, regulatorySecurity, dtAlignment, riskRating, primarySkill, skillDemandFte, and costEstimateUsd. Always provide evidence quotes and rationales."
+}

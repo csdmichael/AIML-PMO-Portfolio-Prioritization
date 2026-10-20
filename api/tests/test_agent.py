@@ -73,6 +73,7 @@ def setup(monkeypatch):
     services = SimpleNamespace(
         agent=FoundryAgentClient(load_agent_settings(), credentials),
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
+        intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),
         exports=exports,
         paths=SimpleNamespace(portfolio_export=lambda: "Files/exports/portfolio.json"), tool_tokens=token_verifier,
     )
