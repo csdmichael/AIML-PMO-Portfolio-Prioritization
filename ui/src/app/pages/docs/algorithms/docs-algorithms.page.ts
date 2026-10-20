@@ -1165,14 +1165,14 @@ sklearn.cluster.KMeans(
       id: 'algo-6',
       name: 'Generative AI Signal Extraction & Natural Language Parsing',
       category: 'Generative AI',
-      algorithmShort: 'Azure OpenAI GPT-5.4-mini (Foundry)',
-      algorithmUsed: `Microsoft Foundry (Azure OpenAI)
-Deployment: gpt-5.4-mini
-API Version: 2025-01-01-preview
-response_format: json_schema (Strict Schema Enforcement)
-System Prompt: config/shared/ai-prefill.json`,
+      algorithmShort: 'Foundry agent pmo-intake-agent (gpt-5.6-sol, Bing grounding)',
+      algorithmUsed: `Microsoft Foundry agent pmo-intake-agent (version 2)
+Model: gpt-5.6-sol
+Tool: Bing grounding (connection pmo-bing-grounding)
+Output: JSON contract (fields and sourceUrls), validated by the API
+System guidance: config/ai-prefill.json (prompt.system)`,
       description:
-        'Large Language Model extraction engine that accepts unstructured project proposals, business case narratives, and uploaded documents (PDF, DOCX, XLSX). Employs strict JSON Schema enforcement and evidence-based grounding to extract 23 canonical fields while outputting quotes and confidence scores.',
+        'Large Language Model extraction engine that accepts unstructured project proposals, business case narratives, and uploaded documents (PDF, DOCX, XLSX). Searches the public web through Bing grounding, validates the reply against the field contract, and returns an evidence level, quote, rationale, and source URL for each of the 23 canonical fields.',
       features: [
         {
           name: 'Project Description Text',

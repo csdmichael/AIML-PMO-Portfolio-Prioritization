@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from app.contracts import AiPrefillSettings, DataEntryContract, DataSourcesContract, OptionLists
+from app.contracts import AiPrefillSettings, DataEntryContract, DataSourcesContract, OneLakeDatasetsContract, OptionLists, RecommendationSettings
 
 API_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = API_ROOT.parent
@@ -229,6 +229,8 @@ class AppConfig:
     api: ApiSettings
     data_entry: DataEntryContract
     ai_prefill: AiPrefillSettings
+    recommendations: RecommendationSettings
+    onelake_datasets: OneLakeDatasetsContract
     data_sources: DataSourcesContract
     values: ResolvedValues
     shared_dir: Path
@@ -287,8 +289,6 @@ def _check_contract(api: ApiSettings, data_entry: DataEntryContract, ai: AiPrefi
         raise ConfigError(f"ai-prefill.json fields must match data-entry.json projectFields (except '{name_field}'); missing {missing}, extra {extra}")
     if set(ai.evidenceToConfidence) != set(ai.evidenceLevels):
         raise ConfigError("ai-prefill.json evidenceToConfidence must have one entry per evidence level")
-    if ai.model.responseFormat != "json_schema":
-        raise ConfigError("ai-prefill.json model.responseFormat must be json_schema")
     source_keys = {source.key for source in sources.sources}
     unknown = sorted(set(data_entry.uploads.acceptedBySource) - source_keys)
     if unknown:
@@ -305,6 +305,11 @@ def load_config(*, settings_file: Path = API_SETTINGS_FILE, shared_dir: Path | N
     documents = {key: _read_json(folder / spec.fileName) for key, spec in api.sharedConfig.files.items()}
     data_entry = DataEntryContract.model_validate(documents["dataEntry"])
     ai_prefill = AiPrefillSettings.model_validate(documents["aiPrefill"])
+    recommendations = RecommendationSettings.model_validate(documents["recommendations"])
+    onelake = OneLakeDatasetsContract.model_validate(documents["onelakeDatasets"])
+    dataset_keys = [dataset.key for dataset in onelake.datasets]
+    if len(dataset_keys) != len(set(dataset_keys)):
+        raise ConfigError("onelake-datasets.json has duplicate dataset keys")
     data_sources = DataSourcesContract.model_validate(documents["dataSources"])
     refs = {
         "workspace_name": api.fabric.workspaceName,
@@ -320,7 +325,10 @@ def load_config(*, settings_file: Path = API_SETTINGS_FILE, shared_dir: Path | N
     }
     values = ResolvedValues(**{name: _resolve(ref, documents) for name, ref in refs.items()})
     _check_contract(api, data_entry, ai_prefill, data_sources)
-    return AppConfig(api=api, data_entry=data_entry, ai_prefill=ai_prefill, data_sources=data_sources, values=values, shared_dir=folder)
+    return AppConfig(
+        api=api, data_entry=data_entry, ai_prefill=ai_prefill, recommendations=recommendations,
+        onelake_datasets=onelake, data_sources=data_sources, values=values, shared_dir=folder,
+    )
 
 
 @lru_cache(maxsize=1)

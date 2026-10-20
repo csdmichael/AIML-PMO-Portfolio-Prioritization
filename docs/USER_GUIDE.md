@@ -102,13 +102,13 @@ The **Power BI** dashboard embeds an enterprise analytics experience backed dire
 
 ## 6. Quick Add with AI Prefill
 
-The **Quick Add** wizard allows business sponsors and PMs to submit project proposals in plain English and have Microsoft Foundry / Azure OpenAI automatically extract the 10 canonical PMO signals:
+The **Quick Add** wizard allows business sponsors and PMs to submit project proposals in plain English and have the Microsoft Foundry intake agent fill the project fields:
 
 ![Quick Add AI Prefill](images/user-guide/06-quick-add-prefill.png)
 
 ### Workflow:
 1. **Pre-saved Sample Prompts**: One-click prompt chips populate realistic semiconductor, IoT, and cybersecurity proposals.
-2. **AI Signal Extraction**: Azure OpenAI extracts Business Value, Regulatory Flag, Primary Skill, Cost Estimate, Risk Rating, and Effort person-weeks.
+2. **AI Pre-fill (Missing only)**: the intake agent fills the fields that are still empty, using public web sources through Bing grounding. It covers Business Value, Regulatory Flag, Primary Skill, Cost Estimate, Risk Rating, and Effort person-weeks. A value you entered is never replaced.
 3. **Signal Provenance & Confidence**: Each field displays an extracted confidence score, evidence quote from the source text, and allows human overrides before OneLake submission.
 
 ---

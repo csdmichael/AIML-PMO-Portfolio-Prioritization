@@ -42,6 +42,7 @@
       "isCategory": true,
       "children": [
         { "id": "docs-architecture", "label": "Architecture & Steps", "icon": "git-network-outline", "route": "/docs/architecture" },
+        { "id": "docs-agents", "label": "AI Agents & Tools", "icon": "people-circle-outline", "route": "/docs/agents" },
         { "id": "docs-project-fields", "label": "Project Fields", "icon": "document-text-outline", "route": "/docs/project-fields" },
         { "id": "docs-algorithms", "label": "ML Algorithms", "icon": "hardware-chip-outline", "route": "/docs/algorithms" },
         { "id": "docs-ai-prefill-confidence", "label": "AI Prefill & Confidence", "icon": "sparkles-outline", "route": "/docs/ai-prefill-confidence" },
@@ -50,6 +51,17 @@
       ]
     }
   ],
+  "recommendations": {
+    "title": "AI Recommendations",
+    "subtitle": "The recommendation agent reads approved OneLake evidence and public web sources, then proposes new projects for each portfolio and changes to existing projects. A person adds each project or records each decision.",
+    "researchPlaceholder": "Ask the recommendation agent a portfolio question",
+    "askLabel": "Ask agent",
+    "quickPrompts": [
+      { "label": "Priority elevation", "prompt": "Which projects should have their priority raised, and why?" },
+      { "label": "Skill bottlenecks", "prompt": "Where are the skill capacity bottlenecks, and which projects depend on them?" },
+      { "label": "New opportunities", "prompt": "What new projects should each portfolio consider, based on the evidence and public context?" }
+    ]
+  },
   "breakpoints": {
     "xl": 1200,
     "md": 768

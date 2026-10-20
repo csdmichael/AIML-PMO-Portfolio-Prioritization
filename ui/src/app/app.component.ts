@@ -84,9 +84,17 @@ import {
   warningOutline,
   optionsOutline,
   listOutline,
+  chatbubblesOutline,
+  constructOutline,
+  globeOutline,
+  peopleCircleOutline,
 } from 'ionicons/icons';
 
 addIcons({
+  chatbubblesOutline,
+  constructOutline,
+  globeOutline,
+  peopleCircleOutline,
   optionsOutline,
   listOutline,
   saveOutline,

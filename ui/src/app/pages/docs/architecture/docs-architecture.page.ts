@@ -512,7 +512,7 @@ interface ArchStep {
                 <tr>
                   <td><strong>Microsoft Foundry (Azure AI)</strong></td>
                   <td>Powers Quick Add AI signal extraction and PMO Copilot Agent</td>
-                  <td>Azure OpenAI GPT-5.4-mini, Strict JSON Schema</td>
+                  <td>Foundry agent pmo-intake-agent (gpt-5.6-sol), Bing grounding, validated JSON contract</td>
                   <td>Cognitive Services RBAC, Private Endpoint</td>
                 </tr>
                 <tr>
@@ -1140,7 +1140,7 @@ export class DocsArchitecturePageComponent {
       title: 'FastAPI Backend & Azure APIM Gateway',
       subtitle: 'Secure REST microservices providing OneLake data access and Foundry AI prefill',
       layer: 'Layer 4: API & Integration Gateway',
-      technologies: ['FastAPI (Python 3.12)', 'Azure APIM', 'Azure Key Vault', 'Microsoft Foundry (Azure OpenAI)'],
+      technologies: ['FastAPI (Python 3.12)', 'Azure APIM', 'Azure Key Vault', 'Microsoft Foundry agents (Bing grounding, OneLake via APIM)'],
       inputs: [
         'REST requests from UI client or external systems under /pmo',
         'OneLake Delta Parquet and JSON files accessed via ADLS Gen2 DFS endpoints',
@@ -1149,7 +1149,7 @@ export class DocsArchitecturePageComponent {
       processing: [
         'Azure API Management enforces rate-limiting, CORS, and request auditing',
         'System-assigned Managed Identity authenticates to Key Vault and OneLake without secrets',
-        'AI Prefill endpoint calls Azure OpenAI GPT-5.4-mini in Microsoft Foundry with strict JSON Schema',
+        'AI Prefill endpoint calls the pmo-intake-agent in Microsoft Foundry, which searches the web with Bing grounding and returns a validated JSON contract',
         'Data entry and governance endpoints append approved records to OneLake with audit trails',
       ],
       outputs: [

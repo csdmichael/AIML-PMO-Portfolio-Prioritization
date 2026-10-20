@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from './config.service';
 import { PortfolioDataset, Project, LocalDecision, CapacityBySkill } from '../models/portfolio.models';
+import { RecommendationReport } from '../models/recommendation.models';
+import { OneLakeDatasetList, OneLakeDatasetView } from '../models/onelake.models';
 import {
   OptionsResponse,
   PortfolioItem,
@@ -182,14 +184,32 @@ export class DataApiService {
     return this.http.put<any>(`${this.base}/admin/lookups`, data);
   }
 
-  getRecommendations(portfolioKey?: string): Observable<any> {
+  getRecommendations(portfolioKey?: string): Observable<RecommendationReport> {
     let params = new HttpParams();
     if (portfolioKey) params = params.set('portfolioKey', portfolioKey);
-    return this.http.get<any>(`${this.base}/recommendations`, { params });
+    return this.http.get<RecommendationReport>(`${this.base}/recommendations`, { params });
   }
 
-  queryResearcherAgent(query: string, portfolioKey?: string): Observable<any> {
-    return this.http.post<any>(`${this.base}/recommendations/research`, { query, portfolioKey });
+  queryResearcherAgent(query: string, portfolioKey?: string): Observable<RecommendationReport> {
+    return this.http.post<RecommendationReport>(`${this.base}/recommendations/research`, { query, portfolioKey });
+  }
+
+  postDecision(decision: Record<string, unknown>): Observable<{ decisionId: string }> {
+    return this.http.post<{ decisionId: string }>(`${this.base}/decisions`, decision);
+  }
+
+  listOneLakeDatasets(): Observable<OneLakeDatasetList> {
+    return this.http.get<OneLakeDatasetList>(`${this.base}/onelake/datasets`);
+  }
+
+  getOneLakeDataset(key: string): Observable<OneLakeDatasetView> {
+    return this.http.get<OneLakeDatasetView>(`${this.base}/onelake/datasets/${encodeURIComponent(key)}`);
+  }
+
+  /** The etag from the last read is sent as If-Match, so a change made since then is rejected rather than overwritten. */
+  putOneLakeDataset(key: string, data: unknown, etag: string | null): Observable<OneLakeDatasetView> {
+    const headers: Record<string, string> = etag ? { 'If-Match': `"${etag}"` } : {};
+    return this.http.put<OneLakeDatasetView>(`${this.base}/onelake/datasets/${encodeURIComponent(key)}`, data, { headers });
   }
 
   async downloadExcelTemplate(filename = 'project_intake_template.xlsx'): Promise<void> {

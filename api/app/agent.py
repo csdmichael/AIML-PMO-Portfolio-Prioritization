@@ -2,9 +2,12 @@
 
 import json
 import logging
+import re
 import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal, NoReturn, TypeVar
+from urllib.parse import urlparse
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -17,19 +20,64 @@ logger = logging.getLogger("pmo.api.agent")
 NonemptyText = Annotated[str, Field(min_length=1)]
 
 
+def is_web_url(value: str) -> bool:
+    parsed = urlparse(value)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc) and len(value) <= 2048
+
+
+def clean_web_urls(values: list[Any] | None) -> list[str]:
+    """Keep only well-formed http(s) URLs, once each, so a malformed citation never reaches the UI."""
+    cleaned: list[str] = []
+    for value in values or []:
+        if isinstance(value, str) and is_web_url(value) and value not in cleaned:
+            cleaned.append(value)
+    return cleaned[:25]
+
+
+ModelT = TypeVar("ModelT", bound=BaseModel)
+INVALID_RESPONSE = "The Foundry agent returned an invalid or ungrounded response. Please retry."
+URL_PATTERN = re.compile(r"https?://[^\s\"'\\<>\]\)]+")
+
+
+class McpToolSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    type: Literal["mcp"]
+    serverLabel: str
+    serverUrl: str
+    connectionName: str
+    allowedTools: list[str]
+    requireApproval: str
+
+
+class BingToolSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    type: Literal["bing_grounding"]
+    projectConnectionId: str
+
+
+class EvidenceSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    onelake: bool
+    web: bool
+
+
 class AgentSettings(BaseModel):
     projectEndpoint: str
     apiVersion: str
     agentName: str
     agentVersion: str
     model: str
+    description: str
     tokenScope: str
     timeoutSeconds: float
     maxOutputTokens: int
     instructions: str
-    mcpServerLabel: str
-    mcpServerUrl: str
-    mcpConnectionName: str
+    tools: list[Annotated[McpToolSettings | BingToolSettings, Field(discriminator="type")]]
+    evidence: EvidenceSettings
+
+    @property
+    def mcp(self) -> McpToolSettings | None:
+        return next((tool for tool in self.tools if isinstance(tool, McpToolSettings)), None)
 
 
 def load_agent_settings(filename: str = "portfolio-agent.json") -> AgentSettings:
@@ -57,17 +105,26 @@ class AgentAnswer(BaseModel):
     sourceProjectIds: list[str]
 
 
+@dataclass(frozen=True)
+class AgentRun:
+    text: str
+    response_id: str
+    evidence_ids: frozenset[str]
+    query_ids: tuple[str, ...]
+    web_searches: int = 0
+    web_citations: frozenset[str] = frozenset()
+
+
 class FoundryAgentClient:
     def __init__(self, settings: AgentSettings, credentials: CredentialProvider) -> None:
         self.settings = settings
         self.credentials = credentials
 
-    def answer(self, question: str, history: list[dict[str, str]]) -> dict[str, Any]:
+    def run(self, inputs: list[dict[str, Any]]) -> AgentRun:
         deadline = time.monotonic() + self.settings.timeoutSeconds
-        inputs: list[dict[str, Any]] = [*history, {"role": "user", "content": question}]
         evidence_ids: set[str] = set()
         query_ids: list[str] = []
-        result = self._invoke(inputs, deadline)
+        result = self._invoke([{"type": "message", **item} for item in inputs], deadline)
         output = result.get("output")
         if (
             result.get("status") != "completed" or not isinstance(output, list)
@@ -75,7 +132,7 @@ class FoundryAgentClient:
         ):
             self._invalid_response()
         calls = [item for item in output if item.get("type") == "mcp_call"]
-        if not 1 <= len(calls) <= 4 or any(
+        if len(calls) > 4 or any(
             item.get("type") in ("function_call", "mcp_approval_request") for item in output
         ):
             self._invalid_response()
@@ -89,14 +146,67 @@ class FoundryAgentClient:
                 continue
             evidence_ids.update(evidence["sourceProjectIds"])
             query_ids.append(evidence["queryId"])
-        if not query_ids:
+        if self.settings.evidence.onelake and not query_ids:
             raise failure or ProblemError(502, "The OneLake MCP tool returned no evidence.", slug="upstream-failure")
-        return self._answer(result, evidence_ids, query_ids)
+        text = self._output_text(output)
+        web_searches, web_citations = self._web_evidence(output)
+        if self.settings.evidence.web and not web_searches:
+            logger.error("Foundry agent did not use the Bing grounding tool")
+            self._invalid_response()
+        response_id = result.get("id")
+        if not isinstance(response_id, str) or not response_id:
+            self._invalid_response()
+        logger.info(
+            "Foundry agent %s:%s response %s queries %s web searches %s",
+            self.settings.agentName, self.settings.agentVersion, response_id, query_ids, web_searches,
+        )
+        return AgentRun(
+            text=text, response_id=response_id, evidence_ids=frozenset(evidence_ids),
+            query_ids=tuple(query_ids), web_searches=web_searches, web_citations=frozenset(web_citations),
+        )
+
+    def answer(self, question: str, history: list[dict[str, str]]) -> dict[str, Any]:
+        run = self.run([*history, {"role": "user", "content": question}])
+        try:
+            answer = AgentAnswer.model_validate_json(run.text)
+        except ValidationError as error:
+            logger.error("Foundry agent answer did not match the chat contract")
+            raise ProblemError(502, INVALID_RESPONSE, slug="upstream-failure") from error
+        if not set(answer.sourceProjectIds).issubset(run.evidence_ids):
+            logger.error("Foundry agent cited projects that the OneLake tool did not return")
+            raise ProblemError(502, INVALID_RESPONSE, slug="upstream-failure")
+        return {
+            **answer.model_dump(),
+            "sourceRecordCount": len(set(answer.sourceProjectIds)),
+            "provenance": self.provenance(run),
+        }
+
+    def structured(self, inputs: list[dict[str, Any]], model: type[ModelT]) -> tuple[ModelT, AgentRun]:
+        run = self.run(inputs)
+        try:
+            return model.model_validate_json(run.text), run
+        except ValidationError as error:
+            logger.error("Foundry agent output did not match %s", model.__name__)
+            raise ProblemError(502, INVALID_RESPONSE, slug="upstream-failure") from error
+
+    def provenance(self, run: AgentRun) -> dict[str, Any]:
+        settings = self.settings
+        return {
+            "provider": "azure-ai-foundry",
+            "agentName": settings.agentName,
+            "agentVersion": settings.agentVersion,
+            "responseId": run.response_id,
+            "groundingSource": "fabric-onelake-via-apim" if settings.evidence.onelake else "bing-web-search",
+            "queryIds": list(run.query_ids),
+            "webSearches": run.web_searches,
+            "webCitations": sorted(run.web_citations)[:25],
+        }
 
     def _evidence(self, call: dict[str, Any]) -> dict[str, Any]:
         try:
+            mcp = self.settings.mcp
             if (
-                call.get("name") != TOOL_NAME or call.get("server_label") != self.settings.mcpServerLabel
+                mcp is None or call.get("name") != TOOL_NAME or call.get("server_label") != mcp.serverLabel
                 or call.get("status") != "completed" or call.get("error") is not None
             ):
                 raise ValueError("MCP call failed or is not allowlisted")
@@ -137,12 +247,17 @@ class FoundryAgentClient:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise ProblemError(504, "The agent query timed out.", slug="upstream-timeout")
+        mcp = settings.mcp
+        tool_choice: Any = (
+            {"type": "mcp", "server_label": mcp.serverLabel, "name": TOOL_NAME}
+            if mcp is not None and not settings.evidence.web else "required"
+        )
         payload = {
             "agent": {"type": "agent_reference", "name": settings.agentName, "version": settings.agentVersion},
             "input": inputs,
             "store": False,
             "max_output_tokens": settings.maxOutputTokens,
-            "tool_choice": {"type": "mcp", "server_label": settings.mcpServerLabel, "name": TOOL_NAME},
+            "tool_choice": tool_choice,
             "max_tool_calls": 4,
         }
         try:
@@ -177,48 +292,42 @@ class FoundryAgentClient:
             logger.error("Invalid Foundry response envelope")
             raise ProblemError(502, "The Foundry response was invalid.", slug="upstream-failure") from error
 
-    def _invalid_response(self) -> None:
+    def _invalid_response(self) -> NoReturn:
         logger.error("Foundry response incomplete or missing required tool evidence")
-        raise ProblemError(502, "The Foundry agent returned an invalid or ungrounded response. Please retry.", slug="upstream-failure")
+        raise ProblemError(502, INVALID_RESPONSE, slug="upstream-failure")
 
-    def _answer(self, result: dict[str, Any], project_ids: set[str], query_ids: list[str]) -> dict[str, Any]:
-        try:
-            output = result.get("output")
-            if not isinstance(output, list) or any(not isinstance(item, dict) for item in output):
-                raise ValueError("Foundry response output is invalid")
-            messages = [item for item in output if item.get("type") == "message"]
-            for message in messages:
-                content = message.get("content")
-                if not isinstance(content, list) or any(not isinstance(item, dict) for item in content):
-                    raise ValueError("Foundry message content is invalid")
-            text = "".join(
-                content["text"]
-                for item in messages
-                for content in item.get("content", []) if content.get("type") == "output_text"
-            )
-            answer = AgentAnswer.model_validate_json(text)
-            if not set(answer.sourceProjectIds).issubset(project_ids):
-                raise ValueError("Foundry cited projects not returned by the tool")
-            response_id = result["id"]
-            if not isinstance(response_id, str) or not response_id:
-                raise ValueError("Foundry response ID is missing")
-        except (ValueError, KeyError, TypeError, ValidationError) as error:
-            logger.error("Invalid Foundry agent response (%s)", type(error).__name__)
-            raise ProblemError(
-                502, "The Foundry agent returned an invalid or ungrounded response. Please retry.", slug="upstream-failure",
-            ) from error
+    def _output_text(self, output: list[dict[str, Any]]) -> str:
+        messages = [item for item in output if item.get("type") == "message"]
+        for message in messages:
+            content = message.get("content")
+            if not isinstance(content, list) or any(not isinstance(item, dict) for item in content):
+                self._invalid_response()
+        text = "".join(
+            part["text"]
+            for message in messages
+            for part in message.get("content", [])
+            if part.get("type") == "output_text" and isinstance(part.get("text"), str)
+        )
+        if not text:
+            self._invalid_response()
+        return text
 
-        settings = self.settings
-        logger.info("Foundry agent %s:%s response %s queries %s", settings.agentName, settings.agentVersion, response_id, query_ids)
-        return {
-            **answer.model_dump(),
-            "sourceRecordCount": len(set(answer.sourceProjectIds)),
-            "provenance": {
-                "provider": "azure-ai-foundry",
-                "agentName": settings.agentName,
-                "agentVersion": settings.agentVersion,
-                "responseId": response_id,
-                "groundingSource": "fabric-onelake-via-apim",
-                "queryIds": query_ids,
-            },
-        }
+    @staticmethod
+    def _web_evidence(output: list[dict[str, Any]]) -> tuple[int, set[str]]:
+        """Bing calls made, plus every URL the search returned or the reply cited."""
+        calls = sum(1 for item in output if item.get("type") == "bing_grounding_call")
+        urls: set[str] = set()
+        for item in output:
+            if item.get("type") == "bing_grounding_call_output":
+                urls.update(url.rstrip(".,;") for url in URL_PATTERN.findall(json.dumps(item)))
+            elif item.get("type") == "message":
+                for part in item.get("content") or []:
+                    if not isinstance(part, dict) or part.get("type") != "output_text":
+                        continue
+                    for annotation in part.get("annotations") or []:
+                        if (
+                            isinstance(annotation, dict) and annotation.get("type") == "url_citation"
+                            and isinstance(annotation.get("url"), str)
+                        ):
+                            urls.add(annotation["url"])
+        return calls, urls

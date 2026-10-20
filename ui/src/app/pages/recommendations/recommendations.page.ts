@@ -1,76 +1,37 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable, Subscription, map } from 'rxjs';
 import {
-  IonContent,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonButton,
-  IonIcon,
   IonBadge,
-  IonSegment,
-  IonSegmentButton,
-  IonSelect,
-  IonSelectOption,
-  IonItem,
-  IonLabel,
-  IonInput,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonIcon,
   IonSpinner,
 } from '@ionic/angular';
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
-import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
-import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
+import { ConfigService } from '../../services/config.service';
+import { RecommendationAction, RecommendationReport } from '../../models/recommendation.models';
 
-interface NewProjectSuggestion {
-  id: string;
-  projectName: string;
-  portfolioKey: string;
-  portfolioName: string;
-  businessUnit: string;
-  site: string;
-  executiveSponsor: string;
-  sponsorLevel: string;
-  businessValue: number;
-  userBase: number;
-  primarySkill: string;
-  skillDemandFte: number;
-  costEstimateUsd: number;
-  goLiveDate: string;
-  regulatorySecurity: boolean;
-  dtAlignment: boolean;
-  riskRating: string;
-  strategicRationale: string;
-  expectedImpact: string;
-  status: string;
-  addedProjectId?: string;
+type ActionStatus = 'running' | 'done' | 'failed';
+
+interface ActionState {
+  status: ActionStatus;
+  message: string;
 }
 
-interface ExistingProjectRecommendation {
-  id: string;
-  projectId: string;
-  projectName: string;
-  portfolioKey: string;
-  currentTier: string;
-  currentPriorityScore: number;
-  recommendationType: string;
-  suggestedTier?: string;
-  suggestedPriorityDelta?: number;
-  reason: string;
-  actionLabel: string;
-  impactSeverity: string;
-  applied?: boolean;
-}
-
-interface PortfolioInsight {
-  portfolioKey: string;
-  portfolioName: string;
-  summary: string;
-  topBottleneck: string;
-  opportunityArea: string;
+/** Turns an API problem response into the text a person needs to act on it. */
+function problemText(err: unknown): string {
+  const problem = (err as { error?: { detail?: string; errors?: { field: string; message: string }[] } })?.error;
+  const issues = (problem?.errors ?? []).map((issue) => `${issue.field}: ${issue.message}`);
+  const detail = problem?.detail ?? (err as { message?: string })?.message ?? 'The request failed.';
+  return issues.length ? `${detail} ${issues.join('; ')}` : detail;
 }
 
 @Component({
@@ -88,782 +49,313 @@ interface PortfolioInsight {
     IonButton,
     IonIcon,
     IonBadge,
-    IonSegment,
-    IonSegmentButton,
-    IonSelect,
-    IonSelectOption,
-    IonItem,
-    IonLabel,
-    IonInput,
     IonSpinner,
-    LoadingSkeletonComponent,
-    EmptyStateComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ion-content class="ion-padding rec-page-content">
-      <!-- Header -->
+    <ion-content class="ion-padding rec-page">
       <div class="page-header">
-        <div class="header-left">
-          <div class="agent-badge-pill">
-            <ion-icon name="sparkles"></ion-icon>
-            AI Portfolio Researcher Agent
-          </div>
-          <h2 class="page-title">Portfolio Strategic Recommendations</h2>
-          <p class="page-subtitle">
-            Autonomous researcher agent analyzing capacity bottlenecks, user reach, and strategic gaps across portfolios.
-          </p>
+        <div class="header-text">
+          <div class="agent-pill"><ion-icon name="sparkles-outline"></ion-icon> Recommendation agent</div>
+          <h2 class="page-title">{{ report()?.title || ui.title }}</h2>
+          <p class="page-subtitle">{{ ui.subtitle }}</p>
         </div>
-
-        <div class="header-right">
-          <div class="portfolio-filter-box">
-            <label class="filter-lbl">Filter by Portfolio:</label>
-            <select class="pf-select" [(ngModel)]="selectedPortfolio" (change)="onPortfolioFilterChange()">
-              <option value="">All Portfolios</option>
+        <div class="header-controls">
+          <label class="portfolio-filter">
+            <span>Portfolio</span>
+            <select [(ngModel)]="portfolioKey" (change)="loadDefault()" [disabled]="loading()">
+              <option value="">All portfolios</option>
               @for (pf of store.portfolios(); track pf) {
                 <option [value]="pf">{{ pf }}</option>
               }
             </select>
-          </div>
+          </label>
+          <ion-button fill="outline" [disabled]="loading()" (click)="loadDefault()">Refresh</ion-button>
         </div>
       </div>
 
-      <!-- Researcher Agent Interactive Bar -->
-      <ion-card class="researcher-chat-card">
+      <ion-card class="research-card">
         <ion-card-content>
-          <div class="research-input-row">
-            <ion-icon name="search-outline" class="search-agent-icon"></ion-icon>
+          <form class="research-row" (ngSubmit)="ask()">
             <input
               type="text"
+              name="query"
               class="research-input"
               [(ngModel)]="researchQuery"
-              placeholder="Ask Researcher Agent for portfolio suggestions or optimization opportunities..."
-              (keyup.enter)="askResearcherAgent()"
+              [placeholder]="ui.researchPlaceholder"
+              [disabled]="loading()"
             />
-            <ion-button color="primary" [disabled]="isQuerying() || !researchQuery.trim()" (click)="askResearcherAgent()">
-              @if (isQuerying()) {
-                <ion-spinner name="crescent" slot="start"></ion-spinner>
-                Researching...
-              } @else {
-                <ion-icon name="sparkles" slot="start"></ion-icon>
-                Ask Agent
-              }
+            <ion-button type="submit" color="primary" [disabled]="loading() || researchQuery.trim().length < 3">
+              <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+              {{ ui.askLabel }}
             </ion-button>
+          </form>
+          <div class="quick-prompts">
+            @for (quick of ui.quickPrompts; track quick.label) {
+              <button type="button" class="prompt-chip" [disabled]="loading()" (click)="ask(quick.prompt)">
+                {{ quick.label }}
+              </button>
+            }
           </div>
-
-          <!-- Quick prompts chips -->
-          <div class="quick-prompts-row">
-            <span class="prompts-label">Quick Research Focus:</span>
-            <button type="button" class="prompt-btn" (click)="setPrompt('Which projects should have priority elevated based on high user impact?')">
-              High User Reach Elevation
-            </button>
-            <button type="button" class="prompt-btn" (click)="setPrompt('Where are our most critical skill demand bottlenecks?')">
-              Skill Deficit Mitigation
-            </button>
-            <button type="button" class="prompt-btn" (click)="setPrompt('What new strategic projects are missing in our manufacturing fab portfolio?')">
-              Fab Expansion Opportunities
-            </button>
-          </div>
-
-          @if (agentResponse()) {
-            <div class="agent-response-box">
-              <div class="agent-resp-header">
-                <ion-badge color="tertiary">Researcher Agent Verdict</ion-badge>
-              </div>
-              <p class="agent-resp-text">{{ agentResponse() }}</p>
-            </div>
-          }
         </ion-card-content>
       </ion-card>
 
-      <!-- View Selector Tabs -->
-      <ion-segment [(ngModel)]="activeTab" class="view-segment">
-        <ion-segment-button value="new-projects">
-          <ion-label>New Project Suggestions ({{ newSuggestions().length }})</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="existing-recs">
-          <ion-label>Project Optimizations ({{ existingRecs().length }})</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="insights">
-          <ion-label>Strategic Portfolio Insights</ion-label>
-        </ion-segment-button>
-      </ion-segment>
-
-      @if (isLoading()) {
-        <app-loading-skeleton [cards]="3" [rows]="4"></app-loading-skeleton>
-      } @else {
-        <!-- SECTION 1: NEW PROJECT SUGGESTIONS -->
-        @if (activeTab === 'new-projects') {
-          <div class="section-container">
-            <div class="section-header-row">
-              <div>
-                <h3 class="section-title">AI Suggested New Projects per Portfolio</h3>
-                <p class="section-desc">Identified gaps based on regulatory needs, cleanroom scaling, and enterprise user reach.</p>
-              </div>
+      @if (loading()) {
+        <div class="state-line">
+          <ion-spinner name="crescent"></ion-spinner>
+          <span>The recommendation agent is querying OneLake and searching the web. This can take up to two minutes.</span>
+        </div>
+      } @else if (error(); as message) {
+        <ion-card class="error-card">
+          <ion-card-content>
+            <strong>The recommendation agent could not complete the report.</strong>
+            <p class="error-text">{{ message }}</p>
+            <ion-button fill="outline" size="small" (click)="retry()">Try again</ion-button>
+          </ion-card-content>
+        </ion-card>
+      } @else if (report(); as r) {
+        <ion-card class="summary-card">
+          <ion-card-content>
+            @if (r.query) {
+              <div class="query-line">Research question: <strong>{{ r.query }}</strong></div>
+            }
+            <p class="summary-text">{{ r.summary }}</p>
+            <div class="provenance-row">
+              <span>{{ r.provenance.agentName }} v{{ r.provenance.agentVersion }}</span>
+              <span>{{ r.provenance.queryIds.length }} OneLake {{ r.provenance.queryIds.length === 1 ? 'query' : 'queries' }}</span>
+              <span>{{ r.provenance.webSearches }} web {{ r.provenance.webSearches === 1 ? 'search' : 'searches' }}</span>
+              <span>{{ r.sourceProjectIds.length }} projects cited</span>
+              <span>Generated {{ r.generatedAtUtc | date: 'medium' }}</span>
             </div>
+            @if (r.sourceUrls.length) {
+              <div class="source-row">
+                <span class="source-label">Web sources:</span>
+                @for (url of r.sourceUrls; track $index) {
+                  <a class="source-link" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                }
+              </div>
+            }
+          </ion-card-content>
+        </ion-card>
 
-            <div class="suggestions-grid">
-              @for (item of newSuggestions(); track item.id) {
-                <ion-card class="suggestion-card" [class.added]="item.status === 'Added'">
+        @for (section of r.sections; track $index; let s = $index) {
+          <section class="section-block">
+            <h3 class="section-title">{{ section.title }}</h3>
+            @if (section.description) {
+              <p class="section-desc">{{ section.description }}</p>
+            }
+            <div class="item-grid">
+              @for (item of section.items; track $index; let i = $index) {
+                <ion-card class="item-card">
                   <ion-card-header>
-                    <div class="card-badge-line">
-                      <ion-badge color="primary">{{ item.portfolioName }}</ion-badge>
-                      <ion-badge color="medium">{{ item.businessUnit }}</ion-badge>
-                      <span class="user-reach-badge">
-                        <ion-icon name="people-outline"></ion-icon>
-                        {{ item.userBase | number }} Users Impacted
-                      </span>
-                    </div>
-                    <ion-card-title class="sug-title">{{ item.projectName }}</ion-card-title>
-                    <ion-card-subtitle>
-                      Sponsor: {{ item.executiveSponsor }} ({{ item.sponsorLevel }}) • Site: {{ item.site }} • Go-Live: {{ item.goLiveDate }}
-                    </ion-card-subtitle>
-                  </ion-card-header>
-
-                  <ion-card-content>
-                    <div class="metrics-strip">
-                      <div class="metric-cell">
-                        <span class="m-lbl">Business Value</span>
-                        <span class="m-val text-success">{{ item.businessValue }}/5</span>
-                      </div>
-                      <div class="metric-cell">
-                        <span class="m-lbl">Est. Capital</span>
-                        <span class="m-val">\${{ (item.costEstimateUsd / 1000000).toFixed(2) }}M</span>
-                      </div>
-                      <div class="metric-cell">
-                        <span class="m-lbl">Skill Demand</span>
-                        <span class="m-val">{{ item.skillDemandFte }} FTE ({{ item.primarySkill }})</span>
-                      </div>
-                      <div class="metric-cell">
-                        <span class="m-lbl">Mandate</span>
-                        <span class="m-val">{{ item.regulatorySecurity ? 'Regulatory / SEC' : 'Strategic DT' }}</span>
-                      </div>
-                    </div>
-
-                    <div class="rationale-box">
-                      <div class="r-label">Strategic Rationale:</div>
-                      <p>{{ item.strategicRationale }}</p>
-                      <div class="impact-text">
-                        <strong>Expected Impact:</strong> {{ item.expectedImpact }}
-                      </div>
-                    </div>
-
-                    <div class="card-action-footer">
-                      @if (item.status === 'Added') {
-                        <div class="added-confirmation">
-                          <ion-icon name="checkmark-circle-outline"></ion-icon>
-                          <span>Added to Portfolio as <strong>{{ item.addedProjectId }}</strong></span>
-                        </div>
-                      } @else {
-                        <ion-button
-                          color="primary"
-                          [disabled]="isAdding(item.id)"
-                          (click)="addProjectToPortfolio(item)"
-                        >
-                          @if (isAdding(item.id)) {
-                            <ion-spinner name="crescent" slot="start"></ion-spinner>
-                            Adding...
-                          } @else {
-                            <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-                            Add Project to Portfolio
-                          }
-                        </ion-button>
-                      }
-                    </div>
-                  </ion-card-content>
-                </ion-card>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- SECTION 2: EXISTING PROJECT RECOMMENDATIONS -->
-        @if (activeTab === 'existing-recs') {
-          <div class="section-container">
-            <div class="section-header-row">
-              <div>
-                <h3 class="section-title">Existing Project Prioritization Adjustments</h3>
-                <p class="section-desc">Actionable adjustments derived from real OneLake project metrics, user reach, and resource constraints.</p>
-              </div>
-            </div>
-
-            <div class="recs-list">
-              @for (rec of existingRecs(); track rec.id) {
-                <div class="rec-row-card" [class.applied]="rec.applied">
-                  <div class="rec-main-info">
-                    <div class="rec-top-line">
-                      <span class="rec-proj-id">{{ rec.projectId }}</span>
-                      <span class="rec-proj-name">{{ rec.projectName }}</span>
-                      <ion-badge [color]="rec.impactSeverity === 'High' ? 'danger' : 'warning'">
-                        {{ rec.impactSeverity }} Impact
-                      </ion-badge>
-                    </div>
-
-                    <div class="rec-reason-text">
-                      {{ rec.reason }}
-                    </div>
-
-                    <div class="rec-score-context">
-                      <span>Current Tier: <strong>{{ rec.currentTier }}</strong></span>
-                      <span>Priority Score: <strong>{{ rec.currentPriorityScore | number:'1.1-1' }}</strong></span>
-                      @if (rec.suggestedTier) {
-                        <span>Suggested Tier: <strong class="text-primary">{{ rec.suggestedTier }}</strong></span>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="rec-action-side">
-                    @if (rec.applied) {
-                      <div class="applied-badge">
-                        <ion-icon name="checkmark-done-outline"></ion-icon>
-                        Decision Applied
-                      </div>
-                    } @else {
-                      <ion-button
-                        size="small"
-                        color="secondary"
-                        [disabled]="isApplying(rec.id)"
-                        (click)="applyRecommendation(rec)"
-                      >
-                        @if (isApplying(rec.id)) {
-                          <ion-spinner name="crescent" slot="start"></ion-spinner>
-                          Applying...
-                        } @else {
-                          <ion-icon name="checkbox-outline" slot="start"></ion-icon>
-                          {{ rec.actionLabel }}
+                    @if (item.badges.length) {
+                      <div class="badge-row">
+                        @for (badge of item.badges; track $index) {
+                          <ion-badge color="medium">{{ badge }}</ion-badge>
                         }
-                      </ion-button>
+                      </div>
                     }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- SECTION 3: STRATEGIC INSIGHTS -->
-        @if (activeTab === 'insights') {
-          <div class="section-container">
-            <div class="insights-grid">
-              @for (insight of insights(); track insight.portfolioKey) {
-                <ion-card class="insight-card">
-                  <ion-card-header>
-                    <ion-card-title>{{ insight.portfolioName }}</ion-card-title>
+                    <ion-card-title class="item-title">{{ item.title }}</ion-card-title>
+                    @if (item.subtitle) {
+                      <ion-card-subtitle>{{ item.subtitle }}</ion-card-subtitle>
+                    }
                   </ion-card-header>
                   <ion-card-content>
-                    <p class="insight-summary">{{ insight.summary }}</p>
-
-                    <div class="insight-point warning-point">
-                      <ion-icon name="alert-circle-outline"></ion-icon>
-                      <div>
-                        <strong>Top Bottleneck:</strong>
-                        <p>{{ insight.topBottleneck }}</p>
+                    <p class="item-summary">{{ item.summary }}</p>
+                    @if (item.metrics.length) {
+                      <dl class="metric-grid">
+                        @for (metric of item.metrics; track $index) {
+                          <div>
+                            <dt>{{ metric.label }}</dt>
+                            <dd>{{ metric.value }}</dd>
+                          </div>
+                        }
+                      </dl>
+                    }
+                    @if (item.sourceProjectIds.length) {
+                      <div class="source-row">
+                        <span class="source-label">OneLake:</span>
+                        @for (projectId of item.sourceProjectIds; track $index) {
+                          <span class="source-chip">{{ projectId }}</span>
+                        }
                       </div>
-                    </div>
-
-                    <div class="insight-point opportunity-point">
-                      <ion-icon name="trending-up-outline"></ion-icon>
-                      <div>
-                        <strong>Strategic Opportunity:</strong>
-                        <p>{{ insight.opportunityArea }}</p>
+                    }
+                    @if (item.sourceUrls.length) {
+                      <div class="source-row">
+                        <span class="source-label">Web:</span>
+                        @for (url of item.sourceUrls; track $index) {
+                          <a class="source-link" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                        }
                       </div>
-                    </div>
+                    }
+                    @if (item.actions.length) {
+                      <div class="action-row">
+                        @for (action of item.actions; track $index; let a = $index) {
+                          <div class="action-item">
+                            <ion-button
+                              size="small"
+                              [color]="action.type === 'addProject' ? 'primary' : 'secondary'"
+                              [disabled]="stateOf(s, i, a)?.status === 'running' || stateOf(s, i, a)?.status === 'done'"
+                              (click)="runAction(s, i, a, action)"
+                            >
+                              {{ action.label }}
+                            </ion-button>
+                            @if (stateOf(s, i, a); as state) {
+                              <span class="action-status" [class.failed]="state.status === 'failed'">{{ state.message }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
                   </ion-card-content>
                 </ion-card>
+              } @empty {
+                <p class="empty-note">No items in this section.</p>
               }
             </div>
-          </div>
+          </section>
+        } @empty {
+          <ion-card>
+            <ion-card-content>
+              <p class="empty-note">The agent returned no recommendations for this request.</p>
+            </ion-card-content>
+          </ion-card>
         }
       }
     </ion-content>
   `,
   styles: [`
-    .rec-page-content {
-      --background: #f8fafc;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .agent-badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1e40af;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .page-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0 0 4px 0;
-    }
-    .page-subtitle {
-      font-size: 14px;
-      color: #64748b;
-      margin: 0;
-    }
-    .portfolio-filter-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #ffffff;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-    }
-    .filter-lbl {
-      font-size: 13px;
-      font-weight: 600;
-      color: #475569;
-    }
-    .pf-select {
-      border: none;
-      font-size: 13px;
-      color: #0f172a;
-      background: transparent;
-      outline: none;
-      font-weight: 600;
-    }
-    .researcher-chat-card {
-      background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
-      border: 1px solid #bae6fd;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 120, 212, 0.08);
-      margin-bottom: 20px;
-    }
-    .research-input-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 4px 8px 4px 14px;
-    }
-    .search-agent-icon {
-      font-size: 20px;
-      color: #0078d4;
-    }
-    .research-input {
-      flex: 1;
-      border: none;
-      font-size: 14px;
-      color: #0f172a;
-      outline: none;
-      padding: 6px 0;
-    }
-    .quick-prompts-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-    .prompts-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
-    }
-    .prompt-btn {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
-      padding: 4px 12px;
-      font-size: 12px;
-      color: #334155;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .prompt-btn:hover {
-      background: #0078d4;
-      color: #ffffff;
-      border-color: #0078d4;
-    }
-    .agent-response-box {
-      margin-top: 16px;
-      padding: 14px;
-      background: #ffffff;
-      border: 1px solid #93c5fd;
-      border-radius: 8px;
-    }
-    .agent-resp-header {
-      margin-bottom: 6px;
-    }
-    .agent-resp-text {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #1e293b;
-      margin: 0;
-    }
-    .view-segment {
-      margin-bottom: 20px;
-      background: #e2e8f0;
-      border-radius: 8px;
-    }
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0 0 4px 0;
-    }
-    .section-desc {
-      font-size: 13px;
-      color: #64748b;
-      margin: 0 0 16px 0;
-    }
-    .suggestions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-      gap: 18px;
-    }
-    .suggestion-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .suggestion-card.added {
-      border-color: #107c10;
-      background: #f0fdf4;
-    }
-    .card-badge-line {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-    .user-reach-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      background: #f0fdf4;
-      color: #15803d;
-      border: 1px solid #bbf7d0;
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-left: auto;
-    }
-    .sug-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f172a;
-      line-height: 1.3;
-    }
-    .metrics-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      background: #f8fafc;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 12px;
-    }
-    .metric-cell {
-      display: flex;
-      flex-direction: column;
-    }
-    .m-lbl {
-      font-size: 10px;
-      color: #64748b;
-      text-transform: uppercase;
-    }
-    .m-val {
-      font-size: 13px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .rationale-box {
-      font-size: 12px;
-      color: #334155;
-      line-height: 1.4;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 14px;
-    }
-    .r-label {
-      font-weight: 600;
-      color: #0284c7;
-      margin-bottom: 2px;
-    }
-    .impact-text {
-      margin-top: 6px;
-      padding-top: 6px;
-      border-top: 1px dashed #e2e8f0;
-    }
-    .card-action-footer {
-      display: flex;
-      justify-content: flex-end;
-    }
-    .added-confirmation {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #166534;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .recs-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .rec-row-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 16px 20px;
-      gap: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    }
-    .rec-row-card.applied {
-      border-color: #107c10;
-      background: #f0fdf4;
-    }
-    .rec-main-info {
-      flex: 1;
-    }
-    .rec-top-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    .rec-proj-id {
-      font-weight: 700;
-      color: #0078d4;
-      font-size: 14px;
-    }
-    .rec-proj-name {
-      font-weight: 600;
-      color: #0f172a;
-      font-size: 15px;
-    }
-    .rec-reason-text {
-      font-size: 13px;
-      color: #475569;
-      line-height: 1.45;
-      margin-bottom: 8px;
-    }
-    .rec-score-context {
-      display: flex;
-      gap: 16px;
-      font-size: 12px;
-      color: #64748b;
-    }
-    .applied-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #166534;
-      font-weight: 600;
-      font-size: 13px;
-    }
-    .insights-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 16px;
-    }
-    .insight-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-    }
-    .insight-summary {
-      font-size: 13px;
-      color: #334155;
-      line-height: 1.45;
-      margin-bottom: 12px;
-    }
-    .insight-point {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 8px;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    .insight-point ion-icon {
-      font-size: 18px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .insight-point p {
-      margin: 2px 0 0 0;
-    }
-    .warning-point {
-      background: #fffbeb;
-      border: 1px solid #fef3c7;
-      color: #92400e;
-    }
-    .opportunity-point {
-      background: #eff6ff;
-      border: 1px solid #dbeafe;
-      color: #1e40af;
-    }
+    .rec-page { --rec-muted: #5b6573; }
+    .page-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .agent-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #5b2ea6; background: #f3edfc; border-radius: 999px; padding: 4px 10px; }
+    .page-title { margin: 6px 0 4px; font-size: 1.5rem; }
+    .page-subtitle { margin: 0; color: var(--rec-muted); max-width: 720px; }
+    .header-controls { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .portfolio-filter { display: flex; flex-direction: column; font-size: 12px; color: var(--rec-muted); gap: 4px; }
+    .portfolio-filter select { min-width: 220px; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; }
+    .research-card { margin: 0 0 16px; }
+    .research-row { display: flex; gap: 12px; align-items: center; }
+    .research-input { flex: 1; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+    .quick-prompts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .prompt-chip { border: 1px solid #d0d7e2; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+    .prompt-chip:disabled { opacity: 0.5; cursor: default; }
+    .state-line { display: flex; align-items: center; gap: 10px; color: var(--rec-muted); padding: 16px 0; }
+    .error-card { border-left: 4px solid #d13438; }
+    .error-text { color: #a4262c; margin: 6px 0 12px; }
+    .summary-card { margin: 0 0 16px; }
+    .summary-text { font-size: 15px; margin: 0 0 10px; }
+    .query-line { font-size: 13px; color: var(--rec-muted); margin-bottom: 6px; }
+    .provenance-row { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--rec-muted); }
+    .source-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; }
+    .source-label { color: var(--rec-muted); font-weight: 600; margin-right: 4px; }
+    .source-chip { background: #eef2f7; border-radius: 6px; padding: 2px 6px; font-family: monospace; }
+    .source-link { color: #0a58ca; word-break: break-all; }
+    .section-block { margin: 20px 0; }
+    .section-title { margin: 0 0 4px; font-size: 1.15rem; }
+    .section-desc { margin: 0 0 12px; color: var(--rec-muted); }
+    .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .item-card { margin: 0; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+    .item-title { font-size: 1rem; }
+    .item-summary { margin: 0 0 10px; font-size: 14px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 10px; }
+    .metric-grid div { background: #f7f9fc; border-radius: 6px; padding: 6px 8px; }
+    .metric-grid dt { font-size: 11px; color: var(--rec-muted); }
+    .metric-grid dd { margin: 0; font-weight: 600; }
+    .action-row { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+    .action-item { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .action-status { font-size: 12px; color: #107c10; }
+    .action-status.failed { color: #a4262c; }
+    .empty-note { color: var(--rec-muted); font-size: 14px; }
   `],
 })
-export class RecommendationsPageComponent implements OnInit {
+export class RecommendationsPageComponent implements OnInit, OnDestroy {
   private readonly dataApi = inject(DataApiService);
+  private readonly configService = inject(ConfigService);
   readonly store = inject(PortfolioStore);
+  readonly ui = this.configService.config.recommendations;
 
-  readonly isLoading = signal(true);
-  readonly isQuerying = signal(false);
-  readonly addingId = signal<string | null>(null);
-  readonly applyingId = signal<string | null>(null);
+  readonly report = signal<RecommendationReport | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly activeQuery = signal<string | null>(null);
+  readonly actionStates = signal<Record<string, ActionState>>({});
 
-  activeTab = 'new-projects';
-  selectedPortfolio = '';
+  portfolioKey = '';
   researchQuery = '';
-  readonly agentResponse = signal<string | null>(null);
-
-  readonly newSuggestions = signal<NewProjectSuggestion[]>([]);
-  readonly existingRecs = signal<ExistingProjectRecommendation[]>([]);
-  readonly insights = signal<PortfolioInsight[]>([]);
+  private request?: Subscription;
 
   ngOnInit(): void {
-    this.loadRecommendations();
+    this.loadDefault();
   }
 
-  loadRecommendations(): void {
-    this.isLoading.set(true);
-    this.dataApi.getRecommendations(this.selectedPortfolio || undefined).subscribe({
-      next: (res) => {
-        this.newSuggestions.set(res.newProjectSuggestions || []);
-        this.existingRecs.set(res.existingProjectRecommendations || []);
-        this.insights.set(res.insights || []);
-        this.isLoading.set(false);
-      },
-      error: () => this.isLoading.set(false),
-    });
+  ngOnDestroy(): void {
+    this.request?.unsubscribe();
   }
 
-  onPortfolioFilterChange(): void {
-    this.loadRecommendations();
+  loadDefault(): void {
+    this.activeQuery.set(null);
+    this.run(this.dataApi.getRecommendations(this.portfolioKey || undefined));
   }
 
-  setPrompt(prompt: string): void {
-    this.researchQuery = prompt;
-    this.askResearcherAgent();
+  ask(prompt?: string): void {
+    const query = (prompt ?? this.researchQuery).trim();
+    if (query.length < 3) return;
+    this.researchQuery = query;
+    this.activeQuery.set(query);
+    this.run(this.dataApi.queryResearcherAgent(query, this.portfolioKey || undefined));
   }
 
-  askResearcherAgent(): void {
-    if (!this.researchQuery.trim()) return;
-    this.isQuerying.set(true);
-    this.dataApi
-      .queryResearcherAgent(this.researchQuery, this.selectedPortfolio || undefined)
-      .subscribe({
-        next: (res) => {
-          this.agentResponse.set(res.answer);
-          this.isQuerying.set(false);
-        },
-        error: () => {
-          this.agentResponse.set(
-            'Researcher Agent analyzed portfolio metrics. Recommended focus: prioritize high-user reach projects while mitigating Q3 cloud and cybersecurity skill constraints.'
-          );
-          this.isQuerying.set(false);
-        },
-      });
+  retry(): void {
+    const query = this.activeQuery();
+    if (query) {
+      this.ask(query);
+    } else {
+      this.loadDefault();
+    }
   }
 
-  isAdding(id: string): boolean {
-    return this.addingId() === id;
+  stateOf(section: number, item: number, action: number): ActionState | undefined {
+    return this.actionStates()[`${section}.${item}.${action}`];
   }
 
-  addProjectToPortfolio(item: NewProjectSuggestion): void {
-    this.addingId.set(item.id);
-
-    const projectPayload = {
-      projectName: item.projectName,
-      portfolioKey: item.portfolioKey,
-      businessUnit: item.businessUnit,
-      site: item.site,
-      sponsorName: item.executiveSponsor,
-      sponsorLevel: item.sponsorLevel,
-      projectStatus: 'Planning',
-      businessValue: item.businessValue,
-      userBase: item.userBase,
-      primarySkill: item.primarySkill,
-      skillDemandFte: item.skillDemandFte,
-      costEstimateUsd: item.costEstimateUsd,
-      goLiveDate: item.goLiveDate,
-      regulatorySecurity: item.regulatorySecurity,
-      dtAlignment: item.dtAlignment,
-      riskRating: item.riskRating,
-    };
-
-    this.dataApi.createProject(projectPayload, true).subscribe({
-      next: (res) => {
-        this.addingId.set(null);
-        this.newSuggestions.update((list) =>
-          list.map((s) => (s.id === item.id ? { ...s, status: 'Added', addedProjectId: res.projectId } : s))
-        );
-        this.store.init(); // Refresh store
-      },
-      error: () => {
-        const fallbackId = `GIS-${Math.floor(100 + Math.random() * 900)}`;
-        this.addingId.set(null);
-        this.newSuggestions.update((list) =>
-          list.map((s) => (s.id === item.id ? { ...s, status: 'Added', addedProjectId: fallbackId } : s))
-        );
-      },
-    });
-  }
-
-  isApplying(id: string): boolean {
-    return this.applyingId() === id;
-  }
-
-  applyRecommendation(rec: ExistingProjectRecommendation): void {
-    this.applyingId.set(rec.id);
-
-    const decisionPayload = {
-      projectId: rec.projectId,
-      action: 'Approve' as const,
-      reason: `Researcher Agent recommendation applied: ${rec.reason}`,
-      timestamp: new Date().toISOString(),
-    };
-
-    this.dataApi.createDecision(decisionPayload).subscribe({
-      next: () => {
-        this.applyingId.set(null);
-        this.existingRecs.update((list) =>
-          list.map((r) => (r.id === rec.id ? { ...r, applied: true } : r))
-        );
-        if (rec.suggestedTier) {
-          this.store.setProjectStatus(rec.projectId, 'Active');
+  runAction(section: number, item: number, index: number, action: RecommendationAction): void {
+    const key = `${section}.${item}.${index}`;
+    this.setState(key, { status: 'running', message: 'Working' });
+    const write$: Observable<string> =
+      action.type === 'addProject'
+        ? this.dataApi.createProject(action.payload, true).pipe(map((res) => `Added as ${res.projectId}`))
+        : this.dataApi.postDecision(action.payload).pipe(map((res) => `Recorded ${res.decisionId}`));
+    write$.subscribe({
+      next: (message) => {
+        this.setState(key, { status: 'done', message });
+        if (action.type === 'addProject') {
+          this.store.init();
         }
       },
-      error: () => {
-        this.applyingId.set(null);
-        this.existingRecs.update((list) =>
-          list.map((r) => (r.id === rec.id ? { ...r, applied: true } : r))
-        );
+      error: (err) => this.setState(key, { status: 'failed', message: problemText(err) }),
+    });
+  }
+
+  private run(request$: Observable<RecommendationReport>): void {
+    this.request?.unsubscribe();
+    this.loading.set(true);
+    this.error.set(null);
+    this.actionStates.set({});
+    this.request = request$.subscribe({
+      next: (report) => {
+        this.report.set(report);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.report.set(null);
+        this.error.set(problemText(err));
+        this.loading.set(false);
       },
     });
+  }
+
+  private setState(key: string, state: ActionState): void {
+    this.actionStates.update((states) => ({ ...states, [key]: state }));
   }
 }

@@ -2,13 +2,18 @@
   "projectEndpoint": "https://foundry-myaacoub-private.services.ai.azure.com/api/projects/pmo-portfolio",
   "apiVersion": "2025-11-15-preview",
   "agentName": "pmo-intake-agent",
-  "agentVersion": "1",
+  "agentVersion": "2",
   "model": "gpt-5.6-sol",
-  "mcpServerLabel": "onelake",
-  "mcpServerUrl": "https://caldova-apim-westus.azure-api.net/pmo-onelake/mcp",
-  "mcpConnectionName": "pmo-onelake-apim",
+  "description": "Fills project intake fields from a project name and a plain-English description, grounded in public web sources through Bing grounding. Read-only.",
   "tokenScope": "https://ai.azure.com/.default",
-  "timeoutSeconds": 90,
+  "timeoutSeconds": 120,
   "maxOutputTokens": 6000,
-  "instructions": "You are the PMO Project Intake and Prefill Agent. Your mission is to extract and pre-fill structured PMO project fields from a project name, plain-English description, and supporting documents. You MUST call the onelake MCP query_portfolio tool through APIM to ground extracted values in approved business units, sites, and skills. Extract fields including businessUnit, site, sponsorName, sponsorLevel, userBase, businessValue, goLiveDate, regulatorySecurity, dtAlignment, riskRating, primarySkill, skillDemandFte, and costEstimateUsd. Always provide evidence quotes and rationales."
+  "instructions": "You are the PMO Project Intake and Prefill Agent. For every request, search the public web with the Bing grounding tool so that each field is grounded in current public information about the project subject, such as the organizations, sites, roles, typical effort, and cost ranges involved. Follow the system guidance and the output contract supplied with each request. Return only the JSON object that the contract describes. Never invent names, emails, project IDs, or numbers that the request and the sources do not support. Cite the URLs you used.",
+  "tools": [
+    {
+      "type": "bing_grounding",
+      "projectConnectionId": "/subscriptions/cf824570-a8ba-497a-a184-0a52f1830aa9/resourceGroups/m365-myaacoub/providers/Microsoft.CognitiveServices/accounts/foundry-myaacoub-private/projects/pmo-portfolio/connections/pmo-bing-grounding"
+    }
+  ],
+  "evidence": {"onelake": false, "web": true}
 }

@@ -46,6 +46,13 @@ const TEST_UI_CONFIG: UiConfig = {
   table: { pageSize: 25, pageSizes: [10, 25, 50] },
   charts: { driverChartHeight: 240, kpiCardHeight: 110, donutRadiusInner: '45%', donutRadiusOuter: '70%' },
   tokens: {},
+  recommendations: {
+    title: 'AI Recommendations',
+    subtitle: 'Test subtitle',
+    researchPlaceholder: 'Ask a question',
+    askLabel: 'Ask agent',
+    quickPrompts: [],
+  },
 };
 
 describe('DataApiService', () => {
@@ -128,5 +135,28 @@ describe('DataApiService', () => {
 
     expect(errorResponse.status).toBe(404);
     expect(errorResponse.error.detail).toContain('Files/exports');
+  });
+
+  it('should list the OneLake datasets the UI can use', () => {
+    service.listOneLakeDatasets().subscribe();
+    const req = httpController.expectOne('/api/v1/onelake/datasets');
+    expect(req.request.method).toBe('GET');
+    req.flush({ items: [], count: 0 });
+  });
+
+  it('should send the etag from the last read as If-Match when updating a dataset', () => {
+    service.putOneLakeDataset('system-settings', [{ setting_key: 'isDemoEnvironment' }], 'etag-1').subscribe();
+    const req = httpController.expectOne('/api/v1/onelake/datasets/system-settings');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.headers.get('If-Match')).toBe('"etag-1"');
+    expect(req.request.body).toEqual([{ setting_key: 'isDemoEnvironment' }]);
+    req.flush({ key: 'system-settings', exists: true, etag: 'etag-2', data: [] });
+  });
+
+  it('should create a dataset without If-Match when it does not exist yet', () => {
+    service.putOneLakeDataset('priority-field-weights', [], null).subscribe();
+    const req = httpController.expectOne('/api/v1/onelake/datasets/priority-field-weights');
+    expect(req.request.headers.has('If-Match')).toBe(false);
+    req.flush({});
   });
 });

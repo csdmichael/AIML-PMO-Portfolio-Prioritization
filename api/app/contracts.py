@@ -3,7 +3,9 @@
 Extra keys are allowed so these contracts can be returned to clients as they are written.
 """
 
-from pydantic import BaseModel, ConfigDict
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Contract(BaseModel):
@@ -118,18 +120,6 @@ class DataSourcesContract(Contract):
     sources: list[DataSource]
 
 
-class ModelSettings(Contract):
-    provider: str
-    foundryAccount: str
-    endpoint: str
-    deployment: str
-    apiVersion: str
-    tokenScope: str
-    maxCompletionTokens: int
-    timeoutSeconds: float
-    responseFormat: str
-
-
 class PrefillLimits(Contract):
     maxProjectNameChars: int
     minDescriptionChars: int
@@ -159,9 +149,45 @@ class PromptTemplates(Contract):
 class AiPrefillSettings(Contract):
     schemaVersion: int
     description: str
-    model: ModelSettings
     limits: PrefillLimits
     evidenceLevels: list[str]
     evidenceToConfidence: dict[str, ConfidenceMapping]
     fields: list[PrefillFieldGuidance]
     prompt: PromptTemplates
+
+
+class RecommendationLimits(Contract):
+    maxSections: int
+    maxItemsPerSection: int
+
+
+class RecommendationSettings(Contract):
+    schemaVersion: int
+    description: str
+    defaultFocus: str
+    limits: RecommendationLimits
+    prompt: PromptTemplates
+
+
+class OneLakeDataset(Contract):
+    key: str
+    label: str
+    description: str
+    path: str
+    shape: Literal["array", "object"]
+    access: Literal["read", "readWrite"]
+    requiredFields: list[str] = []
+    maxBytes: int = Field(gt=0)
+
+    @field_validator("path")
+    @classmethod
+    def lakehouse_path(cls, value: str) -> str:
+        if not value.startswith(("Files/", "Tables/")) or ".." in value.split("/"):
+            raise ValueError("must start with Files/ or Tables/ and must not contain '..'")
+        return value
+
+
+class OneLakeDatasetsContract(Contract):
+    schemaVersion: int
+    description: str
+    datasets: list[OneLakeDataset]

@@ -29,15 +29,28 @@ foreach ($relPath in $AgentConfigFiles) {
         if ([int]$config.agentVersion -ne ($latest + 1)) { throw "Pinned version must be the next immutable version after $latest." }
     }
 
-    $tool = @{
-        type = "mcp"; server_label = $config.mcpServerLabel; server_url = $config.mcpServerUrl
-        project_connection_id = $config.mcpConnectionName
-        allowed_tools = @("query_portfolio")
-        require_approval = "never"
+    $toolDefinitions = foreach ($item in $config.tools) {
+        switch ($item.type) {
+            "mcp" {
+                @{
+                    type = "mcp"; server_label = $item.serverLabel; server_url = $item.serverUrl
+                    project_connection_id = $item.connectionName
+                    allowed_tools = @($item.allowedTools)
+                    require_approval = $item.requireApproval
+                }
+            }
+            "bing_grounding" {
+                @{
+                    type = "bing_grounding"
+                    bing_grounding = @{ search_configurations = @(@{ project_connection_id = $item.projectConnectionId }) }
+                }
+            }
+            default { throw "Unsupported tool type '$($item.type)' in $configFile" }
+        }
     }
     $body = @{
-        definition = @{ kind = "prompt"; model = $config.model; instructions = $config.instructions; tools = @($tool) }
-        description = "Native read-only OneLake MCP retrieval through private APIM using the project managed identity."
+        definition = @{ kind = "prompt"; model = $config.model; instructions = $config.instructions; tools = @($toolDefinitions) }
+        description = $config.description
     } | ConvertTo-Json -Depth 20
 
     $file = Join-Path ([IO.Path]::GetTempPath()) ("pmo-agent-" + [guid]::NewGuid().ToString() + ".json")

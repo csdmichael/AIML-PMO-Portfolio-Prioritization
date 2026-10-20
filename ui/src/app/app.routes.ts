@@ -94,6 +94,11 @@ export const routes: Routes = [
           import('./pages/docs/architecture/docs-architecture.page').then((m) => m.DocsArchitecturePageComponent),
       },
       {
+        path: 'agents',
+        loadComponent: () =>
+          import('./pages/docs/agents/docs-agents.page').then((m) => m.DocsAgentsPageComponent),
+      },
+      {
         path: 'project-fields',
         loadComponent: () =>
           import('./pages/docs/project-fields/docs-project-fields.page').then((m) => m.DocsProjectFieldsPageComponent),

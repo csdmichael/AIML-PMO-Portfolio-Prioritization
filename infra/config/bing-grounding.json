@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "description": "Grounding with Bing Search connection for the PMO Foundry project. infra/scripts/create-bing-connection.ps1 creates or updates this project connection. The subscription, resource group, and Foundry project come from infra/config/pmo-deployment.json and api/config/portfolio-agent.json. The Bing account must already exist in the resource group. The agent definitions reference the connection by name.",
+  "bingAccountName": "bing-search-myaacoub",
+  "connectionName": "pmo-bing-grounding",
+  "target": "https://api.bing.microsoft.com/",
+  "sharedToAll": false,
+  "bingApiVersion": "2020-06-10",
+  "connectionApiVersion": "2025-06-01"
+}

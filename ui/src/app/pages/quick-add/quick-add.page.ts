@@ -815,7 +815,7 @@ export class QuickAddPageComponent implements OnInit, OnDestroy {
       }
 
       // 3. Trigger AI Prefill
-      this.prefillStatusMessage.set('Extracting PMO fields with Azure OpenAI...');
+      this.prefillStatusMessage.set('Extracting PMO fields with the intake agent and Bing grounding...');
       const prefilledDraft = await this.api.prefillIntakeDraft(this.draftId).toPromise();
       if (!prefilledDraft) throw new Error('AI Prefill failed');
 

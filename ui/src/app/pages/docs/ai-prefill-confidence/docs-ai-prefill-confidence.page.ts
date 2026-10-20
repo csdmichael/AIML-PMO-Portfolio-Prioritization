@@ -89,7 +89,7 @@ interface FieldSpec {
               <div class="tier-badge">Tier 1: Field-Level Extraction</div>
               <h3 class="tier-title">AI Extraction Evidence Scoring</h3>
               <p class="tier-desc">
-                When a user submits a project proposal via Quick Add, Azure OpenAI (GPT-5.4-mini in Microsoft Foundry) evaluates textual grounding to assign an evidence level to each of the 23 extracted fields.
+                When a user submits a project proposal via Quick Add, The pmo-intake-agent in Microsoft Foundry searches the public web with Bing grounding and assigns an evidence level to each of the 23 extracted fields, with a source URL where one applies.
               </p>
               <div class="evidence-pill-list">
                 <div class="evidence-pill-item">
@@ -407,7 +407,7 @@ interface FieldSpec {
                     <!-- Prefilled by AI -->
                     <td>
                       <div class="ai-prefill-info">
-                        <div class="yes-badge"><ion-icon name="checkmark-circle"></ion-icon> Yes (Azure OpenAI)</div>
+                        <div class="yes-badge"><ion-icon name="checkmark-circle"></ion-icon> Yes (Foundry agent)</div>
                         <p class="ai-logic-text">{{ f.aiExtractionLogic }}</p>
                       </div>
                     </td>

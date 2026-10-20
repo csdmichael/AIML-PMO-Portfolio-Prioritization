@@ -188,9 +188,11 @@ Invoke-JsonBody PUT "$mcpArm/tools/query_portfolio?api-version=2025-09-01-previe
 $mcpPolicy = $policy.Replace('<rewrite-uri template="/v1/agent/tools/query" copy-unmatched-params="false" />', '')
 $mcpPolicy = $mcpPolicy.Replace('<backend><forward-request timeout="30" /></backend>', '<backend><base /></backend>')
 Invoke-JsonBody PUT "$mcpArm/policies/policy?api-version=2025-09-01-preview" @{ properties = @{ format = "rawxml"; value = $mcpPolicy } } | Out-Null
-Invoke-JsonBody PUT "https://management.azure.com$FoundryProjectResourceId/connections/$($agentConfig.mcpConnectionName)?api-version=2025-10-01-preview" @{
+$mcpTool = @($agentConfig.tools | Where-Object { $_.type -eq "mcp" })[0]
+if (-not $mcpTool) { throw "portfolio-agent.json must define an mcp tool." }
+Invoke-JsonBody PUT "https://management.azure.com$FoundryProjectResourceId/connections/$($mcpTool.connectionName)?api-version=2025-10-01-preview" @{
     properties = @{
-        category = "RemoteTool"; authType = "ProjectManagedIdentity"; target = $agentConfig.mcpServerUrl
+        category = "RemoteTool"; authType = "ProjectManagedIdentity"; target = $mcpTool.serverUrl
         audience = "api://$($app.appId)"; isSharedToAll = $false; metadata = @{ type = "custom_MCP" }
     }
 } | Out-Null

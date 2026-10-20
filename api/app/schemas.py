@@ -101,34 +101,3 @@ def body_schema(
     if required and not partial:
         schema["required"] = required
     return schema
-
-
-def prefill_output_schema(
-    guided: Sequence[tuple[FieldRule, str]],
-    *,
-    allowed_for: Callable[[FieldRule], Sequence[str] | None],
-    relationship_types: Sequence[str],
-    evidence_levels: Sequence[str],
-) -> dict[str, Any]:
-    properties: dict[str, Any] = {}
-    for rule, guidance in guided:
-        value = value_schema(
-            rule,
-            allowed=allowed_for(rule),
-            relationship_types=relationship_types,
-            nullable=True,
-            constraints=False,
-        )
-        properties[rule.key] = {
-            "type": "object",
-            "description": f"{rule.label}. {guidance}",
-            "properties": {
-                "value": value,
-                "evidence": {"type": "string", "enum": list(evidence_levels)},
-                "evidenceQuote": {"type": ["string", "null"]},
-                "rationale": {"type": "string"},
-            },
-            "required": ["value", "evidence", "evidenceQuote", "rationale"],
-            "additionalProperties": False,
-        }
-    return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}

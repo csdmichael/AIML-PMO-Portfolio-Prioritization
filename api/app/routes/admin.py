@@ -2,7 +2,6 @@
 
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -14,9 +13,6 @@ from app.problems import ProblemError
 from app.routes.deps import get_services
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-CONFIG_ROOT = Path(__file__).resolve().parents[2].parent / "config"
-SHARED_CONFIG_ROOT = Path(__file__).resolve().parents[2] / "config" / "shared"
 
 
 class LookupUpdateRequest(BaseModel):
@@ -62,11 +58,21 @@ class AdminSettingsUpdateRequest(BaseModel):
     environmentName: str | None = None
 
 
-def _get_settings_path() -> Path:
-    p = CONFIG_ROOT / "system-settings.json"
-    if p.exists():
-        return p
-    return SHARED_CONFIG_ROOT / "system-settings.json"
+def _shared_json(services: Services, key: str) -> dict[str, Any]:
+    """Defaults from the shared config named by key in api.json (the copy shipped with this app)."""
+    spec = services.config.api.sharedConfig.files[key]
+    return json.loads((services.config.shared_dir / spec.fileName).read_text(encoding="utf-8"))
+
+
+def _settings_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for row in rows:
+        key = row.get("setting_key")
+        raw = row.get("setting_value")
+        if key not in AdminSettings.model_fields or raw is None:
+            continue
+        values[key] = str(raw).lower() in ("true", "1", "yes") if row.get("setting_type") == "boolean" else raw
+    return values
 
 
 @router.get(
@@ -76,36 +82,8 @@ def _get_settings_path() -> Path:
     summary="Get global admin settings from OneLake system_settings table",
 )
 def get_admin_settings(services: Services = Depends(get_services)) -> AdminSettings:
-    # 1. Try reading from OneLake table Tables/system_settings
-    try:
-        records = services.lake.read_table("system_settings")
-        if records:
-            settings_dict: dict[str, Any] = {}
-            for r in records:
-                k = r.get("setting_key")
-                v = r.get("setting_value")
-                t = r.get("setting_type")
-                if k and v is not None:
-                    if t == "boolean":
-                        settings_dict[k] = str(v).lower() in ("true", "1", "yes")
-                    else:
-                        settings_dict[k] = v
-            if "isDemoEnvironment" in settings_dict:
-                return AdminSettings(
-                    isDemoEnvironment=bool(settings_dict["isDemoEnvironment"]),
-                    environmentName=str(settings_dict.get("environmentName", "Demo / Sandbox")),
-                )
-    except Exception:
-        pass
-
-    # 2. Local config fallback
-    path = _get_settings_path()
-    if path.exists():
-        try:
-            return AdminSettings.model_validate_json(path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return AdminSettings(isDemoEnvironment=True)
+    stored = _settings_from_rows(services.lake.read_table("system_settings") or [])
+    return AdminSettings.model_validate({**_shared_json(services, "systemSettings"), **stored})
 
 
 @router.put(
@@ -140,19 +118,7 @@ def update_admin_settings(
             "updated_at": now,
         },
     ]
-    try:
-        services.lake.write_table("system_settings", table_rows)
-        services.lake.write_json("Files/config/system-settings.json", settings.model_dump(), overwrite=True)
-    except Exception:
-        pass
-
-    # 2. Persist local config
-    serialized = settings.model_dump_json(indent=2)
-    for target in (CONFIG_ROOT / "system-settings.json", SHARED_CONFIG_ROOT / "system-settings.json"):
-        try:
-            target.write_text(serialized, encoding="utf-8")
-        except Exception:
-            pass
+    services.lake.write_table("system_settings", table_rows)
     return settings
 
 
@@ -161,27 +127,23 @@ class PriorityWeightsUpdateRequest(BaseModel):
     projectOverrides: dict[str, dict[str, float]] | None = None
 
 
-def _get_weights_path() -> Path | None:
-    candidates = [
-        CONFIG_ROOT / "priority-weights.json",
-        SHARED_CONFIG_ROOT / "priority-weights.json",
-        Path(__file__).resolve().parents[2] / "config" / "shared" / "priority-weights.json",
-        Path(__file__).resolve().parents[2] / "config" / "priority-weights.json",
-    ]
-    for c in candidates:
-        if c.exists():
-            return c
-    return None
-
-
-def _load_weights_config() -> dict[str, Any]:
-    path = _get_weights_path()
-    if path is not None and path.exists():
+def _weights_from_rows(rows: list[dict[str, Any]]) -> tuple[dict[str, float], dict[str, dict[str, float]]]:
+    defaults: dict[str, float] = {}
+    overrides: dict[str, dict[str, float]] = {}
+    for row in rows:
+        field = row.get("field_key")
+        project = row.get("project_id", "*")
+        if not field:
+            continue
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {"version": 1, "description": "Priority weights", "availableFields": [], "defaultWeights": {}, "projectOverrides": {}, "presets": []}
+            weight = float(row.get("weight_percent"))
+        except (TypeError, ValueError) as error:
+            raise ProblemError(502, f"The OneLake priority weight for {field} is not a number.", slug="upstream-failure") from error
+        if project == "*":
+            defaults[field] = weight
+        else:
+            overrides.setdefault(project, {})[field] = weight
+    return defaults, overrides
 
 
 @router.get(
@@ -203,7 +165,8 @@ def get_lookups(services: Services = Depends(get_services)) -> OptionLists:
 def update_lookups(
     body: LookupUpdateRequest, services: Services = Depends(get_services)
 ) -> OptionLists:
-    options = services.config.data_entry.options
+    current = services.config.data_entry.model_copy(deep=True)
+    options = current.options
     if body.sites is not None:
         options.sites = [s.strip() for s in body.sites if s.strip()]
     if body.businessUnits is not None:
@@ -219,26 +182,8 @@ def update_lookups(
     if body.relationshipTypes is not None:
         options.relationshipTypes = [r.strip() for r in body.relationshipTypes if r.strip()]
 
-    # Persist updated options to config/data-entry.json and api/config/shared/data-entry.json
-    for path in (CONFIG_ROOT / "data-entry.json", SHARED_CONFIG_ROOT / "data-entry.json"):
-        if path.exists():
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-                data["options"] = options.model_dump()
-                path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-            except Exception:
-                pass
-
-    # Save to central storage if available
-    try:
-        services.lake.write_json(
-            "Files/config/data-entry.json",
-            services.config.data_entry.model_dump(),
-            etag=None,
-        )
-    except Exception:
-        pass
-
+    services.lake.write_json("Files/config/data-entry.json", current.model_dump(), overwrite=True)
+    services.config.data_entry.options = options
     return options
 
 
@@ -249,31 +194,12 @@ def update_lookups(
     summary="Get configurable priority weights from OneLake priority_field_weights table",
 )
 def get_priority_weights(services: Services = Depends(get_services)) -> dict[str, Any]:
-    # 1. Try reading directly from OneLake table Tables/priority_field_weights
-    try:
-        records = services.lake.read_table("priority_field_weights")
-        if records:
-            default_weights: dict[str, float] = {}
-            project_overrides: dict[str, dict[str, float]] = {}
-            for r in records:
-                pid = r.get("project_id", "*")
-                k = r.get("field_key")
-                w = float(r.get("weight_percent", 0.0))
-                if not k:
-                    continue
-                if pid == "*":
-                    default_weights[k] = w
-                else:
-                    project_overrides.setdefault(pid, {})[k] = w
-            if default_weights:
-                res = _load_weights_config()
-                res["defaultWeights"] = default_weights
-                res["projectOverrides"] = project_overrides
-                return res
-    except Exception:
-        pass
-
-    return _load_weights_config()
+    base = _shared_json(services, "priorityWeights")
+    rows = services.lake.read_table("priority_field_weights") or []
+    if not rows:
+        return base
+    defaults, overrides = _weights_from_rows(rows)
+    return {**base, "defaultWeights": defaults or base.get("defaultWeights", {}), "projectOverrides": overrides}
 
 
 @router.put(
@@ -285,7 +211,7 @@ def get_priority_weights(services: Services = Depends(get_services)) -> dict[str
 def update_priority_weights(
     body: PriorityWeightsUpdateRequest, services: Services = Depends(get_services)
 ) -> dict[str, Any]:
-    cfg = _load_weights_config()
+    cfg = get_priority_weights(services)
 
     if body.defaultWeights is not None:
         total = sum(body.defaultWeights.values())
@@ -322,22 +248,5 @@ def update_priority_weights(
                 "updated_at": now,
             })
 
-    try:
-        services.lake.write_table("priority_field_weights", table_rows)
-        services.lake.write_json("Files/config/priority-weights.json", cfg, overwrite=True)
-    except Exception:
-        pass
-
-    # 2. Persist locally
-    serialized = json.dumps(cfg, indent=2, ensure_ascii=False)
-    for target in (
-        CONFIG_ROOT / "priority-weights.json",
-        SHARED_CONFIG_ROOT / "priority-weights.json",
-    ):
-        try:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(serialized, encoding="utf-8")
-        except Exception:
-            pass
-
+    services.lake.write_table("priority_field_weights", table_rows)
     return cfg

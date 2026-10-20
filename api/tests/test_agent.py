@@ -95,7 +95,7 @@ def test_foundry_executes_native_mcp_without_client_function_loop(setup):
     post.assert_called_once()
     first = post.call_args
     assert first.kwargs["json"]["agent"]["version"] == load_agent_settings().agentVersion
-    assert first.kwargs["json"]["input"][0] == {"role": "user", "content": "Highest priority?"}
+    assert first.kwargs["json"]["input"][0] == {"type": "message", "role": "user", "content": "Highest priority?"}
     assert first.kwargs["json"]["tool_choice"] == {
         "type": "mcp", "server_label": "onelake", "name": "query_portfolio",
     }

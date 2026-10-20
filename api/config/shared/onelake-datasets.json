@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "description": "Lakehouse datasets the UI can read through /v1/onelake. The API serves only the datasets listed here, by key, so a client never supplies a path. Paths are relative to the lakehouse and must start with Files/ or Tables/. A readWrite dataset accepts PUT with the ETag from the last GET in If-Match, or without it while the dataset does not exist yet. requiredFields are checked on every record before anything is written. The admin pages write the same tables through their own validated endpoints.",
+  "datasets": [
+    {
+      "key": "system-settings",
+      "label": "System settings",
+      "description": "Global admin settings stored as one row per setting. The System Settings page reads this table first.",
+      "path": "Tables/system_settings/records.json",
+      "shape": "array",
+      "access": "readWrite",
+      "requiredFields": ["setting_key", "setting_value", "setting_type"],
+      "maxBytes": 262144
+    },
+    {
+      "key": "priority-field-weights",
+      "label": "Priority field weights",
+      "description": "Priority weights stored as one row per field. project_id is * for the default weights and the project ID for an override.",
+      "path": "Tables/priority_field_weights/records.json",
+      "shape": "array",
+      "access": "readWrite",
+      "requiredFields": ["project_id", "field_key", "weight_percent"],
+      "maxBytes": 262144
+    }
+  ]
+}

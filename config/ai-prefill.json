@@ -1,17 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Quick-add AI prefill settings. The API reads a shared copy of this file to call the Azure OpenAI deployment in Foundry, build the strict JSON-schema output, map evidence to confidence levels, and limit uploads. Field keys match config/data-entry.json projectFields. Prompts and guidance are data, not code.",
-  "model": {
-    "provider": "azure-openai",
-    "foundryAccount": "foundry-myaacoub",
-    "endpoint": "https://foundry-myaacoub.cognitiveservices.azure.com",
-    "deployment": "gpt-5.4-mini",
-    "apiVersion": "2025-01-01-preview",
-    "tokenScope": "https://cognitiveservices.azure.com/.default",
-    "maxCompletionTokens": 4000,
-    "timeoutSeconds": 90,
-    "responseFormat": "json_schema"
-  },
+  "description": "Quick-add AI prefill settings. The API sends the system guidance, the field guidance, and the draft to pmo-intake-agent in Microsoft Foundry (agent definition in api/config/intake-agent.json). The agent searches the public web with the Bing grounding tool and returns one entry per field with a source URL. The API maps evidence to confidence levels and limits uploads. Field keys match config/data-entry.json projectFields. Prompts and guidance are data, not code.",
   "limits": {
     "maxProjectNameChars": 120,
     "minDescriptionChars": 40,
@@ -150,8 +139,8 @@
   "prompt": {
     "system": [
       "You extract project intake fields for an IT portfolio prioritization tool from a plain-English description and optional supporting documents.",
-      "Use only the text you are given. Never invent names, emails, project IDs, or numbers that the text does not support.",
-      "For every field, return: the value (in the exact allowed format), the evidence level, a short quote copied from the text when one exists, and a one-sentence rationale.",
+      "Use only the text you are given and the public web sources you retrieve with the Bing grounding tool. Never invent names, emails, project IDs, or numbers that neither the text nor a source supports.",
+      "For every field, return an entry in fields with: the value (in the exact allowed format), the evidence level, a short quote copied from the text when one exists, a one-sentence rationale, and sourceUrl: the public web URL you used for that value, or null. Return the entries inside one JSON object that also has sourceUrls: every URL you used from the Bing grounding tool, or an empty list.",
       "Evidence levels: explicit means the text states the value. inferred means it follows clearly from the text. estimated means you had to judge from context. notProvided means you have no value; return null for the value.",
       "Use the allowed option lists exactly as written. Dates use YYYY-MM-DD. Booleans are true or false. Numbers have no units.",
       "Value formats: booleans are JSON true or false; integers and numbers are JSON numbers with no units or separators (1,200 users is 1200 and 180K USD is 180000); dates are YYYY-MM-DD strings; dependencies are a list of objects with projectId such as GIS-0001 and a relationshipType from the allowed list. Use null when the text gives no value and no estimate is reasonable. A required field must get your best estimate when the text does not state it: set evidence to estimated and explain the basis in the rationale."
@@ -164,7 +153,7 @@
       "{documents}",
       "Allowed options (JSON):",
       "{options}",
-      "Return one entry for every field key in the schema."
+      "Return one entry in fields for every key in fieldGuidance, plus sourceUrls."
     ]
   }
 }

@@ -8,16 +8,15 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-import httpx
 from fastapi import APIRouter, Body, Depends, File, Query, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
+from app.agent import clean_web_urls, is_web_url
+from app.agent_context import agent_options, render_lines
 from app.container import Services
-from app.contracts import static_option_values
 from app.files import utc_now
 from app.problems import FieldIssue, ProblemError
 from app.routes.deps import get_services
-from app.schemas import prefill_output_schema
 
 router = APIRouter(tags=["intake"])
 TEXT_EXTENSIONS = {".txt", ".md", ".csv", ".json"}
@@ -116,13 +115,6 @@ def _typed(rule: Any, raw: Any) -> Any:
     return raw
 
 
-def _allowed_values(services: Services, rule: Any) -> list[str] | None:
-    static = static_option_values(services.config.data_entry, rule)
-    if static is not None or not rule.source:
-        return static
-    return services.catalog.options().all_values(rule.source)
-
-
 def _field_issues(issues: list[FieldIssue]) -> dict[str, str]:
     messages: dict[str, list[str]] = {}
     for issue in issues:
@@ -178,6 +170,23 @@ def get_draft(draftId: str, services: Services = Depends(get_services)) -> dict[
     return _draft_view(draft)
 
 
+class PrefillFieldAnswer(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    value: Any = None
+    evidence: str = "notProvided"
+    evidenceQuote: str | None = None
+    rationale: str = ""
+    sourceUrl: str | None = None
+
+
+class PrefillDraft(BaseModel):
+    """The intake agent's reply: one entry per field key, plus the public URLs it used."""
+
+    model_config = ConfigDict(extra="ignore")
+    fields: dict[str, PrefillFieldAnswer]
+    sourceUrls: list[str] = []
+
+
 @router.post("/intake/drafts/{draftId}/prefill", response_model=DraftView, operation_id="prefillIntakeDraft", summary="AI prefill of every project field with evidence")
 def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[str, Any]:
     draft, etag = _load_draft(services, draftId)
@@ -186,60 +195,65 @@ def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[st
     prefill_settings = services.config.ai_prefill
     contract = services.config.data_entry
     documents = "\n\n".join(f"[{doc['fileName']}]\n{doc.get('text', '')}" for doc in draft["documents"]) or "(none)"
-    options_payload = {
-        "options": contract.options.model_dump(),
-        "portfolios": [{"key": p["key"], "displayName": p["displayName"], "programs": [g["displayName"] for g in p["programs"]]} for p in services.catalog.portfolios()],
-        "fieldGuidance": {g.key: g.guidance for g in prefill_settings.fields},
-    }
-    template = prefill_settings.prompt.userTemplate
-    user_message = "\n".join(template).format(projectName=draft["projectName"], description=draft["description"], documents=documents, options=json.dumps(options_payload, ensure_ascii=False))
-    model = prefill_settings.model
-    url = f"{model.endpoint.rstrip('/')}/openai/deployments/{model.deployment}/chat/completions?api-version={model.apiVersion}"
-    token = services.credentials.bearer_token(model.tokenScope)
     guidance = {item.key: item.guidance for item in prefill_settings.fields}
-    schema = prefill_output_schema(
-        [(rule, guidance.get(rule.key, "")) for rule in contract.projectFields],
-        allowed_for=lambda rule: _allowed_values(services, rule),
-        relationship_types=contract.options.relationshipTypes,
-        evidence_levels=prefill_settings.evidenceLevels,
+    options = {**agent_options(services), "fieldGuidance": guidance}
+    user_message = render_lines(
+        prefill_settings.prompt.userTemplate,
+        projectName=draft["projectName"],
+        description=draft["description"],
+        documents=documents,
+        options=json.dumps(options, ensure_ascii=False),
     )
-    body = {
-        "messages": [{"role": "system", "content": "\n".join(prefill_settings.prompt.system)}, {"role": "user", "content": user_message}],
-        "max_completion_tokens": model.maxCompletionTokens,
-        "response_format": {"type": "json_schema", "json_schema": {"name": "project_intake", "strict": True, "schema": schema}},
-    }
-    try:
-        with httpx.Client(timeout=model.timeoutSeconds) as client:
-            response = client.post(url, headers={"Authorization": f"Bearer {token}"}, json=body)
-    except httpx.HTTPError as error:
-        raise ProblemError(503, f"The model endpoint could not be reached: {error}", slug="service-unavailable") from error
-    if response.status_code >= 300:
-        raise ProblemError(502, f"The model call failed with status {response.status_code}: {response.text[:300]}.", slug="upstream-failure")
-    answer = json.loads(response.json()["choices"][0]["message"]["content"])
-    answer["projectName"] = {"value": draft["projectName"], "evidence": "explicit", "evidenceQuote": draft["projectName"], "rationale": "Entered by the user."}
-    items = {rule.key: answer.get(rule.key) or {} for rule in contract.projectFields}
+    proposal, run = services.intake_agent.structured(
+        [
+            {"role": "system", "content": "\n".join(prefill_settings.prompt.system)},
+            {"role": "user", "content": user_message},
+        ],
+        PrefillDraft,
+    )
+    proposals = {rule.key: proposal.fields.get(rule.key, PrefillFieldAnswer()) for rule in contract.projectFields}
+    proposals["projectName"] = PrefillFieldAnswer(
+        value=draft["projectName"], evidence="explicit", evidenceQuote=draft["projectName"], rationale="Entered by the user.",
+    )
     typed: dict[str, Any] = {}
     for rule in contract.projectFields:
-        value = _typed(rule, items[rule.key].get("value"))
+        value = _typed(rule, proposals[rule.key].value)
         if value is not None:
             typed[rule.key] = value
     checked = services.projects.validate(typed, partial=True)
     problems = _field_issues(checked.issues)
+    previous = draft.get("fields") or {}
     fields: dict[str, Any] = {}
     for rule in contract.projectFields:
-        item = items[rule.key]
+        kept = previous.get(rule.key) or {}
+        if kept.get("source") == "human" and kept.get("value") not in (None, "", []):
+            fields[rule.key] = kept
+            continue
+        item = proposals[rule.key]
         value = checked.values.get(rule.key)
-        evidence = (item.get("evidence") or "notProvided") if value is not None else "notProvided"
+        evidence = item.evidence if value is not None and item.evidence in prefill_settings.evidenceToConfidence else "notProvided"
         mapping = prefill_settings.evidenceToConfidence[evidence]
-        rationale = item.get("rationale") or ""
+        rationale = item.rationale
         if rule.key in problems:
             rationale = f"{rationale} (Not used: {problems[rule.key]})".strip()
         fields[rule.key] = {
             "value": value, "aiValue": value, "source": "ai", "evidence": evidence,
             "confidenceLevel": mapping.level, "confidenceScore": mapping.score,
-            "evidenceQuote": item.get("evidenceQuote"), "rationale": rationale, "updatedAtUtc": utc_now(),
+            "evidenceQuote": item.evidenceQuote, "rationale": rationale,
+            "sourceUrl": item.sourceUrl if item.sourceUrl and is_web_url(item.sourceUrl) else None,
+            "updatedAtUtc": utc_now(),
         }
-    draft.update(status="prefilled", fields=fields, missingRequired=_missing_required(services, fields), model={"deployment": model.deployment, "apiVersion": model.apiVersion, "requestedAtUtc": utc_now()})
+    agent = services.intake_agent.settings
+    draft.update(
+        status="prefilled",
+        fields=fields,
+        missingRequired=_missing_required(services, fields),
+        model={
+            "agentName": agent.agentName, "agentVersion": agent.agentVersion,
+            "responseId": run.response_id, "queryIds": list(run.query_ids), "webSearches": run.web_searches,
+            "sourceUrls": clean_web_urls(proposal.sourceUrls), "requestedAtUtc": utc_now(),
+        },
+    )
     _save_draft(services, draftId, draft, etag)
     return _draft_view(draft)
 

@@ -45,7 +45,11 @@
       "dataSources": { "fileName": "data-sources.json", "repoSource": "config/data-sources.json" },
       "fabricItems": { "fileName": "fabric-items.json", "repoSource": "config/fabric-items.json" },
       "deployment": { "fileName": "pmo-deployment.json", "repoSource": "infra/config/pmo-deployment.json" },
-      "aiPrefill": { "fileName": "ai-prefill.json", "repoSource": "config/ai-prefill.json" }
+      "aiPrefill": { "fileName": "ai-prefill.json", "repoSource": "config/ai-prefill.json" },
+      "recommendations": { "fileName": "recommendations.json", "repoSource": "config/recommendations.json" },
+      "onelakeDatasets": { "fileName": "onelake-datasets.json", "repoSource": "config/onelake-datasets.json" },
+      "priorityWeights": { "fileName": "priority-weights.json", "repoSource": "config/priority-weights.json" },
+      "systemSettings": { "fileName": "system-settings.json", "repoSource": "config/system-settings.json" }
     }
   },
   "fabric": {

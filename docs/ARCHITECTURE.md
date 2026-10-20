@@ -47,7 +47,20 @@ flowchart LR
     M --> N[Human approve / adjust / reject]
 ```
 
-## Native Foundry MCP tool execution
+## Foundry agents and tool execution
+
+Three agents run in the `pmo-portfolio` Foundry project, all on `gpt-5.6-sol`.
+`pmo-portfolio-copilot` answers portfolio chat from OneLake only.
+`pmo-recommendation-agent` recommends new projects and changes to existing
+projects from OneLake and public web sources. `pmo-intake-agent` prefills Quick
+Add fields from public web sources. The sequence below shows the chat path, and
+the other two follow the same pattern. Foundry runs the tools that each agent is
+configured with, and the backend validates the reply against the evidence it
+retrieved. Bing grounding runs inside Foundry and does not pass through APIM. The
+API rejects a prefill or recommendation reply unless Bing was called, and it rejects
+a project citation that the OneLake tool did not return.
+
+### Chat: native Foundry MCP tool execution
 
 ```mermaid
 sequenceDiagram
@@ -120,6 +133,17 @@ gates. The current tool is for one approved application-wide dataset, not
 per-user entitlements. Do not use it for differently entitled users without
 adding a trusted caller authorization context and enforcing it before retrieval.
 
+## OneLake dataset API for the UI
+
+The UI reads and writes OneLake through `/v1/onelake`, not directly. The allowlist
+is [config/onelake-datasets.json](../config/onelake-datasets.json). A client names a
+dataset by key and cannot supply a path. A write to an existing dataset must send
+the ETag from its last read in `If-Match`. A change made since then returns 409 and
+is not overwritten. Each write is checked for shape, required fields, and size before
+anything is stored. Admin system settings and priority weights are the two
+`readWrite` datasets, and their admin endpoints read and write the same tables.
+OneLake errors are reported to the caller and never replaced by defaults.
+
 ## Provision and verify
 
 1. Review [the scoped tool configuration script](../infra/scripts/configure-agent-tools.ps1)
@@ -130,7 +154,9 @@ adding a trusted caller authorization context and enforcing it before retrieval.
 2. Provision the dedicated project using [agent-project.bicep](../infra/bicep/agent-project.bicep).
    Pass its resource ID to the tool configuration script; it creates a keyless
    project-managed-identity connection and grants `Portfolio.Query`.
-   Create the pinned immutable Foundry version using
+   Create the Grounding with Bing Search connection with
+   [the Bing connection script](../infra/scripts/create-bing-connection.ps1), then
+   create the pinned immutable Foundry versions using
    [the agent provisioning script](../infra/scripts/create-portfolio-agent.ps1)
    (`-CreateNextVersion` is required only when an agent already exists).
    APIM shares the validated query schema with the API.

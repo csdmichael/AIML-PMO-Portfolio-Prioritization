@@ -1,273 +1,159 @@
-"""Researcher Agent & Portfolio Recommendations endpoints.
+"""AI recommendations: the pmo-recommendation-agent researches OneLake evidence and returns a generic report.
 
-Analyzes live OneLake portfolio data, capacity bottlenecks, and strategic alignment
-to provide recommendations for new projects per portfolio and adjustments for existing projects.
+The report has no fixed sections or content. The agent chooses the sections and items from the evidence, and the page
+renders whatever comes back. Every cited project must be one the OneLake tool returned in this run.
 """
 
 import json
 import logging
-from pathlib import Path
-from typing import Any
-import uuid
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
+from app.agent import AgentRun, clean_web_urls
+from app.agent_context import agent_options, render_lines
 from app.container import Services
+from app.files import utc_now
 from app.problems import ProblemError
 from app.routes.deps import get_services
 
 logger = logging.getLogger("pmo.api.recommendations")
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
-CONFIG_ROOT = Path(__file__).resolve().parents[2].parent / "config"
-SHARED_CONFIG_ROOT = Path(__file__).resolve().parents[2] / "config" / "shared"
+
+class RecommendationMetric(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    label: str = Field(min_length=1, max_length=60)
+    value: str = Field(min_length=1, max_length=120)
 
 
-def _load_recommendations_config() -> dict[str, Any]:
-    for path in (
-        CONFIG_ROOT / "recommendations.json",
-        SHARED_CONFIG_ROOT / "recommendations.json",
-    ):
-        if path.exists():
-            try:
-                return json.loads(path.read_text(encoding="utf-8"))
-            except Exception:
-                pass
-    return {"projectBlueprints": [], "portfolioInsights": []}
+class RecommendationAction(BaseModel):
+    """A write that a person runs from the page. Only these two types exist."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(min_length=1, max_length=60)
+    label: str = Field(min_length=1, max_length=60)
+    type: Literal["addProject", "recordDecision"]
+    payload: dict[str, Any]
 
 
-class NewProjectSuggestion(BaseModel):
-    id: str
-    projectName: str
-    portfolioKey: str
-    portfolioName: str
-    businessUnit: str
-    site: str
-    executiveSponsor: str
-    sponsorLevel: str = "Executive"
-    businessValue: int = 4
-    userBase: int = 2500
-    primarySkill: str = "CLOUD"
-    skillDemandFte: float = 2.5
-    costEstimateUsd: float = 850000.0
-    goLiveDate: str = "2027-12-31"
-    regulatorySecurity: bool = False
-    dtAlignment: bool = True
-    riskRating: str = "Medium"
-    strategicRationale: str
-    expectedImpact: str
-    status: str = "Suggested"
+class RecommendationItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(min_length=1, max_length=60)
+    title: str = Field(min_length=1, max_length=160)
+    subtitle: str | None = Field(default=None, max_length=240)
+    summary: str = Field(min_length=1, max_length=1200)
+    badges: list[str] = Field(default_factory=list, max_length=6)
+    metrics: list[RecommendationMetric] = Field(default_factory=list, max_length=8)
+    sourceProjectIds: list[str] = Field(default_factory=list, max_length=25)
+    sourceUrls: list[str] = Field(default_factory=list)
+    actions: list[RecommendationAction] = Field(default_factory=list, max_length=3)
 
 
-class ExistingProjectRecommendation(BaseModel):
-    id: str
-    projectId: str
-    projectName: str
-    portfolioKey: str
-    currentTier: str
-    currentPriorityScore: float
-    recommendationType: str  # 'elevatePriority', 'resequence', 'addCapacity', 'mitigateRisk', 'deprioritize'
-    suggestedTier: str | None = None
-    suggestedPriorityDelta: float | None = None
-    reason: str
-    actionLabel: str
-    impactSeverity: str = "High"  # 'High', 'Medium', 'Low'
+class RecommendationSection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(min_length=1, max_length=60)
+    title: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=400)
+    items: list[RecommendationItem] = Field(default_factory=list)
 
 
-class PortfolioInsight(BaseModel):
-    portfolioKey: str
-    portfolioName: str
-    summary: str
-    topBottleneck: str
-    opportunityArea: str
+class RecommendationDraft(BaseModel):
+    """The contract the agent must return. The API adds the generation metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(min_length=1, max_length=160)
+    summary: str = Field(min_length=1, max_length=2000)
+    sections: list[RecommendationSection] = Field(default_factory=list)
+    sourceProjectIds: list[str] = Field(default_factory=list, max_length=25)
+    sourceUrls: list[str] = Field(default_factory=list)
 
 
-class RecommendationsResponse(BaseModel):
+class RecommendationReport(RecommendationDraft):
     generatedAtUtc: str
-    insights: list[PortfolioInsight]
-    newProjectSuggestions: list[NewProjectSuggestion]
-    existingProjectRecommendations: list[ExistingProjectRecommendation]
-    totalSuggestions: int
-    totalActionableProjects: int
+    portfolioKey: str | None = None
+    query: str | None = None
+    provenance: dict[str, Any]
 
 
 class ResearchQueryRequest(BaseModel):
+    query: str = Field(min_length=3, max_length=1000)
     portfolioKey: str | None = None
-    focusArea: str | None = None
-    query: str
 
 
 @router.get(
     "",
-    response_model=RecommendationsResponse,
+    response_model=RecommendationReport,
     operation_id="getPortfolioRecommendations",
-    summary="Get AI researcher agent suggestions for new projects and existing project optimizations",
+    summary="Recommendation agent report: new projects per portfolio and changes to existing projects",
 )
 def get_recommendations(
-    portfolioKey: str | None = Query(None, description="Filter by portfolio key"),
+    portfolioKey: str | None = Query(None, description="Limit the report to one portfolio"),
     services: Services = Depends(get_services),
 ) -> dict[str, Any]:
-    # Read live OneLake portfolio export
-    try:
-        snapshot = services.exports.read(services.paths.portfolio_export())
-    except Exception:
-        snapshot = {"projects": [], "capacityBySkill": []}
-
-    projects = snapshot.get("projects", [])
-    capacity = snapshot.get("capacityBySkill", [])
-
-    # Filter projects by portfolio if requested
-    if portfolioKey:
-        scoped_projects = [p for p in projects if p.get("portfolioKey") == portfolioKey or p.get("portfolio") == portfolioKey]
-    else:
-        scoped_projects = projects
-
-    # Analyze capacity bottlenecks
-    bottleneck_skills = [c["skill"] for c in capacity if c.get("gapFte", 0) < 0]
-
-    # Load strategic recommendations blueprints and insights from JSON config
-    rec_config = _load_recommendations_config()
-    blueprints = rec_config.get("projectBlueprints", [])
-    raw_insights = rec_config.get("portfolioInsights", [])
-
-    new_suggestions = [NewProjectSuggestion.model_validate(b) for b in blueprints]
-    if portfolioKey:
-        new_suggestions = [s for s in new_suggestions if s.portfolioKey == portfolioKey]
-
-    # Generate Existing Project Optimization Recommendations based on real OneLake project metrics
-    existing_recs: list[ExistingProjectRecommendation] = []
-    rec_counter = 1
-
-    for p in scoped_projects:
-        pid = p.get("projectId", "")
-        name = p.get("projectName", "")
-        tier = p.get("finalTier", "")
-        score = float(p.get("priorityScore") or 0.0)
-        user_base = int(p.get("userBase") or 0)
-        p_key = p.get("portfolioKey") or "it-infosec"
-        reg = bool(p.get("regulatorySecurity"))
-        deps = float(p.get("dependencyCount") or 0)
-
-        # Condition 1: High user base projects currently ranked below Must-do-now
-        if user_base >= 3000 and tier in ("Proceed", "Can wait"):
-            existing_recs.append(
-                ExistingProjectRecommendation(
-                    id=f"REC-{rec_counter:03d}",
-                    projectId=pid,
-                    projectName=name,
-                    portfolioKey=p_key,
-                    currentTier=tier,
-                    currentPriorityScore=score,
-                    recommendationType="elevatePriority",
-                    suggestedTier="Must-do-now",
-                    suggestedPriorityDelta=12.5,
-                    reason=f"Project impacts {user_base:,} users across enterprise operations, ranking in the top decile of user reach. Prioritize to maximize adoption leverage.",
-                    actionLabel="Elevate to Must-do-now",
-                    impactSeverity="High",
-                )
-            )
-            rec_counter += 1
-
-        # Condition 2: Critical path projects with high dependencies facing bottleneck skills
-        if deps >= 2 and p.get("primarySkill") in bottleneck_skills:
-            existing_recs.append(
-                ExistingProjectRecommendation(
-                    id=f"REC-{rec_counter:03d}",
-                    projectId=pid,
-                    projectName=name,
-                    portfolioKey=p_key,
-                    currentTier=tier,
-                    currentPriorityScore=score,
-                    recommendationType="addCapacity",
-                    suggestedTier=tier,
-                    suggestedPriorityDelta=5.0,
-                    reason=f"Relies heavily on {p.get('primarySkill')} ({p.get('skillDemandFte')} FTE demand) which currently has an active deficit in capacity modeling. Allocate contractor capacity or protect schedule slot.",
-                    actionLabel="Protect Skill Slot & Add Capacity",
-                    impactSeverity="High",
-                )
-            )
-            rec_counter += 1
-
-        # Condition 3: Candidate to deprioritize with low risk and low regulatory needs
-        if tier == "Candidate to deprioritize" and not reg:
-            existing_recs.append(
-                ExistingProjectRecommendation(
-                    id=f"REC-{rec_counter:03d}",
-                    projectId=pid,
-                    projectName=name,
-                    portfolioKey=p_key,
-                    currentTier=tier,
-                    currentPriorityScore=score,
-                    recommendationType="deprioritize",
-                    suggestedTier="Candidate to deprioritize",
-                    suggestedPriorityDelta=-10.0,
-                    reason="Low strategic alignment with no regulatory or safety mandates. Candidate for budget deferral to reallocate $1.2M in annual capital to Must-do-now initiatives.",
-                    actionLabel="Confirm Deprioritization & Free Budget",
-                    impactSeverity="Medium",
-                )
-            )
-            rec_counter += 1
-
-        if len(existing_recs) >= 8:
-            break
-
-    insights = [PortfolioInsight.model_validate(i) for i in raw_insights]
-    if portfolioKey:
-        insights = [i for i in insights if i.portfolioKey == portfolioKey]
-
-    return {
-        "generatedAtUtc": snapshot.get("generatedAtUtc", "2026-10-12T00:00:00Z"),
-        "insights": insights,
-        "newProjectSuggestions": [s.model_dump() for s in new_suggestions],
-        "existingProjectRecommendations": [r.model_dump() for r in existing_recs],
-        "totalSuggestions": len(new_suggestions),
-        "totalActionableProjects": len(existing_recs),
-    }
+    return _report(services, focus=None, portfolio_key=portfolioKey)
 
 
 @router.post(
     "/research",
+    response_model=RecommendationReport,
     operation_id="queryResearcherAgent",
-    summary="Interactive query to Researcher Agent for portfolio strategic advice",
+    summary="Ask the recommendation agent a research question about the portfolio",
 )
-def query_researcher_agent(
-    body: ResearchQueryRequest,
-    services: Services = Depends(get_services),
-) -> dict[str, Any]:
-    portfolio = body.portfolioKey or "All Portfolios"
-    question = f"Focus portfolio: {portfolio}. Question: {body.query.strip()}"
+def query_researcher_agent(body: ResearchQueryRequest, services: Services = Depends(get_services)) -> dict[str, Any]:
+    return _report(services, focus=body.query.strip(), portfolio_key=body.portfolioKey)
 
-    agent_answer: str | None = None
-    table_data: Any = None
-    provenance: dict[str, Any] = {}
 
-    try:
-        # Call the dedicated Foundry recommendation agent
-        result = services.recommendation_agent.answer(question, [])
-        agent_answer = result.get("text")
-        table_data = result.get("tableData")
-        provenance = result.get("provenance", {})
-    except Exception as exc:
-        logger.info("Foundry recommendation agent fallback: %s", exc)
+def _report(services: Services, *, focus: str | None, portfolio_key: str | None) -> dict[str, Any]:
+    settings = services.config.recommendations
+    message = render_lines(
+        settings.prompt.userTemplate,
+        portfolioKey=portfolio_key or "All portfolios",
+        focus=focus or settings.defaultFocus,
+        contract=json.dumps(RecommendationDraft.model_json_schema(), ensure_ascii=False),
+        options=json.dumps(agent_options(services), ensure_ascii=False),
+    )
+    draft, run = services.recommendation_agent.structured(
+        [
+            {"role": "system", "content": "\n".join(settings.prompt.system)},
+            {"role": "user", "content": message},
+        ],
+        RecommendationDraft,
+    )
+    _check_grounding(draft, run)
+    draft = _tidy(draft, settings.limits.maxSections, settings.limits.maxItemsPerSection)
+    return {
+        **draft.model_dump(),
+        "generatedAtUtc": utc_now(),
+        "portfolioKey": portfolio_key,
+        "query": focus,
+        "provenance": services.recommendation_agent.provenance(run),
+    }
 
-    if not agent_answer:
-        agent_answer = (
-            f"Based on real-time OneLake evidence for {portfolio}, the primary lever to maximize portfolio return "
-            f"is balancing high user-base adoption projects with regulatory requirements. Projects with user bases "
-            f"exceeding 3,000 users show an average business value return of 4.4/5. Recommended action: Accelerate "
-            f"Edge Network Segmentation and Cleanroom IoT modernization while deferring non-regulated legacy reporting rollouts."
+
+def _check_grounding(draft: RecommendationDraft, run: AgentRun) -> None:
+    cited = set(draft.sourceProjectIds)
+    for section in draft.sections:
+        for item in section.items:
+            cited.update(item.sourceProjectIds)
+            for action in item.actions:
+                if action.type == "recordDecision":
+                    cited.add(str(action.payload.get("projectId")))
+    ungrounded = cited - run.evidence_ids
+    if ungrounded:
+        logger.error("Recommendation agent cited %d projects that the OneLake tool did not return", len(ungrounded))
+        raise ProblemError(
+            502, "The recommendation agent cited projects that the OneLake tool did not return. Please retry.", slug="upstream-failure",
         )
 
-    return {
-        "queryId": str(uuid.uuid4()),
-        "portfolio": portfolio,
-        "answer": agent_answer,
-        "tableData": table_data,
-        "provenance": provenance,
-        "suggestedActions": [
-            "Add suggested Zero Trust Cleanroom project to IT - InfoSec",
-            "Elevate priority on top 3 high-user projects",
-            "Re-sequence skills for Q3 bottleneck mitigation",
-        ],
-    }
+
+def _tidy(draft: RecommendationDraft, max_sections: int, max_items: int) -> RecommendationDraft:
+    sections = []
+    for section in draft.sections[:max_sections]:
+        items = [
+            item.model_copy(update={"sourceUrls": clean_web_urls(item.sourceUrls)})
+            for item in section.items[:max_items]
+        ]
+        sections.append(section.model_copy(update={"items": items}))
+    return draft.model_copy(update={"sections": sections, "sourceUrls": clean_web_urls(draft.sourceUrls)})

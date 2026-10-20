@@ -4,9 +4,18 @@
   "agentName": "pmo-portfolio-copilot",
   "agentVersion": "1",
   "model": "gpt-5.6-sol",
-  "mcpServerLabel": "onelake",
-  "mcpServerUrl": "https://caldova-apim-westus.azure-api.net/pmo-onelake/mcp",
-  "mcpConnectionName": "pmo-onelake-apim",
+  "description": "Chat agent: answers PMO portfolio questions from approved OneLake evidence through APIM. Read-only.",
+  "tools": [
+    {
+      "type": "mcp",
+      "serverLabel": "onelake",
+      "serverUrl": "https://caldova-apim-westus.azure-api.net/pmo-onelake/mcp",
+      "connectionName": "pmo-onelake-apim",
+      "allowedTools": ["query_portfolio"],
+      "requireApproval": "never"
+    }
+  ],
+  "evidence": {"onelake": true, "web": false},
   "tokenScope": "https://ai.azure.com/.default",
   "timeoutSeconds": 90,
   "maxOutputTokens": 6000,

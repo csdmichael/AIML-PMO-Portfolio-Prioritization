@@ -102,6 +102,7 @@ export interface UiConfig {
   api: ApiConfig;
   brand: BrandConfig;
   navigation: NavigationItem[];
+  recommendations: RecommendationsUiConfig;
   breakpoints: BreakpointsConfig;
   confidence: ConfidenceConfig;
   tiers: TiersConfig;
@@ -109,4 +110,17 @@ export interface UiConfig {
   table: TableConfig;
   charts: ChartSettingsConfig;
   tokens: Record<string, string>;
+}
+
+export interface RecommendationPrompt {
+  label: string;
+  prompt: string;
+}
+
+export interface RecommendationsUiConfig {
+  title: string;
+  subtitle: string;
+  researchPlaceholder: string;
+  askLabel: string;
+  quickPrompts: RecommendationPrompt[];
 }

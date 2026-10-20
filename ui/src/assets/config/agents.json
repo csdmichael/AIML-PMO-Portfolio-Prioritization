@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "description": "Presentation data for Documentation → AI Agents & Tools. Agent names, versions, tools and connections must match api/config/intake-agent.json, api/config/recommendation-agent.json and api/config/portfolio-agent.json.",
+  "hostedIn": "All three agents run in the Microsoft Foundry project pmo-portfolio on foundry-myaacoub-private, using gpt-5.6-sol. The API calls them with its managed identity.",
+  "routing": "OneLake tool calls leave Foundry through the private Azure API Management gateway (MCP). Bing grounding is a Foundry-managed tool, so its calls do not pass through APIM.",
+  "agents": [
+    {
+      "id": "intake",
+      "icon": "create-outline",
+      "role": "Project intake prefill",
+      "name": "pmo-intake-agent",
+      "version": "2",
+      "trigger": "Data entry, Quick add: enter a project name and a plain-English description, then choose Pre-fill with AI (Missing only).",
+      "description": "Reads the project name, the description, and any uploaded documents, then fills each project field it can ground in public sources. Each value carries an evidence level, a quote, a rationale, and the source URL it came from. Anything the agent cannot support stays empty for a person to complete.",
+      "tools": [
+        {
+          "name": "Bing grounding",
+          "kind": "Foundry-managed web search",
+          "connection": "pmo-bing-grounding",
+          "purpose": "Searches the public web so that skills, sites, effort, and cost ranges come from sources rather than guesses."
+        }
+      ]
+    },
+    {
+      "id": "recommendation",
+      "icon": "sparkles-outline",
+      "role": "Portfolio researcher",
+      "name": "pmo-recommendation-agent",
+      "version": "2",
+      "trigger": "AI Recommendations page: it runs when the page opens, when the portfolio filter changes, and for each research question.",
+      "description": "Recommends new projects for each portfolio and changes to existing projects, such as raising a priority, adding skill capacity, or deprioritizing. It combines approved OneLake evidence with public context. People add a suggested project or record a suggested decision. The agent cannot change records.",
+      "tools": [
+        {
+          "name": "query_portfolio",
+          "kind": "OneLake MCP tool through APIM",
+          "connection": "pmo-onelake-apim",
+          "purpose": "Reads approved project rankings, budgets by business unit, and skill supply and demand from Fabric OneLake."
+        },
+        {
+          "name": "Bing grounding",
+          "kind": "Foundry-managed web search",
+          "connection": "pmo-bing-grounding",
+          "purpose": "Checks public context for each new project opportunity."
+        }
+      ]
+    },
+    {
+      "id": "chat",
+      "icon": "chatbubbles-outline",
+      "role": "Portfolio chat",
+      "name": "pmo-portfolio-copilot",
+      "version": "1",
+      "trigger": "AI Copilot button, available on every page.",
+      "description": "Answers questions about the approved portfolio using OneLake data only. Each answer lists the project IDs it used, and the API rejects any project the tool did not return.",
+      "tools": [
+        {
+          "name": "query_portfolio",
+          "kind": "OneLake MCP tool through APIM",
+          "connection": "pmo-onelake-apim",
+          "purpose": "Returns exact rankings, filtered project lists, budget totals, and skill capacity, with truncation flags so answers never extrapolate."
+        }
+      ]
+    }
+  ]
+}
