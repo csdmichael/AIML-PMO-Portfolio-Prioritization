@@ -306,15 +306,24 @@ Latest figures (September 2026, actual cost, USD): total **$892.67** across 19 s
 
 Regenerate with `node scripts/cost/generate-acr-readme.mjs --config config/consumption.json`. Scope, period, and tag mapping live in [config/consumption.json](config/consumption.json).
 
-## 13. Hosted endpoints
+## 13. Hosted endpoints & published URLs
 
-Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a184-0a52f1830aa9`. App Services and the Foundry project are in West US 2 and West US, APIM is in West US.
+Deployed to resource group `m365-myaacoub` in subscription `cf824570-a8ba-497a-a184-0a52f1830aa9`. Both the Python API and Ionic UI Web Apps are hosted on the **same App Service Plan** (`caldova-tokenomics-api-plan`). App Services and the Foundry project are in West US 2 and West US, APIM is in West US.
+
+### Published URLs & API Documentation
+
+- **Interactive API Swagger UI:** [https://azapittlyg2gcvfsso.azurewebsites.net/docs](https://azapittlyg2gcvfsso.azurewebsites.net/docs)
+- **API Base URL (Direct):** [https://azapittlyg2gcvfsso.azurewebsites.net](https://azapittlyg2gcvfsso.azurewebsites.net)
+- **API OpenAPI Specification:** [https://azapittlyg2gcvfsso.azurewebsites.net/openapi.json](https://azapittlyg2gcvfsso.azurewebsites.net/openapi.json) (also committed in [docs/api/openapi.json](docs/api/openapi.json))
+- **API via APIM Gateway:** `https://caldova-apim-westus.azure-api.net/pmo` (protected by APIM subscription key over private VNet)
+- **Web Application (UI):** [https://azuittlyg2gcvfsso.azurewebsites.net](https://azuittlyg2gcvfsso.azurewebsites.net)
 
 | Component | URL or location | Notes |
 |---|---|---|
-| Ionic UI (web, tablet, mobile) | https://azuittlyg2gcvfsso.azurewebsites.net | Sign in with Entra. App Service `azuittlyg2gcvfsso`. |
-| API (direct) | https://azapittlyg2gcvfsso.azurewebsites.net | Health at `/v1/health`. Clients should use the APIM URL below. |
-| API Swagger UI | https://azapittlyg2gcvfsso.azurewebsites.net/docs | OpenAPI document at `/openapi.json`. Also committed as [docs/api/openapi.json](docs/api/openapi.json). |
+| Web Application (UI) | https://azuittlyg2gcvfsso.azurewebsites.net | Single-page application hosted on `caldova-tokenomics-api-plan`. |
+| API Base URL (direct) | https://azapittlyg2gcvfsso.azurewebsites.net | Python FastAPI backend hosted on `caldova-tokenomics-api-plan`. Health at `/v1/health`. |
+| API Swagger Documentation | https://azapittlyg2gcvfsso.azurewebsites.net/docs | Interactive Swagger UI documentation with all schemas and try-it-out. |
+| API OpenAPI Specification | https://azapittlyg2gcvfsso.azurewebsites.net/openapi.json | Machine-readable OpenAPI 3.1 specification. |
 | API through APIM | https://caldova-apim-westus.azure-api.net/pmo | Needs the `Ocp-Apim-Subscription-Key` header. The gateway is private (public access is disabled), so the UI host reaches it over VNet integration and adds the key from Key Vault. |
 | OneLake MCP through APIM | https://caldova-apim-westus.azure-api.net/pmo-onelake/mcp | Private gateway. Called by Foundry through the `pmo-onelake-apim` project connection (managed identity, `Portfolio.Query`), not by browsers. |
 | Foundry agent endpoint | https://foundry-myaacoub-private.services.ai.azure.com/api/projects/pmo-portfolio | Project endpoint for `pmo-portfolio-copilot:1`. Replaces the earlier `foundry-myaacoub` project endpoint. |

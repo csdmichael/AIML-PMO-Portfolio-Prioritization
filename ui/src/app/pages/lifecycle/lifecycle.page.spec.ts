@@ -5,7 +5,6 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { LifecyclePageComponent } from './lifecycle.page';
 import { PortfolioStore } from '../../services/portfolio.store';
 import { ConfigService } from '../../services/config.service';
-import { SAMPLE_PORTFOLIO_DATASET } from '../../data/sample-portfolio.data';
 
 const TEST_CONFIG = {
   api: { basePath: '/api/v1', timeoutMs: 30000, pipelinePollIntervalMs: 15000 },
@@ -65,7 +64,63 @@ describe('LifecyclePageComponent', () => {
     }).compileComponents();
 
     store = TestBed.inject(PortfolioStore);
-    store.resetToDefaultData();
+    const testProject = {
+      projectId: 'GIS-0001',
+      projectName: 'Test Project 1',
+      portfolio: 'IT - InfoSec',
+      businessUnit: 'Corporate IT',
+      site: 'Fremont',
+      projectManager: 'PM One',
+      executiveSponsor: 'Exec One',
+      sponsorLevel: 'Executive' as const,
+      projectStatus: 'Active' as const,
+      goLiveDate: '2027-01-01',
+      monthsToGoLive: 12,
+      businessValue: 5,
+      regulatorySecurity: true,
+      dtAlignment: false,
+      protectedProgram: false,
+      primarySkill: 'UC',
+      skillDemandFte: 1,
+      costEstimateUsd: 100000,
+      dependencyCount: 0,
+      riskRating: 'Low' as const,
+      effortPersonWeeks: 10,
+      sourcesPresent: 5,
+      sourcesTotal: 10,
+      sources: { planview: true, powerapps: true, ado: false, jira: false, msProject: false, smartsheet: false, buTrackers: false, buRepositories: false, hrCapacity: false, cost: false, excelIntake: false },
+      completeness: 1,
+      quality: 1,
+      modelCertainty: 1,
+      confidenceScore: 90,
+      confidenceLevel: 'High' as const,
+      mlTier: 'Must-do-now' as const,
+      finalTier: 'Must-do-now' as const,
+      tierProbabilities: { mustDoNow: 1, proceed: 0, canWait: 0, deprioritize: 0 },
+      priorityScore: 95,
+      ruleOverrides: [],
+      recommendedAction: 'Proceed' as const,
+      cluster: 'Cluster 1',
+      topDrivers: [],
+      dataIssues: [],
+    };
+    store.dataset.set({
+      projects: [testProject],
+      generatedAtUtc: '',
+      asOfDate: '2026-10-12',
+      source: '',
+      capacityBySkill: [],
+      clusters: [],
+      rules: [],
+      modelMetrics: {
+        algorithm: 'LightGBM',
+        accuracyCv: 0.9,
+        macroF1Cv: 0.9,
+        logLossCv: 0.1,
+        trainingRows: 100,
+        features: [],
+      },
+    });
   });
 
   afterEach(() => {
@@ -112,16 +167,13 @@ describe('LifecyclePageComponent', () => {
     expect(store.softDeletedProjects().length).toBe(0);
   });
 
-  it('should support clearing all projects and restoring defaults', () => {
+  it('should support clearing all projects', () => {
     const fixture = TestBed.createComponent(LifecyclePageComponent);
     const component = fixture.componentInstance;
 
     store.clearAllProjects();
     expect(store.rawProjects().length).toBe(0);
     expect(store.activeProjects().length).toBe(0);
-
-    store.resetToDefaultData();
-    expect(store.rawProjects().length).toBe(SAMPLE_PORTFOLIO_DATASET.projects.length);
   });
 
   it('should support opening edit modal and saving project modifications', () => {

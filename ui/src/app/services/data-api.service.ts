@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { ConfigService } from './config.service';
 import { PortfolioDataset, Project, LocalDecision, CapacityBySkill } from '../models/portfolio.models';
 import {
@@ -13,12 +12,6 @@ import {
   IntakeDraft,
   DraftFieldProvenance,
 } from '../models/api.models';
-import {
-  SAMPLE_PORTFOLIO_DATASET,
-  SAMPLE_OPTIONS_RESPONSE,
-  SAMPLE_PORTFOLIOS,
-  SAMPLE_DECISIONS,
-} from '../data/sample-portfolio.data';
 
 @Injectable({
   providedIn: 'root',
@@ -32,9 +25,7 @@ export class DataApiService {
   }
 
   getOptions(): Observable<OptionsResponse> {
-    return this.http
-      .get<OptionsResponse>(`${this.base}/options`)
-      .pipe(catchError(() => of(SAMPLE_OPTIONS_RESPONSE)));
+    return this.http.get<OptionsResponse>(`${this.base}/options`);
   }
 
   getPortfolio(): Observable<PortfolioDataset> {
@@ -42,22 +33,11 @@ export class DataApiService {
   }
 
   getPortfolios(): Observable<PortfolioItem[]> {
-    return this.http
-      .get<PortfolioItem[]>(`${this.base}/portfolios`)
-      .pipe(catchError(() => of(SAMPLE_PORTFOLIOS)));
+    return this.http.get<PortfolioItem[]>(`${this.base}/portfolios`);
   }
 
   createPortfolio(data: Partial<PortfolioItem>): Observable<PortfolioItem> {
-    const item: PortfolioItem = {
-      key: data.key || `portfolio-${Date.now()}`,
-      displayName: data.displayName || 'Custom Portfolio',
-      code: data.code || 'CUSTOM',
-      role: data.role || 'coupled',
-      programs: data.programs || [],
-    };
-    return this.http
-      .post<PortfolioItem>(`${this.base}/portfolios`, data)
-      .pipe(catchError(() => of(item)));
+    return this.http.post<PortfolioItem>(`${this.base}/portfolios`, data);
   }
 
   getProjects(params?: {
@@ -83,432 +63,123 @@ export class DataApiService {
   }
 
   getProject(projectId: string): Observable<Project> {
-    return this.http.get<Project>(`${this.base}/projects/${encodeURIComponent(projectId)}`).pipe(
-      catchError(() => {
-        const p =
-          SAMPLE_PORTFOLIO_DATASET.projects.find((x) => x.projectId === projectId) ||
-          SAMPLE_PORTFOLIO_DATASET.projects[0];
-        return of(p);
-      }),
-    );
+    return this.http.get<Project>(`${this.base}/projects/${encodeURIComponent(projectId)}`);
   }
 
   createProject(projectData: Record<string, unknown>, runPipeline = true): Observable<CreateProjectResponse> {
     const params = new HttpParams().set('runPipeline', runPipeline.toString());
-    const fallbackId = `GIS-${Math.floor(100 + Math.random() * 900)}`;
-    return this.http.post<CreateProjectResponse>(`${this.base}/projects`, projectData, { params }).pipe(
-      catchError(() =>
-        of({
-          projectId: fallbackId,
-          status: 'processed' as const,
-          pipelineRunId: `run-${Date.now()}`,
-        }),
-      ),
-    );
+    return this.http.post<CreateProjectResponse>(`${this.base}/projects`, projectData, { params });
   }
 
   uploadProjectFile(projectId: string, sourceKey: string, file: File): Observable<ProjectUploadMetadata> {
     const formData = new FormData();
     formData.append('sourceKey', sourceKey);
     formData.append('file', file, file.name);
-    return this.http
-      .post<ProjectUploadMetadata>(
-        `${this.base}/projects/${encodeURIComponent(projectId)}/uploads`,
-        formData,
-      )
-      .pipe(
-        catchError(() =>
-          of({
-            uploadId: `up-${Date.now()}`,
-            sourceKey,
-            fileName: file.name,
-            sizeBytes: file.size,
-            oneLakePath: `Files/raw/${sourceKey}/${file.name}`,
-            uploadedAt: new Date().toISOString(),
-          }),
-        ),
-      );
+    return this.http.post<ProjectUploadMetadata>(
+      `${this.base}/projects/${encodeURIComponent(projectId)}/uploads`,
+      formData,
+    );
   }
 
   getProjectUploads(projectId: string): Observable<ProjectUploadMetadata[]> {
-    return this.http
-      .get<ProjectUploadMetadata[]>(
-        `${this.base}/projects/${encodeURIComponent(projectId)}/uploads`,
-      )
-      .pipe(
-        catchError(() =>
-          of([
-            {
-              uploadId: 'up-101',
-              sourceKey: 'planview',
-              fileName: 'planview_extract_2026-10.csv',
-              sizeBytes: 245100,
-              oneLakePath: 'Files/raw/planview/planview_extract_2026-10.csv',
-              uploadedAt: '2026-10-12T08:30:00Z',
-            },
-            {
-              uploadId: 'up-102',
-              sourceKey: 'ado',
-              fileName: 'ado_workitems_export.csv',
-              sizeBytes: 118400,
-              oneLakePath: 'Files/raw/ado/ado_workitems_export.csv',
-              uploadedAt: '2026-10-13T09:15:00Z',
-            },
-          ]),
-        ),
-      );
+    return this.http.get<ProjectUploadMetadata[]>(
+      `${this.base}/projects/${encodeURIComponent(projectId)}/uploads`,
+    );
   }
 
   getPipelineRunStatus(runId: string): Observable<PipelineRunStatus> {
-    return this.http
-      .get<PipelineRunStatus>(`${this.base}/pipeline/runs/${encodeURIComponent(runId)}`)
-      .pipe(
-        catchError(() =>
-          of({
-            runId,
-            status: 'Completed' as const,
-            startTimeUtc: new Date(Date.now() - 60000).toISOString(),
-            endTimeUtc: new Date().toISOString(),
-          }),
-        ),
-      );
+    return this.http.get<PipelineRunStatus>(`${this.base}/pipeline/runs/${encodeURIComponent(runId)}`);
   }
 
   getCapacityScenarios(): Observable<{ scenarios: CapacityBySkill[] } | CapacityBySkill[]> {
-    return this.http
-      .get<{ scenarios: CapacityBySkill[] } | CapacityBySkill[]>(`${this.base}/capacity/scenarios`)
-      .pipe(catchError(() => of(SAMPLE_PORTFOLIO_DATASET.capacityBySkill)));
+    return this.http.get<{ scenarios: CapacityBySkill[] } | CapacityBySkill[]>(`${this.base}/capacity/scenarios`);
   }
 
   getDecisions(projectId?: string): Observable<LocalDecision[]> {
     let params = new HttpParams();
     if (projectId) params = params.set('projectId', projectId);
-    return this.http.get<LocalDecision[]>(`${this.base}/decisions`, { params }).pipe(
-      catchError(() => {
-        if (projectId) {
-          return of(SAMPLE_DECISIONS.filter((d) => d.projectId === projectId));
-        }
-        return of(SAMPLE_DECISIONS);
-      }),
-    );
+    return this.http.get<LocalDecision[]>(`${this.base}/decisions`, { params });
   }
 
   createDecision(decision: LocalDecision): Observable<LocalDecision> {
-    return this.http
-      .post<LocalDecision>(`${this.base}/decisions`, decision)
-      .pipe(catchError(() => of(decision)));
+    return this.http.post<LocalDecision>(`${this.base}/decisions`, decision);
   }
 
   getIntakeTemplateUrl(): string {
     return `${this.base}/templates/intake.xlsx`;
   }
 
-  // Quick-add AI Prefill endpoints (v3.1)
   createIntakeDraft(projectName: string, description: string): Observable<IntakeDraft> {
-    const draftId = `draft-${Date.now()}`;
-    return this.http
-      .post<IntakeDraft>(`${this.base}/intake/drafts`, { projectName, description })
-      .pipe(
-        catchError(() =>
-          of({
-            draftId,
-            projectName,
-            description,
-            status: 'draft' as const,
-            documents: [],
-            fields: [],
-            missingRequired: [],
-          }),
-        ),
-      );
+    return this.http.post<IntakeDraft>(`${this.base}/intake/drafts`, { projectName, description });
   }
 
   uploadIntakeDocument(draftId: string, file: File): Observable<ProjectUploadMetadata> {
     const formData = new FormData();
     formData.append('file', file, file.name);
-    return this.http
-      .post<ProjectUploadMetadata>(
-        `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/documents`,
-        formData,
-      )
-      .pipe(
-        catchError(() =>
-          of({
-            uploadId: `doc-${Date.now()}`,
-            sourceKey: 'quick_add_doc',
-            fileName: file.name,
-            sizeBytes: file.size,
-            oneLakePath: `Files/raw/intake_docs/${file.name}`,
-            uploadedAt: new Date().toISOString(),
-          }),
-        ),
-      );
+    return this.http.post<ProjectUploadMetadata>(
+      `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/documents`,
+      formData,
+    );
   }
 
   prefillIntakeDraft(draftId: string): Observable<IntakeDraft> {
-    return this.http
-      .post<IntakeDraft>(
-        `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/prefill`,
-        {},
-      )
-      .pipe(
-        catchError(() =>
-          of({
-            draftId,
-            projectName: 'NextGen Fab Telemetry & AI Yield Optimizer',
-            description: 'AI-assisted sensor ingestion for semiconductor fab floor.',
-            status: 'prefilled' as const,
-            documents: [],
-            missingRequired: [],
-            fields: [
-              {
-                key: 'businessUnit',
-                label: 'Business Unit',
-                value: 'Fab Operations',
-                confidenceScore: 95,
-                confidenceLevel: 'High' as const,
-                evidence: 'explicit' as const,
-                evidenceQuote: 'Extracted directly from fab equipment scope',
-                source: 'ai' as const,
-              },
-              {
-                key: 'site',
-                label: 'Site',
-                value: 'Singapore',
-                confidenceScore: 92,
-                confidenceLevel: 'High' as const,
-                evidence: 'explicit' as const,
-                evidenceQuote: 'Deploying to Singapore cleanroom facility',
-                source: 'ai' as const,
-              },
-              {
-                key: 'businessValue',
-                label: 'Business Value',
-                value: 5,
-                confidenceScore: 90,
-                confidenceLevel: 'High' as const,
-                evidence: 'inferred' as const,
-                evidenceQuote: 'Direct impact on wafer yield efficiency',
-                source: 'ai' as const,
-              },
-              {
-                key: 'regulatorySecurity',
-                label: 'Regulatory / Security',
-                value: true,
-                confidenceScore: 88,
-                confidenceLevel: 'High' as const,
-                evidence: 'explicit' as const,
-                evidenceQuote: 'Complies with SEC cybersecurity disclosure and ISO 27001',
-                source: 'ai' as const,
-              },
-              {
-                key: 'primarySkill',
-                label: 'Primary Skill',
-                value: 'Application Development',
-                confidenceScore: 85,
-                confidenceLevel: 'High' as const,
-                evidence: 'inferred' as const,
-                evidenceQuote: 'Requires custom streaming microservices and Kafka',
-                source: 'ai' as const,
-              },
-              {
-                key: 'skillDemandFte',
-                label: 'Skill Demand (FTE)',
-                value: 6.5,
-                confidenceScore: 82,
-                confidenceLevel: 'High' as const,
-                evidence: 'inferred' as const,
-                evidenceQuote: 'Estimated 6-8 engineers for 12 months',
-                source: 'ai' as const,
-              },
-              {
-                key: 'costEstimateUsd',
-                label: 'Cost Estimate ($USD)',
-                value: 1850000,
-                confidenceScore: 86,
-                confidenceLevel: 'High' as const,
-                evidence: 'inferred' as const,
-                evidenceQuote: 'Capital budget estimated around $1.85M',
-                source: 'ai' as const,
-              },
-              {
-                key: 'riskRating',
-                label: 'Risk Rating',
-                value: 'Medium',
-                confidenceScore: 84,
-                confidenceLevel: 'High' as const,
-                evidence: 'inferred' as const,
-                evidenceQuote: 'Medium risk due to cleanroom calibration windows',
-                source: 'ai' as const,
-              },
-              {
-                key: 'effortPersonWeeks',
-                label: 'Effort (Person Weeks)',
-                value: 80,
-                confidenceScore: 85,
-                confidenceLevel: 'High' as const,
-                evidence: 'inferred' as const,
-                evidenceQuote: '80 person weeks calculated from delivery roadmap',
-                source: 'ai' as const,
-              },
-            ],
-          }),
-        ),
-      );
+    return this.http.post<IntakeDraft>(
+      `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/prefill`,
+      {},
+    );
   }
 
   getIntakeDraft(draftId: string): Observable<IntakeDraft> {
-    return this.http
-      .get<IntakeDraft>(`${this.base}/intake/drafts/${encodeURIComponent(draftId)}`)
-      .pipe(
-        catchError(() =>
-          of({
-            draftId,
-            projectName: 'Sample Intake Draft',
-            description: 'Draft description',
-            status: 'draft' as const,
-            documents: [],
-            fields: [],
-            missingRequired: [],
-          }),
-        ),
-      );
+    return this.http.get<IntakeDraft>(`${this.base}/intake/drafts/${encodeURIComponent(draftId)}`);
   }
 
   patchIntakeDraftFields(
     draftId: string,
     fields: Record<string, unknown>,
   ): Observable<{ fields: DraftFieldProvenance[] }> {
-    return this.http
-      .patch<{ fields: DraftFieldProvenance[] }>(
-        `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/fields`,
-        fields,
-      )
-      .pipe(catchError(() => of({ fields: [] })));
+    return this.http.patch<{ fields: DraftFieldProvenance[] }>(
+      `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/fields`,
+      fields,
+    );
   }
 
   submitIntakeDraft(draftId: string, runPipeline = true): Observable<CreateProjectResponse> {
     const params = new HttpParams().set('runPipeline', runPipeline.toString());
-    const assignedId = `GIS-${Math.floor(100 + Math.random() * 900)}`;
-    return this.http
-      .post<CreateProjectResponse>(
-        `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/submit`,
-        {},
-        { params },
-      )
-      .pipe(
-        catchError(() =>
-          of({
-            projectId: assignedId,
-            status: 'processed' as const,
-            pipelineRunId: `run-${Date.now()}`,
-          }),
-        ),
-      );
+    return this.http.post<CreateProjectResponse>(
+      `${this.base}/intake/drafts/${encodeURIComponent(draftId)}/submit`,
+      {},
+      { params },
+    );
   }
 
-  // Admin Configuration Endpoints
   getAdminSettings(): Observable<{ isDemoEnvironment: boolean; environmentName?: string }> {
-    return this.http
-      .get<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`)
-      .pipe(catchError(() => of({ isDemoEnvironment: true, environmentName: 'Demo / Sandbox' })));
+    return this.http.get<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`);
   }
 
   updateAdminSettings(settings: {
     isDemoEnvironment: boolean;
     environmentName?: string;
   }): Observable<{ isDemoEnvironment: boolean; environmentName?: string }> {
-    return this.http
-      .put<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`, settings)
-      .pipe(catchError(() => of(settings)));
+    return this.http.put<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`, settings);
   }
 
   getPriorityWeights(): Observable<any> {
-    return this.http.get<any>(`${this.base}/admin/priority-weights`).pipe(
-      catchError(() =>
-        of({
-          version: 1,
-          description: 'Priority weights configuration',
-          availableFields: [
-            { key: 'businessValue', label: 'Business Value', category: 'Impact', min: 1, max: 5, defaultWeight: 25 },
-            { key: 'userBase', label: 'Impacted Users Base', category: 'Reach', min: 0, max: 100000, defaultWeight: 20 },
-            { key: 'regulatorySecurity', label: 'Regulatory & Security', category: 'Compliance', min: 0, max: 1, defaultWeight: 15 },
-            { key: 'timingUrgency', label: 'Timing Urgency', category: 'Schedule', min: 0, max: 1, defaultWeight: 15 },
-            { key: 'sponsorPriority', label: 'Executive Sponsor Priority', category: 'Leadership', min: 1, max: 4, defaultWeight: 10 },
-            { key: 'dtAlignment', label: 'Digital Transformation Alignment', category: 'Strategy', min: 0, max: 1, defaultWeight: 5 },
-            { key: 'risk', label: 'Risk Governance Level', category: 'Risk', min: 1, max: 4, defaultWeight: 5 },
-            { key: 'cost', label: 'Cost Scale', category: 'Financial', min: 10000, max: 100000000, defaultWeight: 5 },
-            { key: 'dependencies', label: 'Critical Path Dependencies', category: 'Architecture', min: 0, max: 10, defaultWeight: 0 },
-            { key: 'effort', label: 'Effort Demand', category: 'Resources', min: 1, max: 100, defaultWeight: 0 },
-            { key: 'skillDemand', label: 'Skill Demand (FTE)', category: 'Resources', min: 0.5, max: 12, defaultWeight: 0 },
-          ],
-          defaultWeights: {
-            businessValue: 25,
-            userBase: 20,
-            regulatorySecurity: 15,
-            timingUrgency: 15,
-            sponsorPriority: 10,
-            dtAlignment: 5,
-            risk: 5,
-            cost: 5,
-            dependencies: 0,
-            effort: 0,
-            skillDemand: 0,
-          },
-          projectOverrides: {},
-          presets: [],
-        }),
-      ),
-    );
+    return this.http.get<any>(`${this.base}/admin/priority-weights`);
   }
 
   updatePriorityWeights(data: {
     defaultWeights?: Record<string, number>;
     projectOverrides?: Record<string, Record<string, number>>;
   }): Observable<any> {
-    return this.http
-      .put<any>(`${this.base}/admin/priority-weights`, data)
-      .pipe(catchError(() => of(data)));
+    return this.http.put<any>(`${this.base}/admin/priority-weights`, data);
   }
 
   getLookups(): Observable<any> {
-    return this.http.get<any>(`${this.base}/admin/lookups`).pipe(
-      catchError(() =>
-        of({
-          sites: ['Fremont', 'Tualatin', 'Singapore', 'Penang', 'Hsinchu', 'Global Remote'],
-          businessUnits: [
-            'Semiconductor Process Equipment',
-            'Fab Operations',
-            'Global Supply Chain',
-            'Digital Transformation',
-            'Finance and Controls',
-            'Human Resources',
-            'Information Security',
-            'Manufacturing Engineering',
-            'Customer Services',
-            'Corporate IT',
-          ],
-          projectStatuses: ['Planning', 'Active', 'On Hold', 'Backlog'],
-          sponsorLevels: ['Executive', 'Director', 'Manager', 'Individual'],
-          riskRatings: ['Low', 'Medium', 'High', 'Critical'],
-          skills: [
-            { key: 'UC', displayName: 'Unified Communications' },
-            { key: 'NET', displayName: 'Network Engineering' },
-            { key: 'APP', displayName: 'Application Development' },
-            { key: 'DATA', displayName: 'Data Engineering' },
-            { key: 'CLOUD', displayName: 'Cloud and Infrastructure' },
-            { key: 'SEC', displayName: 'Cybersecurity' },
-            { key: 'INT', displayName: 'Integration (iPaaS)' },
-            { key: 'PM', displayName: 'Project Management' },
-          ],
-          relationshipTypes: ['FinishToStart', 'StartToStart', 'SharedResource', 'DataDependency', 'SecurityGate'],
-        }),
-      ),
-    );
+    return this.http.get<any>(`${this.base}/admin/lookups`);
   }
 
   updateLookups(data: any): Observable<any> {
-    return this.http.put<any>(`${this.base}/admin/lookups`, data).pipe(catchError(() => of(data)));
+    return this.http.put<any>(`${this.base}/admin/lookups`, data);
   }
 
   async downloadExcelTemplate(filename = 'project_intake_template.xlsx'): Promise<void> {
@@ -518,20 +189,9 @@ export class DataApiService {
         .toPromise();
       if (blob) {
         this.triggerBlobDownload(blob, filename);
-        return;
-      }
-    } catch {
-      // fallback to asset
-    }
-    try {
-      const blob = await this.http
-        .get('assets/data/portfolios/project_intake_template.xlsx', { responseType: 'blob' })
-        .toPromise();
-      if (blob) {
-        this.triggerBlobDownload(blob, filename);
       }
     } catch (e) {
-      console.error('Failed to download Excel template:', e);
+      console.error('Failed to download Excel template from API:', e);
     }
   }
 

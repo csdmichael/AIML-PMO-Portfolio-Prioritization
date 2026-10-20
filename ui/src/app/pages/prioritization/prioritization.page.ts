@@ -200,9 +200,9 @@ import { ConfigService } from '../../services/config.service';
               message="Your portfolio currently has 0 projects loaded. Go to the Lifecycle & Import page to import a portfolio Excel file or load baseline datasets."
               icon="file-tray-outline"
             >
-              <ion-button routerLink="/lifecycle">
+              <ion-button routerLink="/data-entry">
                 <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
-                Go to Portfolio Import & Lifecycle
+                Go to Project & Portfolio Data Entry
               </ion-button>
             </app-empty-state>
           } @else if (store.filteredProjects().length === 0) {

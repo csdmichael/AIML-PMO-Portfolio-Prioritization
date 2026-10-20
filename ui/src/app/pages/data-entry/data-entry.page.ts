@@ -1083,76 +1083,56 @@ export class DataEntryPageComponent implements OnInit {
 
   onPrefillWithAi(): void {
     this.isPrefilling.set(true);
+    this.submitError.set(null);
 
-    // Call draft AI prefill endpoint
+    // Call draft AI prefill endpoint on Python API
     this.dataApi.createIntakeDraft(this.projectName, this.projectDescription).subscribe({
       next: (draft) => {
         this.dataApi.prefillIntakeDraft(draft.draftId).subscribe({
           next: (prefilled) => {
-            this.applyAiPrefillData(prefilled.fields || []);
+            this.applyAiPrefillData(prefilled);
             this.isPrefilling.set(false);
           },
-          error: () => {
-            this.fallbackHeuristicPrefill();
+          error: (err) => {
             this.isPrefilling.set(false);
+            this.submitError.set(err?.error?.detail || err?.message || 'AI prefill service call failed.');
           },
         });
       },
-      error: () => {
-        this.fallbackHeuristicPrefill();
+      error: (err) => {
         this.isPrefilling.set(false);
+        this.submitError.set(err?.error?.detail || err?.message || 'Unable to create intake draft for AI prefill.');
       },
     });
   }
 
-  private applyAiPrefillData(fields: any[]): void {
-    const updatedAiSet = new Set(this.aiFilledSet());
+  private applyAiPrefillData(prefilled: any): void {
+    const rawFields = prefilled?.fields;
+    if (!rawFields) return;
 
-    for (const f of fields) {
-      const key = f.key;
-      const current = (this.projectFields as any)[key];
-      // CRITICAL RULE: only fill missing values, never overwrite manually entered values!
-      const isBlank = current === undefined || current === null || current === '' || current === 0;
-      if (isBlank && f.value !== undefined && f.value !== null) {
-        (this.projectFields as any)[key] = f.value;
-        updatedAiSet.add(key);
+    if (Array.isArray(rawFields)) {
+      for (const item of rawFields) {
+        const key = item.key || item.fieldKey;
+        const val = item.value !== undefined ? item.value : item.extractedValue;
+        this.applySingleField(key, val);
+      }
+    } else if (typeof rawFields === 'object') {
+      for (const [key, obj] of Object.entries(rawFields)) {
+        const val = (obj as any)?.value !== undefined ? (obj as any).value : obj;
+        this.applySingleField(key, val);
       }
     }
-    this.aiFilledSet.set(updatedAiSet);
   }
 
-  private fallbackHeuristicPrefill(): void {
-    const desc = (this.projectName + ' ' + this.projectDescription).toLowerCase();
-    const updatedAiSet = new Set(this.aiFilledSet());
-
-    const suggestions: Record<string, any> = {
-      portfolioKey: 'it-infosec',
-      businessUnit: desc.includes('fab') ? 'Fab Operations' : desc.includes('supply') ? 'Global Supply Chain' : 'Corporate IT',
-      site: desc.includes('singapore') ? 'Singapore' : desc.includes('hsinchu') ? 'Hsinchu' : 'Fremont',
-      sponsorName: desc.includes('nakamura') ? 'Dmitri Nakamura' : 'Mateo Okafor',
-      sponsorLevel: 'Executive',
-      projectStatus: 'Active',
-      userBase: desc.includes('12,000') ? 12000 : desc.includes('4,200') ? 4200 : 1500,
-      businessValue: 5,
-      goLiveDate: '2027-11-15',
-      regulatorySecurity: desc.includes('compliance') || desc.includes('security') || desc.includes('zero trust'),
-      dtAlignment: desc.includes('ai') || desc.includes('iot') || desc.includes('modernization'),
-      riskRating: 'Medium',
-      primarySkill: 'CLOUD',
-      skillDemandFte: 4.5,
-      costEstimateUsd: 2400000,
-      effortPersonWeeks: 38,
-    };
-
-    for (const [key, val] of Object.entries(suggestions)) {
-      const cur = (this.projectFields as any)[key];
-      const isBlank = cur === undefined || cur === null || cur === '' || cur === 0;
-      if (isBlank) {
-        (this.projectFields as any)[key] = val;
-        updatedAiSet.add(key);
-      }
+  private applySingleField(key: string, value: any): void {
+    if (value === undefined || value === null) return;
+    const current = (this.projectFields as any)[key];
+    const isBlank = current === undefined || current === null || current === '' || current === 0;
+    // CRITICAL: Only fill missing/blank fields, never overwrite manual entries!
+    if (isBlank) {
+      (this.projectFields as any)[key] = value;
+      this.aiFilledSet.update((s) => new Set([...s, key]));
     }
-    this.aiFilledSet.set(updatedAiSet);
   }
 
   isAiFilled(key: string): boolean {

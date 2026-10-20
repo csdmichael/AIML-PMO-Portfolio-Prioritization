@@ -214,7 +214,7 @@ def prefill(draftId: str, services: Services = Depends(get_services)) -> dict[st
     except httpx.HTTPError as error:
         raise ProblemError(503, f"The model endpoint could not be reached: {error}", slug="service-unavailable") from error
     if response.status_code >= 300:
-        raise ProblemError(502, f"The model call failed with status {response.status_code}.", slug="upstream-failure")
+        raise ProblemError(502, f"The model call failed with status {response.status_code}: {response.text[:300]}.", slug="upstream-failure")
     answer = json.loads(response.json()["choices"][0]["message"]["content"])
     answer["projectName"] = {"value": draft["projectName"], "evidence": "explicit", "evidenceQuote": draft["projectName"], "rationale": "Entered by the user."}
     items = {rule.key: answer.get(rule.key) or {} for rule in contract.projectFields}

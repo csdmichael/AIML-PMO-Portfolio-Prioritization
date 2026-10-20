@@ -22,12 +22,10 @@ import {
 } from '../core/portfolio-filter';
 import { recalculateDatasetRollups } from '../core/portfolio-normalizer';
 import { PortfolioService } from './portfolio.service';
-import { SAMPLE_PORTFOLIO_DATASET } from '../data/sample-portfolio.data';
 
 const SAVED_VIEWS_STORAGE_KEY = 'pmo_portfolio_saved_views_v1';
 const DECISIONS_STORAGE_KEY = 'pmo_portfolio_decisions_v1';
 const PINNED_STORAGE_KEY = 'pmo_portfolio_pinned_v1';
-const DATASET_STORAGE_KEY = 'pmo_portfolio_dataset_override_v2';
 const PORTFOLIOS_STORAGE_KEY = 'pmo_portfolio_definitions_v3';
 
 export interface PortfolioDefinition {
@@ -245,47 +243,27 @@ export class PortfolioStore {
     const normalizePf = (p: Project): Project =>
       p.portfolio === 'IT InfoSec' ? { ...p, portfolio: 'IT - InfoSec' } : p;
 
-    const stored = this.loadStoredDataset();
-    if (stored) {
-      const normStored = {
-        ...stored,
-        projects: (stored.projects || []).map(normalizePf),
-      };
-      this.dataset.set(normStored);
-      this.isLoading.set(false);
-      const active = normStored.projects.filter((p) => !p.isDeleted);
-      if (active.length > 0) {
-        this.selectedProjectId.set(active[0].projectId);
-      } else {
-        this.selectedProjectId.set(null);
-      }
-      return;
-    }
-
     this.portfolioService.getPortfolioData().subscribe({
       next: (data) => {
-        if (data && data.projects && data.projects.length > 0) {
+        if (data && data.projects) {
           const normProjects = data.projects.map(normalizePf);
           this.dataset.set({ ...data, projects: normProjects });
         } else {
-          const normProjects = SAMPLE_PORTFOLIO_DATASET.projects.map(normalizePf);
-          this.dataset.set({ ...SAMPLE_PORTFOLIO_DATASET, projects: normProjects });
+          this.dataset.set(data || null);
         }
         this.isLoading.set(false);
+        this.loadError.set(null);
+        this.problemDetail.set(null);
         if (!this.selectedProjectId() && this.dataset()?.projects?.length) {
           this.selectedProjectId.set(this.dataset()!.projects[0].projectId);
         }
       },
-      error: (_err) => {
-        // Fallback to comprehensive realistic 100-project dataset so screens always have full data
-        const normProjects = SAMPLE_PORTFOLIO_DATASET.projects.map(normalizePf);
-        this.dataset.set({ ...SAMPLE_PORTFOLIO_DATASET, projects: normProjects });
-        this.loadError.set(null);
-        this.problemDetail.set(null);
+      error: (err) => {
+        this.dataset.set(null);
         this.isLoading.set(false);
-        if (!this.selectedProjectId() && normProjects.length > 0) {
-          this.selectedProjectId.set(normProjects[0].projectId);
-        }
+        const detail = err?.error?.detail || err?.message || 'Unable to load portfolio data from OneLake in Fabric.';
+        this.loadError.set(detail);
+        this.problemDetail.set(err?.error || null);
       },
     });
   }
@@ -408,7 +386,8 @@ export class PortfolioStore {
 
   // Lifecycle & Deletion operations
   updateDatasetProjects(updatedProjects: Project[]): void {
-    const current = this.dataset() ?? { ...SAMPLE_PORTFOLIO_DATASET, projects: [] };
+    const current = this.dataset();
+    if (!current) return;
     const normProjects = updatedProjects.map((p) =>
       p.portfolio === 'IT InfoSec' ? { ...p, portfolio: 'IT - InfoSec' } : p
     );
@@ -421,7 +400,6 @@ export class PortfolioStore {
       asOfDate: new Date().toISOString().slice(0, 10),
     };
     this.dataset.set(updated);
-    this.persistDataset(updated);
 
     // If current selected project is deleted or removed, pick first active
     const active = normProjects.filter((p) => !p.isDeleted);
@@ -507,11 +485,7 @@ export class PortfolioStore {
   }
 
   resetToDefaultData(): void {
-    this.clearDatasetStorage();
-    this.dataset.set(SAMPLE_PORTFOLIO_DATASET);
-    if (SAMPLE_PORTFOLIO_DATASET.projects.length > 0) {
-      this.selectedProjectId.set(SAMPLE_PORTFOLIO_DATASET.projects[0].projectId);
-    }
+    this.init();
   }
 
   importProjects(
@@ -555,33 +529,6 @@ export class PortfolioStore {
   // CSV export
   exportCsv(): string {
     return exportProjectsToCsv(this.sortedFilteredProjects());
-  }
-
-  // Storage helpers
-  private loadStoredDataset(): PortfolioDataset | null {
-    try {
-      const raw = localStorage.getItem(DATASET_STORAGE_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  }
-
-  private persistDataset(dataset: PortfolioDataset): void {
-    try {
-      localStorage.setItem(DATASET_STORAGE_KEY, JSON.stringify(dataset));
-    } catch {
-      // Storage unavailable or quota exceeded
-    }
-  }
-
-  private clearDatasetStorage(): void {
-    try {
-      localStorage.removeItem(DATASET_STORAGE_KEY);
-    } catch {
-      // Ignore
-    }
   }
 
   private loadPortfolioDefinitions(): PortfolioDefinition[] {

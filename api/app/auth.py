@@ -1,11 +1,19 @@
 """Token credentials. Every token request uses the scope named in config, never a scope a library chooses."""
 
+import os
 from collections.abc import Callable
 from threading import Lock
 from typing import Any
 
 from azure.core.credentials import AccessToken, TokenCredential
 from azure.identity import DefaultAzureCredential
+
+
+def _default_factory() -> TokenCredential:
+    client_id = os.environ.get("AZURE_CLIENT_ID")
+    if client_id:
+        return DefaultAzureCredential(managed_identity_client_id=client_id)
+    return DefaultAzureCredential()
 
 
 class ScopedCredential(TokenCredential):
@@ -22,7 +30,7 @@ class ScopedCredential(TokenCredential):
 class CredentialProvider:
     """Creates DefaultAzureCredential on first use, so importing the app makes no Azure calls."""
 
-    def __init__(self, factory: Callable[[], TokenCredential] = DefaultAzureCredential) -> None:
+    def __init__(self, factory: Callable[[], TokenCredential] = _default_factory) -> None:
         self._factory = factory
         self._credential: TokenCredential | None = None
         self._lock = Lock()
