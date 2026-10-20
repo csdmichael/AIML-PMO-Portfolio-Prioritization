@@ -95,26 +95,27 @@ describe('PowerBiEmbedComponent', () => {
     const fixture = TestBed.createComponent(PowerBiEmbedComponent);
     const errors: string[] = [];
     fixture.componentInstance.embedError.subscribe((error) => errors.push(error));
-    fixture.componentRef.setInput('report', REPORT);
-    fixture.componentRef.setInput('accessToken', 'test-token');
-    fixture.detectChanges();
+    fixture.componentInstance.report = REPORT;
+    fixture.componentInstance.accessToken = 'test-token';
+    fixture.componentInstance.ngAfterViewInit();
 
     expect(errors).toEqual(['Invalid embed URL']);
   });
 
   it('resets the SDK when the view is destroyed and embeds on remount', () => {
     const fixture = TestBed.createComponent(PowerBiEmbedComponent);
-    fixture.componentRef.setInput('report', REPORT);
-    fixture.componentRef.setInput('accessToken', 'test-token');
-    fixture.detectChanges();
+    fixture.componentInstance.report = REPORT;
+    fixture.componentInstance.accessToken = 'test-token';
+    fixture.componentInstance.ngAfterViewInit();
     reset.mockClear();
     fixture.destroy();
     expect(reset).toHaveBeenCalled();
 
+    embed.mockClear();
     const remounted = TestBed.createComponent(PowerBiEmbedComponent);
-    remounted.componentRef.setInput('report', REPORT);
-    remounted.componentRef.setInput('accessToken', 'test-token');
-    remounted.detectChanges();
+    remounted.componentInstance.report = REPORT;
+    remounted.componentInstance.accessToken = 'test-token';
+    remounted.componentInstance.ngAfterViewInit();
     expect(embed).toHaveBeenCalled();
   });
 });
