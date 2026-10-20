@@ -1,10 +1,25 @@
 import json
+from unittest.mock import Mock
 from fastapi.testclient import TestClient
 from app.main import create_app
+from app.container import build_services
+from app.routes.deps import get_services
+
+
+def get_test_services():
+    services = build_services()
+    mock_lake = Mock()
+    mock_lake.read_table.return_value = None
+    mock_lake.write_table.return_value = "etag"
+    mock_lake.write_json.return_value = "etag"
+    services.lake = mock_lake
+    return services
 
 
 def test_admin_get_and_update_lookups():
-    client = TestClient(create_app())
+    app = create_app()
+    app.dependency_overrides[get_services] = get_test_services
+    client = TestClient(app)
     resp = client.get("/v1/admin/lookups")
     assert resp.status_code == 200
     lookups = resp.json()
@@ -23,7 +38,9 @@ def test_admin_get_and_update_lookups():
 
 
 def test_admin_get_and_update_priority_weights():
-    client = TestClient(create_app())
+    app = create_app()
+    app.dependency_overrides[get_services] = get_test_services
+    client = TestClient(app)
     resp = client.get("/v1/admin/priority-weights")
     assert resp.status_code == 200
     data = resp.json()
@@ -47,7 +64,9 @@ def test_admin_get_and_update_priority_weights():
 
 
 def test_admin_settings():
-    client = TestClient(create_app())
+    app = create_app()
+    app.dependency_overrides[get_services] = get_test_services
+    client = TestClient(app)
     resp = client.get("/v1/admin/settings")
     assert resp.status_code == 200
     assert "isDemoEnvironment" in resp.json()
@@ -58,4 +77,5 @@ def test_admin_settings():
 
     # Revert to true
     client.put("/v1/admin/settings", json={"isDemoEnvironment": True})
+
 

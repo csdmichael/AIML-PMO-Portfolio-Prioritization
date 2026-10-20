@@ -1,6 +1,7 @@
 """Admin endpoints: configure dropdown lookups and project priority field weights."""
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,7 @@ from app.routes.deps import get_services
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 CONFIG_ROOT = Path(__file__).resolve().parents[2].parent / "config"
-SHARED_CONFIG_ROOT = Path(__file__).resolve().parents[1] / "config" / "shared"
+SHARED_CONFIG_ROOT = Path(__file__).resolve().parents[2] / "config" / "shared"
 
 
 class LookupUpdateRequest(BaseModel):
@@ -72,9 +73,32 @@ def _get_settings_path() -> Path:
     "/settings",
     response_model=AdminSettings,
     operation_id="getAdminSettings",
-    summary="Get global admin settings including demo environment flag",
+    summary="Get global admin settings from OneLake system_settings table",
 )
 def get_admin_settings(services: Services = Depends(get_services)) -> AdminSettings:
+    # 1. Try reading from OneLake table Tables/system_settings
+    try:
+        records = services.lake.read_table("system_settings")
+        if records:
+            settings_dict: dict[str, Any] = {}
+            for r in records:
+                k = r.get("setting_key")
+                v = r.get("setting_value")
+                t = r.get("setting_type")
+                if k and v is not None:
+                    if t == "boolean":
+                        settings_dict[k] = str(v).lower() in ("true", "1", "yes")
+                    else:
+                        settings_dict[k] = v
+            if "isDemoEnvironment" in settings_dict:
+                return AdminSettings(
+                    isDemoEnvironment=bool(settings_dict["isDemoEnvironment"]),
+                    environmentName=str(settings_dict.get("environmentName", "Demo / Sandbox")),
+                )
+    except Exception:
+        pass
+
+    # 2. Local config fallback
     path = _get_settings_path()
     if path.exists():
         try:
@@ -88,7 +112,7 @@ def get_admin_settings(services: Services = Depends(get_services)) -> AdminSetti
     "/settings",
     response_model=AdminSettings,
     operation_id="updateAdminSettings",
-    summary="Update global admin settings including demo environment flag",
+    summary="Update global admin settings and write to OneLake system_settings table",
 )
 def update_admin_settings(
     body: AdminSettingsUpdateRequest, services: Services = Depends(get_services)
@@ -98,16 +122,37 @@ def update_admin_settings(
         environmentName=body.environmentName
         or ("Demo / Sandbox" if body.isDemoEnvironment else "Production"),
     )
+    now = datetime.now(timezone.utc).isoformat()
+    # 1. Write directly to OneLake table Tables/system_settings
+    table_rows = [
+        {
+            "setting_key": "isDemoEnvironment",
+            "setting_value": str(settings.isDemoEnvironment).lower(),
+            "setting_type": "boolean",
+            "description": "Controls whether demo actions like sample dataset loading and clearing portfolio data are permitted.",
+            "updated_at": now,
+        },
+        {
+            "setting_key": "environmentName",
+            "setting_value": settings.environmentName,
+            "setting_type": "string",
+            "description": "Enterprise environment classification label.",
+            "updated_at": now,
+        },
+    ]
+    try:
+        services.lake.write_table("system_settings", table_rows)
+        services.lake.write_json("Files/config/system-settings.json", settings.model_dump(), overwrite=True)
+    except Exception:
+        pass
+
+    # 2. Persist local config
     serialized = settings.model_dump_json(indent=2)
     for target in (CONFIG_ROOT / "system-settings.json", SHARED_CONFIG_ROOT / "system-settings.json"):
         try:
             target.write_text(serialized, encoding="utf-8")
         except Exception:
             pass
-    try:
-        services.lake.write_json("Files/config/system-settings.json", settings.model_dump(), etag=None)
-    except Exception:
-        pass
     return settings
 
 
@@ -223,9 +268,34 @@ def update_lookups(
     "/priority-weights",
     response_model=PriorityWeightsResponse,
     operation_id="getPriorityWeights",
-    summary="Get configurable priority weights and per-project overrides",
+    summary="Get configurable priority weights from OneLake priority_field_weights table",
 )
 def get_priority_weights(services: Services = Depends(get_services)) -> dict[str, Any]:
+    # 1. Try reading directly from OneLake table Tables/priority_field_weights
+    try:
+        records = services.lake.read_table("priority_field_weights")
+        if records:
+            default_weights: dict[str, float] = {}
+            project_overrides: dict[str, dict[str, float]] = {}
+            for r in records:
+                pid = r.get("project_id", "*")
+                k = r.get("field_key")
+                w = float(r.get("weight_percent", 0.0))
+                if not k:
+                    continue
+                if pid == "*":
+                    default_weights[k] = w
+                else:
+                    project_overrides.setdefault(pid, {})[k] = w
+            if default_weights:
+                res = json.loads(json.dumps(DEFAULT_WEIGHTS_DATA))
+                res["defaultWeights"] = default_weights
+                res["projectOverrides"] = project_overrides
+                return res
+    except Exception:
+        pass
+
+    # 2. Local fallback
     path = _get_weights_path()
     if path is not None and path.exists():
         try:
@@ -239,7 +309,7 @@ def get_priority_weights(services: Services = Depends(get_services)) -> dict[str
     "/priority-weights",
     response_model=PriorityWeightsResponse,
     operation_id="updatePriorityWeights",
-    summary="Update configurable priority weights and per-project overrides",
+    summary="Update priority weights and write to OneLake priority_field_weights table",
 )
 def update_priority_weights(
     body: PriorityWeightsUpdateRequest, services: Services = Depends(get_services)
@@ -262,18 +332,45 @@ def update_priority_weights(
             for pid, weights in body.projectOverrides.items()
         }
 
-    # Persist locally
+    now = datetime.now(timezone.utc).isoformat()
+    # 1. Write directly to OneLake table Tables/priority_field_weights
+    table_rows = []
+    for k, v in cfg["defaultWeights"].items():
+        table_rows.append({
+            "project_id": "*",
+            "field_key": k,
+            "field_label": k,
+            "weight_percent": float(v),
+            "is_active": True,
+            "updated_at": now,
+        })
+    for pid, overrides in cfg["projectOverrides"].items():
+        for k, v in overrides.items():
+            table_rows.append({
+                "project_id": pid,
+                "field_key": k,
+                "field_label": k,
+                "weight_percent": float(v),
+                "is_active": True,
+                "updated_at": now,
+            })
+
+    try:
+        services.lake.write_table("priority_field_weights", table_rows)
+        services.lake.write_json("Files/config/priority-weights.json", cfg, overwrite=True)
+    except Exception:
+        pass
+
+    # 2. Persist locally
     serialized = json.dumps(cfg, indent=2, ensure_ascii=False)
-    for target in (CONFIG_ROOT / "priority-weights.json", SHARED_CONFIG_ROOT / "priority-weights.json"):
+    for target in (
+        CONFIG_ROOT / "priority-weights.json",
+        SHARED_CONFIG_ROOT / "priority-weights.json",
+    ):
         try:
+            target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(serialized, encoding="utf-8")
         except Exception:
             pass
-
-    # Write to enterprise storage
-    try:
-        services.lake.write_json("Files/config/priority-weights.json", cfg, etag=None)
-    except Exception:
-        pass
 
     return cfg

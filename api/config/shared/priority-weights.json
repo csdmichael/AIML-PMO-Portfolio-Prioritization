@@ -126,7 +126,12 @@
     "effort": 0.0,
     "skillDemand": 0.0
   },
-  "projectOverrides": {},
+  "projectOverrides": {
+    "GIS-0001": {
+      "businessValue": 30.0,
+      "userBase": 25.0
+    }
+  },
   "presets": [
     {
       "id": "balanced",

@@ -75,8 +75,8 @@ class OneLakeClient:
 
     def _adls_path(self, lake_path: str) -> str:
         cleaned = lake_path.strip("/")
-        if not cleaned.startswith(_FILES_ROOT):
-            raise ValueError(f"lake paths must start with {_FILES_ROOT}: {lake_path}")
+        if not (cleaned.startswith(_FILES_ROOT) or cleaned.startswith("Tables/")):
+            raise ValueError(f"lake paths must start with {_FILES_ROOT} or Tables/: {lake_path}")
         return f"{self._item_root}/{cleaned}"
 
     def _file(self, lake_path: str) -> Any:
@@ -125,11 +125,11 @@ class OneLakeClient:
             except ResourceExistsError:
                 pass
 
-    def write_bytes(self, lake_path: str, data: bytes, *, etag: str | None = None) -> str:
+    def write_bytes(self, lake_path: str, data: bytes, *, etag: str | None = None, overwrite: bool = False) -> str:
         client = self._file(lake_path)
         try:
             if etag is None:
-                if self.properties(lake_path) is not None:
+                if not overwrite and self.properties(lake_path) is not None:
                     raise LakeConflict(f"{lake_path} already exists")
                 self._ensure_parent(lake_path)
                 response = client.upload_data(data, overwrite=True)
@@ -150,9 +150,24 @@ class OneLakeClient:
             raise _map_error(exc, lake_path) from exc
         return str(response["etag"])
 
-    def write_json(self, lake_path: str, value: Any, *, etag: str | None = None) -> str:
+    def write_json(self, lake_path: str, value: Any, *, etag: str | None = None, overwrite: bool = False) -> str:
         payload = json.dumps(value, indent=2, ensure_ascii=False).encode("utf-8")
-        return self.write_bytes(lake_path, payload, etag=etag)
+        return self.write_bytes(lake_path, payload, etag=etag, overwrite=overwrite)
+
+    def read_table(self, table_name: str) -> list[dict[str, Any]] | None:
+        """Read a table from OneLake Tables/<table_name>."""
+        path = f"Tables/{table_name}/records.json"
+        data = self.read_json(path)
+        if data is not None:
+            records, _ = data
+            if isinstance(records, list):
+                return records
+        return None
+
+    def write_table(self, table_name: str, records: list[dict[str, Any]]) -> str:
+        """Write a table directly to OneLake Tables/<table_name>/records.json."""
+        path = f"Tables/{table_name}/records.json"
+        return self.write_json(path, records, overwrite=True)
 
     def delete(self, lake_path: str) -> None:
         try:
