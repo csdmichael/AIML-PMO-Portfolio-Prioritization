@@ -189,6 +189,7 @@ resource uiApp 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
         { name: 'PORT', value: string(create.apps.ui.port) }
         { name: 'WEBSITES_PORT', value: string(create.apps.ui.port) }
+        { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: string(create.apps.ui.containerStartTimeLimitSeconds) }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
         { name: 'ENABLE_ORYX_BUILD', value: 'true' }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
@@ -235,6 +236,7 @@ resource apiApp 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
         { name: 'PORT', value: string(create.apps.api.port) }
         { name: 'WEBSITES_PORT', value: string(create.apps.api.port) }
+        { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: string(create.apps.api.containerStartTimeLimitSeconds) }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
         { name: 'ENABLE_ORYX_BUILD', value: 'true' }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }

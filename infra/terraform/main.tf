@@ -200,6 +200,7 @@ resource "azurerm_linux_web_app" "ui" {
     AZURE_CLIENT_ID                       = azurerm_user_assigned_identity.solution.client_id
     PORT                                  = tostring(local.create.apps.ui.port)
     WEBSITES_PORT                         = tostring(local.create.apps.ui.port)
+    WEBSITES_CONTAINER_START_TIME_LIMIT    = tostring(local.create.apps.ui.containerStartTimeLimitSeconds)
     SCM_DO_BUILD_DURING_DEPLOYMENT        = "true"
     ENABLE_ORYX_BUILD                     = "true"
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.solution.connection_string
@@ -247,6 +248,7 @@ resource "azurerm_linux_web_app" "api" {
     AZURE_CLIENT_ID                       = azurerm_user_assigned_identity.solution.client_id
     PORT                                  = tostring(local.create.apps.api.port)
     WEBSITES_PORT                         = tostring(local.create.apps.api.port)
+    WEBSITES_CONTAINER_START_TIME_LIMIT    = tostring(local.create.apps.api.containerStartTimeLimitSeconds)
     SCM_DO_BUILD_DURING_DEPLOYMENT        = "true"
     ENABLE_ORYX_BUILD                     = "true"
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.solution.connection_string

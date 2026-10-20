@@ -458,9 +458,20 @@ unavailable. Resume it only with billing approval. Pausing it after verification
 means live retrieval is unavailable until it is resumed again.
 
 Publish the API and UI with `infra/scripts/deploy.ps1 -Mode publish`. API publish
-adds only the `chatWithPortfolioAgent` APIM operation to the existing PMO API;
-it does not apply the infrastructure template. The generated OpenAPI document
-also includes the operation for fresh infrastructure deployments.
+registers missing operations from the checked-in OpenAPI document on the existing
+PMO API, preserving existing operations and their policies. It does not apply the
+infrastructure template.
+
+The Python apps' startup allowance is configured by
+`create.apps.ui.containerStartTimeLimitSeconds` and
+`create.apps.api.containerStartTimeLimitSeconds` in
+[`pmo-deployment.json`](infra/config/pmo-deployment.json). Both IaC flavors set
+`WEBSITES_CONTAINER_START_TIME_LIMIT` to this value (1,800 seconds). This gives
+cold starts time to finish while the reused shared plan is busy; it does not
+increase compute capacity or cost. Existing apps need the app setting synchronized
+when publishing without an infrastructure apply. Wait for remote builds to finish,
+then verify the live OpenAPI routes and UI assets rather than relying on an older
+process's successful health response.
 
 Each successful answer displays its Foundry agent/version, response ID, and
 source project IDs and APIM query IDs. Conversation history is bounded to 12 turns;

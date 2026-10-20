@@ -12,6 +12,8 @@ Generated: 2026-10-14T13:52:00-07:00
 
 **Current update (2026-10-20):** Publish the user-approved recommendation cache, demo-only project controls, business-facing operational terminology, six expandable Overview chart explanations, and the showcase feature catalog. Reuse the API/UI GitHub Actions and the existing showcase ZIP deployment. No infrastructure provisioning, identity changes, capacity changes, or active project resets.
 
+**Approved recovery (2026-10-20):** The shared plan measured 100% CPU and 83-88% memory, and API platform logs confirmed the new container exceeded the default 230-second startup probe. The user approved extending only the three apps' startup allowance to 1,800 seconds. Preserve the main API/UI values in the shared JSON contract and both IaC flavors; apply only the individual app setting to existing sites, without a full infrastructure apply. Do not interrupt active remote builds or change shared-plan capacity, permissions, networking, or project data.
+
 **Path:** Modify Existing
 
 ---
@@ -99,6 +101,9 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 - [x] Update plan status to `Ready for Validation`
 - [x] Run Azure validation and record proof
 - [x] All validation checks pass
+  - [x] Recovery core validation: JSON startup values and compiled Bicep settings match 1,800 seconds; Bicep lint and Terraform validation pass; existing deployment identity has app-configuration permissions. No full infrastructure validation/apply is needed for the scoped existing-app setting update.
+  - [x] Recovery Docker build: not applicable; existing built-in Python App Service runtime.
+  - [x] Recovery Azure Policy validation: no applicable policy assignments were returned for the existing resource group, including inherited scopes.
   - [x] Core validation for this app-only update: Azure CLI/authentication, API/UI tests, main/showcase builds, and existing App Service targets; Bicep validate/what-if is not an application-publish gate because no IaC changes are being applied
   - [x] Docker build: not applicable; Python App Service ZIPs
   - [x] Azure Policy validation: existing running app resources and build settings verified; resource-group policy assignments empty; no hosting resources, identities, SKUs, or network settings change
@@ -114,6 +119,7 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 
 ## 8. Validation Proof
 
+- 2026-10-20 approved startup recovery: Bicep build and lint passed; an exact-output check confirmed both generated startup settings reference the JSON-backed 1,800-second integer values. Terraform validate and git diff --check passed. The active CLI context matches the approved subscription/tenant, ARM permissions on the API include configuration write access, and the applicable policy-assignment query returned an empty list. This validates only the approved existing-app setting update, not a full infrastructure apply. No roles, network settings, capacity, or project data change.
 - 2026-10-20 preparation: API suite passed 208 tests with one opt-in test skipped. UI suite passed 114 tests; focused chart and presentation suite passed 66 tests. UI lint and production build passed. Shared configuration check passed, and the OpenAPI document was regenerated.
 - 2026-10-20 final checks: native PowerShell gateway synchronization tests passed complete OpenAPI coverage, path-parameter registration, no overwrites of existing operations, and explicit failure handling. The final Overview subset passed all three tests. Showcase production browser verified 20 feature cards, their icons, and the six-chart guidance description. All three existing App Service targets are running; main API health, live UI portfolio read (100 projects), and showcase health return success. There are no RBAC/IaC changes to apply, and no resource-group policy assignments.
 - 2026-10-20 source publication: the dedicated approved demo snapshot was published and read back with exactly 100 projects across five portfolios (40/20/15/10/15). Scores and explanations were retained; the one missing project name was restored from the deterministic generator and audited. A read-only check confirmed no active reset document exists.
