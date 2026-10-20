@@ -4,7 +4,9 @@ Analyzes live OneLake portfolio data, capacity bottlenecks, and strategic alignm
 to provide recommendations for new projects per portfolio and adjustments for existing projects.
 """
 
+import json
 import logging
+from pathlib import Path
 from typing import Any
 import uuid
 
@@ -17,6 +19,22 @@ from app.routes.deps import get_services
 
 logger = logging.getLogger("pmo.api.recommendations")
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
+
+CONFIG_ROOT = Path(__file__).resolve().parents[2].parent / "config"
+SHARED_CONFIG_ROOT = Path(__file__).resolve().parents[2] / "config" / "shared"
+
+
+def _load_recommendations_config() -> dict[str, Any]:
+    for path in (
+        CONFIG_ROOT / "recommendations.json",
+        SHARED_CONFIG_ROOT / "recommendations.json",
+    ):
+        if path.exists():
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+    return {"projectBlueprints": [], "portfolioInsights": []}
 
 
 class NewProjectSuggestion(BaseModel):
@@ -108,94 +126,12 @@ def get_recommendations(
     # Analyze capacity bottlenecks
     bottleneck_skills = [c["skill"] for c in capacity if c.get("gapFte", 0) < 0]
 
-    # Generate contextual New Project Suggestions
-    new_suggestions: list[NewProjectSuggestion] = [
-        NewProjectSuggestion(
-            id="SUG-001",
-            projectName="Zero Trust Micro-Segmentation for Fab Cleanrooms",
-            portfolioKey="it-infosec",
-            portfolioName="IT - InfoSec",
-            businessUnit="Fab Operations",
-            site="Singapore",
-            executiveSponsor="Dmitri Nakamura",
-            sponsorLevel="Executive",
-            businessValue=5,
-            userBase=6200,
-            primarySkill="SEC",
-            skillDemandFte=3.5,
-            costEstimateUsd=1450000.0,
-            goLiveDate="2027-09-30",
-            regulatorySecurity=True,
-            dtAlignment=True,
-            riskRating="High",
-            strategicRationale="Fills critical cybersecurity isolation gap across manufacturing lithography clusters. Enforces SEC disclosure mandates.",
-            expectedImpact="Prevents operational halt risks, protecting an estimated $14M in annual wafer line throughput.",
-        ),
-        NewProjectSuggestion(
-            id="SUG-002",
-            projectName="Autonomous Supplier Inventory Rebalancing Engine",
-            portfolioKey="it-software-development",
-            portfolioName="IT Software Development",
-            businessUnit="Global Supply Chain",
-            site="Penang",
-            executiveSponsor="Mateo Okafor",
-            sponsorLevel="Director",
-            businessValue=4,
-            userBase=1850,
-            primarySkill="DATA",
-            skillDemandFte=2.0,
-            costEstimateUsd=780000.0,
-            goLiveDate="2027-11-15",
-            regulatorySecurity=False,
-            dtAlignment=True,
-            riskRating="Medium",
-            strategicRationale="Leverages predictive analytics to mitigate single-source component lead-time volatility for precision sub-assemblies.",
-            expectedImpact="Reduces inventory holding costs by 18% and accelerates line replenishment cycles by 5 days.",
-        ),
-        NewProjectSuggestion(
-            id="SUG-003",
-            projectName="Hybrid Multi-Cloud Edge Telemetry Ingestion Gateway",
-            portfolioKey="it-infrastructure",
-            portfolioName="IT Infrastructure",
-            businessUnit="Semiconductor Process Equipment",
-            site="Fremont",
-            executiveSponsor="Elena Rostova",
-            sponsorLevel="Executive",
-            businessValue=5,
-            userBase=4500,
-            primarySkill="CLOUD",
-            skillDemandFte=4.0,
-            costEstimateUsd=2100000.0,
-            goLiveDate="2028-03-31",
-            regulatorySecurity=False,
-            dtAlignment=True,
-            riskRating="Medium",
-            strategicRationale="Centralizes high-frequency chamber sensor streaming data for AI defect detection models with sub-millisecond edge latency.",
-            expectedImpact="Scales telemetry throughput to 100K events/sec while standardizing hybrid cloud landing zones.",
-        ),
-        NewProjectSuggestion(
-            id="SUG-004",
-            projectName="GenAI PMO Document Ingestion & Contract Copilot",
-            portfolioKey="ai-team",
-            portfolioName="AI Team",
-            businessUnit="Corporate IT",
-            site="Tualatin",
-            executiveSponsor="Michael Chen",
-            sponsorLevel="Director",
-            businessValue=4,
-            userBase=3200,
-            primarySkill="APP",
-            skillDemandFte=2.5,
-            costEstimateUsd=920000.0,
-            goLiveDate="2027-08-31",
-            regulatorySecurity=False,
-            dtAlignment=True,
-            riskRating="Low",
-            strategicRationale="Automates extraction of scope, deliverable milestones, and vendor SLAs from unstructured PDF statements of work.",
-            expectedImpact="Saves 35 person-weeks annually across PMO analysts and eliminates project charter drafting delays.",
-        ),
-    ]
+    # Load strategic recommendations blueprints and insights from JSON config
+    rec_config = _load_recommendations_config()
+    blueprints = rec_config.get("projectBlueprints", [])
+    raw_insights = rec_config.get("portfolioInsights", [])
 
+    new_suggestions = [NewProjectSuggestion.model_validate(b) for b in blueprints]
     if portfolioKey:
         new_suggestions = [s for s in new_suggestions if s.portfolioKey == portfolioKey]
 
@@ -276,30 +212,9 @@ def get_recommendations(
         if len(existing_recs) >= 8:
             break
 
-    # Portfolio overview insights
-    insights = [
-        PortfolioInsight(
-            portfolioKey="it-infosec",
-            portfolioName="IT - InfoSec",
-            summary="Zero Trust and regulatory security compliance initiatives show the highest confidence and priority scores in OneLake.",
-            topBottleneck="Cybersecurity specialist capacity (SEC skill gap) in Q3/Q4.",
-            opportunityArea="Deploy AI-driven automation for IAM access certifications to offset audit workloads.",
-        ),
-        PortfolioInsight(
-            portfolioKey="it-software-development",
-            portfolioName="IT Software Development",
-            summary="Strong delivery velocity with heavy focus on Global Supply Chain supplier integrations.",
-            topBottleneck="Data Engineering (DATA) demand exceeding supply by 3.2 FTE.",
-            opportunityArea="Standardize enterprise API contracts to streamline cross-portfolio dependencies.",
-        ),
-        PortfolioInsight(
-            portfolioKey="it-infrastructure",
-            portfolioName="IT Infrastructure",
-            summary="Multi-site fab network expansions across Singapore and Fremont.",
-            topBottleneck="High capital expenditure concentration in edge datacenter hardware.",
-            opportunityArea="Transition to scalable hybrid cloud landing zones to decrease fixed hardware lead times.",
-        ),
-    ]
+    insights = [PortfolioInsight.model_validate(i) for i in raw_insights]
+    if portfolioKey:
+        insights = [i for i in insights if i.portfolioKey == portfolioKey]
 
     return {
         "generatedAtUtc": snapshot.get("generatedAtUtc", "2026-10-12T00:00:00Z"),

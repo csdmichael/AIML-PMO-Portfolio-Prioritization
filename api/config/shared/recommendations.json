@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "description": "Baseline strategic research blueprints and portfolio insights used by the AI Researcher Agent.",
+  "projectBlueprints": [
+    {
+      "id": "SUG-001",
+      "projectName": "Zero Trust Micro-Segmentation for Fab Cleanrooms",
+      "portfolioKey": "it-infosec",
+      "portfolioName": "IT - InfoSec",
+      "businessUnit": "Fab Operations",
+      "site": "Singapore",
+      "executiveSponsor": "Dmitri Nakamura",
+      "sponsorLevel": "Executive",
+      "businessValue": 5,
+      "userBase": 6200,
+      "primarySkill": "SEC",
+      "skillDemandFte": 3.5,
+      "costEstimateUsd": 1450000.0,
+      "goLiveDate": "2027-09-30",
+      "regulatorySecurity": true,
+      "dtAlignment": true,
+      "riskRating": "High",
+      "strategicRationale": "Fills critical cybersecurity isolation gap across manufacturing lithography clusters. Enforces SEC disclosure mandates.",
+      "expectedImpact": "Prevents operational halt risks, protecting an estimated $14M in annual wafer line throughput."
+    },
+    {
+      "id": "SUG-002",
+      "projectName": "Autonomous Supplier Inventory Rebalancing Engine",
+      "portfolioKey": "it-software-development",
+      "portfolioName": "IT Software Development",
+      "businessUnit": "Global Supply Chain",
+      "site": "Penang",
+      "executiveSponsor": "Mateo Okafor",
+      "sponsorLevel": "Director",
+      "businessValue": 4,
+      "userBase": 1850,
+      "primarySkill": "DATA",
+      "skillDemandFte": 2.0,
+      "costEstimateUsd": 780000.0,
+      "goLiveDate": "2027-11-15",
+      "regulatorySecurity": false,
+      "dtAlignment": true,
+      "riskRating": "Medium",
+      "strategicRationale": "Leverages predictive analytics to mitigate single-source component lead-time volatility for precision sub-assemblies.",
+      "expectedImpact": "Reduces inventory holding costs by 18% and accelerates line replenishment cycles by 5 days."
+    },
+    {
+      "id": "SUG-003",
+      "projectName": "Hybrid Multi-Cloud Edge Telemetry Ingestion Gateway",
+      "portfolioKey": "it-infrastructure",
+      "portfolioName": "IT Infrastructure",
+      "businessUnit": "Semiconductor Process Equipment",
+      "site": "Fremont",
+      "executiveSponsor": "Elena Rostova",
+      "sponsorLevel": "Executive",
+      "businessValue": 5,
+      "userBase": 4500,
+      "primarySkill": "CLOUD",
+      "skillDemandFte": 4.0,
+      "costEstimateUsd": 2100000.0,
+      "goLiveDate": "2028-03-31",
+      "regulatorySecurity": false,
+      "dtAlignment": true,
+      "riskRating": "Medium",
+      "strategicRationale": "Centralizes high-frequency chamber sensor streaming data for AI defect detection models with sub-millisecond edge latency.",
+      "expectedImpact": "Scales telemetry throughput to 100K events/sec while standardizing hybrid cloud landing zones."
+    },
+    {
+      "id": "SUG-004",
+      "projectName": "GenAI PMO Document Ingestion & Contract Copilot",
+      "portfolioKey": "ai-team",
+      "portfolioName": "AI Team",
+      "businessUnit": "Corporate IT",
+      "site": "Tualatin",
+      "executiveSponsor": "Michael Chen",
+      "sponsorLevel": "Director",
+      "businessValue": 4,
+      "userBase": 3200,
+      "primarySkill": "APP",
+      "skillDemandFte": 2.5,
+      "costEstimateUsd": 920000.0,
+      "goLiveDate": "2027-08-31",
+      "regulatorySecurity": false,
+      "dtAlignment": true,
+      "riskRating": "Low",
+      "strategicRationale": "Automates extraction of scope, deliverable milestones, and vendor SLAs from unstructured PDF statements of work.",
+      "expectedImpact": "Saves 35 person-weeks annually across PMO analysts and eliminates project charter drafting delays."
+    }
+  ],
+  "portfolioInsights": [
+    {
+      "portfolioKey": "it-infosec",
+      "portfolioName": "IT - InfoSec",
+      "summary": "Zero Trust and regulatory security compliance initiatives show the highest confidence and priority scores in OneLake.",
+      "topBottleneck": "Cybersecurity specialist capacity (SEC skill gap) in Q3/Q4.",
+      "opportunityArea": "Deploy AI-driven automation for IAM access certifications to offset audit workloads."
+    },
+    {
+      "portfolioKey": "it-software-development",
+      "portfolioName": "IT Software Development",
+      "summary": "Strong delivery velocity with heavy focus on Global Supply Chain supplier integrations.",
+      "topBottleneck": "Data Engineering (DATA) demand exceeding supply by 3.2 FTE.",
+      "opportunityArea": "Standardize enterprise API contracts to streamline cross-portfolio dependencies."
+    },
+    {
+      "portfolioKey": "it-infrastructure",
+      "portfolioName": "IT Infrastructure",
+      "summary": "Multi-site fab network expansions across Singapore and Fremont.",
+      "topBottleneck": "High capital expenditure concentration in edge datacenter hardware.",
+      "opportunityArea": "Transition to scalable hybrid cloud landing zones to decrease fixed hardware lead times."
+    }
+  ]
+}

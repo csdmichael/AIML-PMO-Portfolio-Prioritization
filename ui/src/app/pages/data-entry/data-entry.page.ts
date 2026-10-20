@@ -221,7 +221,7 @@ export interface ProjectFormFields {
                       Extracting...
                     } @else {
                       <ion-icon name="sparkles" slot="start"></ion-icon>
-                      Pre-fill with AI
+                      Pre-fill with AI (Missing only)
                     }
                   </ion-button>
                 </div>
