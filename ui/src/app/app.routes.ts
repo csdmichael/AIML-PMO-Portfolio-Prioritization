@@ -12,6 +12,13 @@ export const routes: Routes = [
       import('./pages/prioritization/prioritization.page').then((m) => m.PrioritizationPageComponent),
   },
   {
+    path: 'recommendations',
+    loadComponent: () =>
+      import('./pages/recommendations/recommendations.page').then(
+        (m) => m.RecommendationsPageComponent
+      ),
+  },
+  {
     path: 'hierarchy',
     loadComponent: () =>
       import('./pages/hierarchy/hierarchy.page').then((m) => m.HierarchyPageComponent),

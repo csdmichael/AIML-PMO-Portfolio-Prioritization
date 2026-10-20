@@ -19,6 +19,7 @@
   "navigation": [
     { "id": "overview", "label": "Overview", "icon": "pie-chart-outline", "route": "/overview" },
     { "id": "prioritization", "label": "Prioritization", "icon": "funnel-outline", "route": "/prioritization" },
+    { "id": "recommendations", "label": "AI Recommendations", "icon": "sparkles-outline", "route": "/recommendations" },
     { "id": "hierarchy", "label": "Hierarchy", "icon": "git-network-outline", "route": "/hierarchy" },
     { "id": "powerbi", "label": "Power BI dashboards", "icon": "analytics-outline", "route": "/powerbi" },
     { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },

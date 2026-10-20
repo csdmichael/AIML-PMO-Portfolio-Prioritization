@@ -1541,6 +1541,100 @@
           }
         }
       }
+    },
+    "/v1/recommendations": {
+      "get": {
+        "tags": [
+          "recommendations"
+        ],
+        "summary": "Get AI researcher agent suggestions for new projects and existing project optimizations",
+        "operationId": "getPortfolioRecommendations",
+        "parameters": [
+          {
+            "name": "portfolioKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by portfolio key",
+              "title": "Portfoliokey"
+            },
+            "description": "Filter by portfolio key"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/recommendations/research": {
+      "post": {
+        "tags": [
+          "recommendations"
+        ],
+        "summary": "Interactive query to Researcher Agent for portfolio strategic advice",
+        "operationId": "queryResearcherAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Queryresearcheragent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2034,6 +2128,86 @@
         ],
         "title": "DraftView"
       },
+      "ExistingProjectRecommendation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "projectName": {
+            "type": "string",
+            "title": "Projectname"
+          },
+          "portfolioKey": {
+            "type": "string",
+            "title": "Portfoliokey"
+          },
+          "currentTier": {
+            "type": "string",
+            "title": "Currenttier"
+          },
+          "currentPriorityScore": {
+            "type": "number",
+            "title": "Currentpriorityscore"
+          },
+          "recommendationType": {
+            "type": "string",
+            "title": "Recommendationtype"
+          },
+          "suggestedTier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedtier"
+          },
+          "suggestedPriorityDelta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedprioritydelta"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "actionLabel": {
+            "type": "string",
+            "title": "Actionlabel"
+          },
+          "impactSeverity": {
+            "type": "string",
+            "title": "Impactseverity",
+            "default": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "projectId",
+          "projectName",
+          "portfolioKey",
+          "currentTier",
+          "currentPriorityScore",
+          "recommendationType",
+          "reason",
+          "actionLabel"
+        ],
+        "title": "ExistingProjectRecommendation"
+      },
       "FieldRule": {
         "properties": {
           "key": {
@@ -2400,6 +2574,114 @@
         "type": "object",
         "title": "LookupUpdateRequest"
       },
+      "NewProjectSuggestion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "projectName": {
+            "type": "string",
+            "title": "Projectname"
+          },
+          "portfolioKey": {
+            "type": "string",
+            "title": "Portfoliokey"
+          },
+          "portfolioName": {
+            "type": "string",
+            "title": "Portfolioname"
+          },
+          "businessUnit": {
+            "type": "string",
+            "title": "Businessunit"
+          },
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "executiveSponsor": {
+            "type": "string",
+            "title": "Executivesponsor"
+          },
+          "sponsorLevel": {
+            "type": "string",
+            "title": "Sponsorlevel",
+            "default": "Executive"
+          },
+          "businessValue": {
+            "type": "integer",
+            "title": "Businessvalue",
+            "default": 4
+          },
+          "userBase": {
+            "type": "integer",
+            "title": "Userbase",
+            "default": 2500
+          },
+          "primarySkill": {
+            "type": "string",
+            "title": "Primaryskill",
+            "default": "CLOUD"
+          },
+          "skillDemandFte": {
+            "type": "number",
+            "title": "Skilldemandfte",
+            "default": 2.5
+          },
+          "costEstimateUsd": {
+            "type": "number",
+            "title": "Costestimateusd",
+            "default": 850000.0
+          },
+          "goLiveDate": {
+            "type": "string",
+            "title": "Golivedate",
+            "default": "2027-12-31"
+          },
+          "regulatorySecurity": {
+            "type": "boolean",
+            "title": "Regulatorysecurity",
+            "default": false
+          },
+          "dtAlignment": {
+            "type": "boolean",
+            "title": "Dtalignment",
+            "default": true
+          },
+          "riskRating": {
+            "type": "string",
+            "title": "Riskrating",
+            "default": "Medium"
+          },
+          "strategicRationale": {
+            "type": "string",
+            "title": "Strategicrationale"
+          },
+          "expectedImpact": {
+            "type": "string",
+            "title": "Expectedimpact"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "Suggested"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "projectName",
+          "portfolioKey",
+          "portfolioName",
+          "businessUnit",
+          "site",
+          "executiveSponsor",
+          "strategicRationale",
+          "expectedImpact"
+        ],
+        "title": "NewProjectSuggestion"
+      },
       "OptionLists": {
         "properties": {
           "businessUnits": {
@@ -2711,6 +2993,39 @@
           "jobInstanceId"
         ],
         "title": "PipelineRunStatus"
+      },
+      "PortfolioInsight": {
+        "properties": {
+          "portfolioKey": {
+            "type": "string",
+            "title": "Portfoliokey"
+          },
+          "portfolioName": {
+            "type": "string",
+            "title": "Portfolioname"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "topBottleneck": {
+            "type": "string",
+            "title": "Topbottleneck"
+          },
+          "opportunityArea": {
+            "type": "string",
+            "title": "Opportunityarea"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolioKey",
+          "portfolioName",
+          "summary",
+          "topBottleneck",
+          "opportunityArea"
+        ],
+        "title": "PortfolioInsight"
       },
       "PortfolioList": {
         "properties": {
@@ -3278,6 +3593,88 @@
           "status"
         ],
         "title": "ProjectRecord"
+      },
+      "RecommendationsResponse": {
+        "properties": {
+          "generatedAtUtc": {
+            "type": "string",
+            "title": "Generatedatutc"
+          },
+          "insights": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioInsight"
+            },
+            "type": "array",
+            "title": "Insights"
+          },
+          "newProjectSuggestions": {
+            "items": {
+              "$ref": "#/components/schemas/NewProjectSuggestion"
+            },
+            "type": "array",
+            "title": "Newprojectsuggestions"
+          },
+          "existingProjectRecommendations": {
+            "items": {
+              "$ref": "#/components/schemas/ExistingProjectRecommendation"
+            },
+            "type": "array",
+            "title": "Existingprojectrecommendations"
+          },
+          "totalSuggestions": {
+            "type": "integer",
+            "title": "Totalsuggestions"
+          },
+          "totalActionableProjects": {
+            "type": "integer",
+            "title": "Totalactionableprojects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generatedAtUtc",
+          "insights",
+          "newProjectSuggestions",
+          "existingProjectRecommendations",
+          "totalSuggestions",
+          "totalActionableProjects"
+        ],
+        "title": "RecommendationsResponse"
+      },
+      "ResearchQueryRequest": {
+        "properties": {
+          "portfolioKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliokey"
+          },
+          "focusArea": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focusarea"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "ResearchQueryRequest"
       },
       "SkillOption": {
         "properties": {

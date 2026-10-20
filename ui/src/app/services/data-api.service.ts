@@ -182,6 +182,16 @@ export class DataApiService {
     return this.http.put<any>(`${this.base}/admin/lookups`, data);
   }
 
+  getRecommendations(portfolioKey?: string): Observable<any> {
+    let params = new HttpParams();
+    if (portfolioKey) params = params.set('portfolioKey', portfolioKey);
+    return this.http.get<any>(`${this.base}/recommendations`, { params });
+  }
+
+  queryResearcherAgent(query: string, portfolioKey?: string): Observable<any> {
+    return this.http.post<any>(`${this.base}/recommendations/research`, { query, portfolioKey });
+  }
+
   async downloadExcelTemplate(filename = 'project_intake_template.xlsx'): Promise<void> {
     try {
       const blob = await this.http

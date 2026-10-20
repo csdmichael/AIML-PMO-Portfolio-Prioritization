@@ -332,12 +332,21 @@ echarts.use([
 
         @if (embedError()) {
           <app-empty-state
-            title="Embed Error"
+            title="Power BI Workspace Notice"
             [message]="embedError()!"
             [isError]="true"
             icon="alert-circle-outline"
           >
-            <ion-button [disabled]="isBusy()" (click)="onSignIn()">Retry Embed</ion-button>
+            <div class="embed-actions-row">
+              <ion-button color="primary" (click)="activeViewMode.set('directlake')">
+                <ion-icon name="analytics-outline" slot="start"></ion-icon>
+                Switch to Direct Lake Dashboard
+              </ion-button>
+              <ion-button fill="outline" [disabled]="isBusy()" (click)="onSignIn()">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Retry Entra Sign-In
+              </ion-button>
+            </div>
           </app-empty-state>
         }
 
@@ -727,6 +736,13 @@ echarts.use([
         color: #555555;
         line-height: 1.5;
       }
+      .embed-actions-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
       .report-embed-card {
         border-radius: 8px;
         border: 1px solid var(--pmo-border, #e0e0e0);
@@ -1040,23 +1056,37 @@ export class PowerBiPageComponent implements OnInit {
     const cfg = this.config();
     if (!cfg) return;
 
-    const reports = await this.auth.getWorkspaceReports(cfg.workspaceId, accessToken);
-    this.availableReports.set(reports);
+    try {
+      const reports = await this.auth.getWorkspaceReports(cfg.workspaceId, accessToken);
+      this.availableReports.set(reports);
 
-    const configuredId = isReportConfigured(cfg) ? cfg.reportId : null;
-    const preferredName = cfg.preferredReportName?.trim().toLocaleLowerCase();
-    const selected =
-      reports.find((report) => report.id === configuredId) ??
-      reports.find((report) => report.name.trim().toLocaleLowerCase() === preferredName) ??
-      reports[0];
+      const configuredId = isReportConfigured(cfg) ? cfg.reportId : null;
+      const preferredName = cfg.preferredReportName?.trim().toLocaleLowerCase();
+      const selected =
+        reports.find((report) => report.id === configuredId) ??
+        reports.find((report) => report.name.trim().toLocaleLowerCase() === preferredName) ??
+        reports[0];
 
-    if (!selected) {
-      this.isConfigured.set(false);
-      throw new Error('No Power BI reports are available in the configured Fabric workspace.');
+      if (!selected) {
+        this.isConfigured.set(false);
+        this.embedError.set(
+          'No Power BI reports are published yet in the Fabric workspace PMO-Portfolio-Prioritization. Switch to the Direct Lake Dashboard above for real-time OneLake analytics.',
+        );
+        return;
+      }
+
+      this.selectedReportId.set(selected.id);
+      this.isConfigured.set(true);
+      await this.loadAndEmbed(accessToken);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('401')) {
+        this.embedError.set(
+          `Workspace Access Restricted (HTTP 401): The signed-in account (${this.userEmail() || 'current account'}) is not authorized to list reports in Fabric workspace PMO-Portfolio-Prioritization (tenant caldova37587778), or no report is published. Use the Direct Lake Dashboard for live data-driven analytics.`,
+        );
+      } else {
+        this.embedError.set(msg);
+      }
     }
-
-    this.selectedReportId.set(selected.id);
-    this.isConfigured.set(true);
-    await this.loadAndEmbed(accessToken);
   }
 }
