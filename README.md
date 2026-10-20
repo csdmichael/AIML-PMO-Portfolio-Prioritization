@@ -194,6 +194,8 @@ The approved demo source is a separate, verified OneLake JSON snapshot of the or
 
 API publication also registers missing APIM operations from the configured OpenAPI document, including cached recommendations, demo controls, and lifecycle/import routes. Existing operations and their policies are preserved; no wildcard gateway operation or network-access change is introduced.
 
+Run UI unit tests with `npm test` from [ui/](ui/). The CI configuration isolates test modules so SDK mocks in different test files cannot overwrite one another.
+
 Lifecycle/demo changes are API overlays; the existing Fabric inference pipeline does not yet consume those overlays. Loading demo projects therefore preserves captured scores rather than recalculating them. After a demo reset, old aggregate capacity and cluster summaries are suppressed and capacity scenarios return an explicit unavailable response instead of showing totals for the previous project set. No new SQL database is introduced: persisted reports, settings, and reset snapshots remain OneLake JSON documents.
 
 Header: Microsoft 4-square logo, app title, subtitle, and live as-of date. Footer: Michael Yaacoub | Sr Solution Engineer with LinkedIn and GitHub links.
