@@ -130,6 +130,27 @@ The **Data Entry** page supports project and portfolio creation and the **Import
 - **Create Portfolio**: Register new portfolios and program taxonomies.
 - **Import Excel**: Upload a workbook that follows the import template. Download the template from the same screen; its *Allowed values* sheet lists the portfolios, programs, skills, and statuses the workbook must use. Every row is checked first. If any row is invalid, nothing is saved and each problem is listed by row and column (for example, row 4, Sponsor). A valid workbook saves its projects and starts a pipeline run, so scores and dashboards update when the run finishes.
 
+### Saving a project
+
+1. Enter a project name of 3 to 120 characters. Scope and description are saved
+   as the project's Notes, with a 1,000-character limit. Description is optional
+   for manual entry, but AI prefill needs enough description to understand the work.
+2. Select a Portfolio and then one of its Programs. Complete Business Unit, Site,
+   Executive Sponsor, Sponsor Level, Status, Risk Rating and Primary Skill.
+   For new work, use Planning or Backlog.
+3. Enter Business Value as a whole number from 1 to 5; User Base as a whole number
+   from 0 to 100,000,000; a Go-Live Date from 2026-01-01 to 2032-12-31; Skill Demand
+   from 0.5 to 12 FTE; Cost Estimate from 10,000 to 100,000,000 USD; and **Effort**
+   from 1 to 2,000 person-weeks. Effort is required, not optional.
+4. Select **Save & Submit Project**. Missing or out-of-range entries are listed
+   by field name. Any additional server checks show their field-level reasons;
+   entered values remain in the form so they can be corrected and resubmitted.
+   An assigned project ID confirms that the record was created. Start and completion
+   dates are recorded separately from project details.
+
+The API remains the authority for current allowed values and limits. The form
+reads those limits from its shared field definitions rather than inventing replacements.
+
 ### Demo project controls
 
 When **Demo Environment** is enabled, **Import & Uploads** also provides:

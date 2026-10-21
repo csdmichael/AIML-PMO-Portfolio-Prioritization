@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable, Subscription, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import {
@@ -28,8 +28,8 @@ import {
 } from '@ionic/angular';
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
-import { problemMessage } from '../../core/problem-detail';
-import { DemoProjectCatalog, DemoResetResult, IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem, ProblemDetail, ProjectImportResult, ProjectUploadMetadata } from '../../models/api.models';
+import { businessText, problemMessage } from '../../core/problem-detail';
+import { DemoProjectCatalog, DemoResetResult, IntakeDraft, IntakeSuggestion, OptionsResponse, PortfolioItem, ProblemDetail, ProjectFieldDef, ProjectImportResult, ProjectUploadMetadata } from '../../models/api.models';
 import { LoadingSkeletonComponent } from '../../components/loading-skeleton/loading-skeleton.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 
@@ -52,6 +52,13 @@ export interface ProjectFormFields {
   skillDemandFte: number | null;
   costEstimateUsd: number | null;
   effortPersonWeeks: number | null;
+  notes?: string;
+}
+
+interface ProjectValidationIssue {
+  field: string;
+  label: string;
+  message: string;
 }
 
 @Component({
@@ -172,13 +179,19 @@ export interface ProjectFormFields {
                 </div>
 
                 <div class="field-group">
-                  <ion-label class="input-label">Project Scope & Description <span class="required">*</span></ion-label>
+                  <ion-label class="input-label">Project Scope & Description</ion-label>
                   <textarea
                     rows="6"
                     class="textarea-input"
                     placeholder="Describe the business objectives, expected user base, technical requirements, target go-live date, and executive sponsorship..."
                     [(ngModel)]="projectDescription"
+                    [attr.maxlength]="projectField('notes')?.maxLength"
                   ></textarea>
+                  <span class="field-helper">
+                    Saved in the project's Notes and used by AI to suggest missing details.
+                    @if (projectField('notes')?.maxLength; as limit) { Maximum {{ limit }} characters. }
+                    A description is needed for AI prefill; it is optional when completing the fields manually.
+                  </span>
                 </div>
 
                 @if (step1Error()) {
@@ -255,7 +268,11 @@ export interface ProjectFormFields {
                   }
                 </ng-template>
 
-                <form (ngSubmit)="onSubmitProject()">
+                <form #projectForm="ngForm" (ngSubmit)="onSubmitProject(projectForm)">
+                  <p class="field-helper">
+                    Fields marked * are required, including Effort. Choose a Portfolio before selecting its Program.
+                    For new work, use Planning or Backlog; record start and completion dates from project details after saving.
+                  </p>
                   <!-- SECTION A: ORGANIZATION -->
                   <h4 class="section-heading">Organization & Governance</h4>
                   <div class="form-grid">
@@ -327,7 +344,7 @@ export interface ProjectFormFields {
                           @if (isAiFilled('sponsorName')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('sponsorName')" title="Clear field">&times;</button>
                         </div>
-                        <input type="text" class="form-input" [(ngModel)]="projectFields.sponsorName" name="sponsorName" placeholder="Full name of the executive sponsor" required />
+                        <input type="text" class="form-input" [(ngModel)]="projectFields.sponsorName" name="sponsorName" placeholder="Full name of the executive sponsor" [minlength]="projectField('sponsorName')?.minLength ?? null" [maxlength]="projectField('sponsorName')?.maxLength ?? null" required />
                       </div>
 
                       <div class="field-item">
@@ -377,7 +394,9 @@ export interface ProjectFormFields {
                         </div>
                         <input
                           type="number"
-                          min="0"
+                          [min]="projectField('userBase')?.min ?? null"
+                          [max]="projectField('userBase')?.max ?? null"
+                          step="1"
                           class="form-input"
                           [(ngModel)]="projectFields.userBase"
                           name="userBase"
@@ -393,7 +412,7 @@ export interface ProjectFormFields {
                           @if (isAiFilled('businessValue')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('businessValue')" title="Clear field">&times;</button>
                         </div>
-                        <input type="number" min="1" max="5" class="form-input" [(ngModel)]="projectFields.businessValue" name="businessValue" required />
+                        <input type="number" [min]="projectField('businessValue')?.min ?? null" [max]="projectField('businessValue')?.max ?? null" step="1" class="form-input" [(ngModel)]="projectFields.businessValue" name="businessValue" required />
                       </div>
 
                       <div class="field-item">
@@ -402,7 +421,8 @@ export interface ProjectFormFields {
                           @if (isAiFilled('goLiveDate')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('goLiveDate')" title="Clear field">&times;</button>
                         </div>
-                        <input type="date" class="form-input" [(ngModel)]="projectFields.goLiveDate" name="goLiveDate" required />
+                        <input type="date" class="form-input" [(ngModel)]="projectFields.goLiveDate" name="goLiveDate" [min]="projectField('goLiveDate')?.minDate ?? null" [max]="projectField('goLiveDate')?.maxDate ?? null" required />
+                        <span class="field-helper">Allowed dates: {{ projectField('goLiveDate')?.minDate }} to {{ projectField('goLiveDate')?.maxDate }}.</span>
                       </div>
                     </div>
 
@@ -459,7 +479,7 @@ export interface ProjectFormFields {
                           @if (isAiFilled('skillDemandFte')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('skillDemandFte')" title="Clear field">&times;</button>
                         </div>
-                        <input type="number" step="0.1" min="0.5" max="12" class="form-input" [(ngModel)]="projectFields.skillDemandFte" name="skillDemandFte" required />
+                        <input type="number" step="0.1" [min]="projectField('skillDemandFte')?.min ?? null" [max]="projectField('skillDemandFte')?.max ?? null" class="form-input" [(ngModel)]="projectFields.skillDemandFte" name="skillDemandFte" required />
                       </div>
                     </div>
 
@@ -470,22 +490,34 @@ export interface ProjectFormFields {
                           @if (isAiFilled('costEstimateUsd')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('costEstimateUsd')" title="Clear field">&times;</button>
                         </div>
-                        <input type="number" min="10000" class="form-input" [(ngModel)]="projectFields.costEstimateUsd" name="costEstimateUsd" placeholder="e.g. 1500000" required />
+                        <input type="number" [min]="projectField('costEstimateUsd')?.min ?? null" [max]="projectField('costEstimateUsd')?.max ?? null" class="form-input" [(ngModel)]="projectFields.costEstimateUsd" name="costEstimateUsd" placeholder="e.g. 1500000" required />
+                        <span class="field-helper">Allowed total cost: {{ projectField('costEstimateUsd')?.min | number }} to {{ projectField('costEstimateUsd')?.max | number }} USD.</span>
                       </div>
 
                       <div class="field-item">
                         <div class="field-label-row">
-                          <label>Effort (Person-Weeks)</label>
+                          <label>Effort (Person-Weeks) <span class="required">*</span></label>
                           @if (isAiFilled('effortPersonWeeks')) { <span class="ai-badge">AI</span> }
                           <button type="button" class="clear-btn" (click)="clearField('effortPersonWeeks')" title="Clear field">&times;</button>
                         </div>
-                        <input type="number" min="1" class="form-input" [(ngModel)]="projectFields.effortPersonWeeks" name="effortPersonWeeks" placeholder="e.g. 24" />
+                        <input type="number" [min]="projectField('effortPersonWeeks')?.min ?? null" [max]="projectField('effortPersonWeeks')?.max ?? null" class="form-input" [(ngModel)]="projectFields.effortPersonWeeks" name="effortPersonWeeks" placeholder="e.g. 24" required />
+                        <span class="field-helper">Required: {{ projectField('effortPersonWeeks')?.min }} to {{ projectField('effortPersonWeeks')?.max }} person-weeks of total estimated work.</span>
                       </div>
                     </div>
                   </div>
 
                   @if (submitError()) {
-                    <div class="error-banner">{{ submitError() }}</div>
+                    <div class="error-banner validation-summary" role="alert">
+                      <strong>{{ submitError() }}</strong>
+                      @if (submitIssues().length) {
+                        <ul>
+                          @for (issue of submitIssues(); track issue.field + issue.message) {
+                            <li><strong>{{ issue.label }}:</strong> {{ issue.message }}</li>
+                          }
+                        </ul>
+                      }
+                      <p>Your entries have been kept. Correct the listed fields, then select Save & Submit Project again.</p>
+                    </div>
                   }
 
                   <div class="wizard-actions">
@@ -500,7 +532,7 @@ export interface ProjectFormFields {
                         Pre-fill with AI (Missing only)
                       </ion-button>
 
-                      <ion-button type="submit" color="primary" [disabled]="isSubmitting()">
+                      <ion-button type="submit" color="primary" [disabled]="isSubmitting() || isPrefilling() || applyingSuggestion() !== null">
                         @if (isSubmitting()) {
                           <ion-spinner name="crescent" slot="start"></ion-spinner>
                           Saving...
@@ -1157,6 +1189,7 @@ export class DataEntryPageComponent implements OnInit {
   isPrefilling = signal(false);
   isSubmitting = signal(false);
   submitError = signal<string | null>(null);
+  readonly submitIssues = signal<ProjectValidationIssue[]>([]);
 
   projectFields: ProjectFormFields = {
     portfolioKey: undefined,
@@ -1311,6 +1344,7 @@ export class DataEntryPageComponent implements OnInit {
   onPrefillWithAi(): void {
     this.isPrefilling.set(true);
     this.submitError.set(null);
+    this.submitIssues.set([]);
     this.draftId.set(null);
     this.suggestions.set({});
 
@@ -1379,14 +1413,27 @@ export class DataEntryPageComponent implements OnInit {
     if (key === 'portfolioKey') this.onPortfolioChanged(undefined);
   }
 
-  onSubmitProject(): void {
-    this.isSubmitting.set(true);
-    this.submitError.set(null);
+  projectField(key: string): ProjectFieldDef | undefined {
+    return this.options()?.projectFields.find((field) => field.key === key);
+  }
 
+  onSubmitProject(form?: NgForm): void {
+    if (this.isSubmitting() || this.isPrefilling() || this.applyingSuggestion() !== null) return;
+    this.submitError.set(null);
+    form?.form.markAllAsTouched();
+    const issues = [...this.basicsIssues(), ...this.formIssues(form)];
+    this.submitIssues.set(issues);
+    if (issues.length) {
+      this.submitError.set('The project has not been saved. Please review these fields.');
+      return;
+    }
+    this.isSubmitting.set(true);
+
+    // Scope belongs to the existing Notes field; projectDescription is not an API field.
     const payload = {
-      projectName: this.projectName,
-      projectDescription: this.projectDescription,
       ...this.projectFields,
+      projectName: this.projectName.trim(),
+      notes: this.projectDescription.trim() || this.projectFields.notes,
     };
 
     this.dataApi.createProject(payload, true).subscribe({
@@ -1397,17 +1444,49 @@ export class DataEntryPageComponent implements OnInit {
       },
       error: (err: unknown) => {
         this.isSubmitting.set(false);
-        this.submitError.set(this.describeError(err, 'The project could not be created.'));
+        this.submitError.set(problemMessage(err, 'The project could not be created.'));
+        const problem = (err as { error?: ProblemDetail } | null)?.error;
+        const invalid = problem?.errors?.length
+          ? problem.errors
+          : Object.entries(problem?.invalidFields ?? {}).map(([field, message]) => ({ field, message }));
+        this.submitIssues.set(invalid.map(({ field, message }) => this.issue(field, businessText(message))));
       },
     });
   }
 
-  /** The API's message, followed by each invalid field it names. */
-  private describeError(err: unknown, fallback: string): string {
-    const message = problemMessage(err, fallback);
-    const invalid = (err as { error?: ProblemDetail } | null)?.error?.invalidFields ?? {};
-    const issues = Object.entries(invalid).map(([field, text]) => `${field} ${text}`);
-    return issues.length ? `${message} ${issues.join('; ')}` : message;
+  private issue(field: string, message: string): ProjectValidationIssue {
+    const key = field.split('.')[0].split('[')[0];
+    const label = key === 'notes' ? 'Project scope & description (Step 1)'
+      : this.projectField(key)?.label ?? key.replace(/([a-z])([A-Z])/g, '$1 $2');
+    return { field, label, message };
+  }
+
+  private basicsIssues(): ProjectValidationIssue[] {
+    const issues: ProjectValidationIssue[] = [];
+    const name = this.projectName.trim();
+    const rule = this.projectField('projectName');
+    if (!name) issues.push(this.issue('projectName', 'is required (Step 1)'));
+    else if (rule?.minLength !== undefined && name.length < rule.minLength) {
+      issues.push(this.issue('projectName', `must be at least ${rule.minLength} characters (Step 1)`));
+    } else if (rule?.maxLength !== undefined && name.length > rule.maxLength) {
+      issues.push(this.issue('projectName', `must be at most ${rule.maxLength} characters (Step 1)`));
+    }
+    const notes = this.projectDescription.trim() || this.projectFields.notes || '';
+    const limit = this.projectField('notes')?.maxLength;
+    if (limit !== undefined && notes.length > limit) issues.push(this.issue('notes', `must be at most ${limit} characters`));
+    return issues;
+  }
+
+  private formIssues(form?: NgForm): ProjectValidationIssue[] {
+    return Object.entries(form?.controls ?? {}).filter(([, control]) => control.invalid).map(([field, control]) => {
+      let message = 'Enter a valid value.';
+      if (control.hasError('required')) message = 'is required';
+      else if (control.hasError('min')) message = `must be at least ${control.getError('min').min}`;
+      else if (control.hasError('max')) message = `must be at most ${control.getError('max').max}`;
+      else if (control.hasError('minlength')) message = `must be at least ${control.getError('minlength').requiredLength} characters`;
+      else if (control.hasError('maxlength')) message = `must be at most ${control.getError('maxlength').requiredLength} characters`;
+      return this.issue(field, message);
+    });
   }
 
   resetWizard(): void {
@@ -1419,6 +1498,8 @@ export class DataEntryPageComponent implements OnInit {
     this.draftId.set(null);
     this.suggestions.set({});
     this.draftFields = {};
+    this.submitError.set(null);
+    this.submitIssues.set([]);
   }
 
   /** The suggestion for a dropdown that is still blank: a value the AI proposed that the list does not have yet. */

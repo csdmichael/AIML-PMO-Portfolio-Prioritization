@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NgForm } from '@angular/forms';
 import { DataEntryPageComponent } from './data-entry.page';
 import { DataApiService } from '../../services/data-api.service';
 import { PortfolioStore } from '../../services/portfolio.store';
@@ -19,10 +20,13 @@ const options = {
     relationshipTypes: [],
   },
   projectFields: [
+    { key: 'projectName', label: 'Project name', type: 'text', required: true, minLength: 3, maxLength: 120 },
     { key: 'portfolioKey', label: 'Portfolio', type: 'select', required: true, source: 'portfolios' },
     { key: 'programKey', label: 'Program', type: 'select', required: true, source: 'programsOfPortfolio' },
     { key: 'businessUnit', label: 'Business unit', type: 'select', required: true, source: 'options.businessUnits' },
     { key: 'site', label: 'Site', type: 'select', required: true, source: 'options.sites' },
+    { key: 'effortPersonWeeks', label: 'Effort (person-weeks)', type: 'number', required: true, min: 1, max: 2000 },
+    { key: 'notes', label: 'Notes', type: 'text', required: false, maxLength: 1000 },
   ],
 } as unknown as OptionsResponse;
 
@@ -82,7 +86,7 @@ function createApi(overrides: Record<string, unknown> = {}) {
     prefillIntakeDraft: vi.fn(() => of(prefilledDraft({}, { businessUnit: businessUnitSuggestion }))),
     applyIntakeSuggestion: vi.fn(() => of(prefilledDraft({}))),
     dismissIntakeSuggestion: vi.fn(() => of(prefilledDraft({}))),
-    createProject: vi.fn(() => of({ projectId: 'GIS-0100' })),
+    createProject: vi.fn((_payload: Record<string, unknown>, _runPipeline: boolean) => of({ projectId: 'GIS-0100' })),
     createPortfolio: vi.fn(() => of({})),
     getAdminSettings: vi.fn(() => of({ isDemoEnvironment: false })),
     getDemoProjectCatalog: vi.fn(() => of(demoCatalog)),
@@ -104,6 +108,7 @@ function render(api: ReturnType<typeof createApi>) {
   const fixture = TestBed.createComponent(DataEntryPageComponent);
   fixture.detectChanges();
   fixture.componentInstance.ionViewWillEnter();
+  fixture.componentInstance.projectName = 'HR Policies website';
   fixture.componentInstance.projectStep.set(2);
   fixture.detectChanges();
   return fixture;
@@ -190,6 +195,75 @@ describe('Data Entry page: AI prefill and dropdown suggestions', () => {
     page.onSubmitProject();
     expect(page.submitError()).toBe('programKey is required.');
     expect(page.createdProjectId()).toBeNull();
+  });
+
+  it('saves the scope in the supported notes field instead of sending an unknown field', () => {
+    const api = createApi();
+    const page = render(api).componentInstance;
+    page.projectDescription = 'Publish the HR policies and make them searchable by all staff.';
+    page.onSubmitProject();
+    const payload = api.createProject.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('projectDescription');
+    expect(payload['notes']).toBe(page.projectDescription);
+    expect(payload['projectName']).toBe('HR Policies website');
+    expect(page.createdProjectId()).toBe('GIS-0100');
+  });
+
+  it('shows API field errors with readable labels and preserves the entered values', () => {
+    const api = createApi({
+      createProject: vi.fn(() => throwError(() => ({ error: {
+        detail: 'The project does not match the data-entry rules.',
+        errors: [
+          { field: 'effortPersonWeeks', message: 'is required' },
+          { field: 'programKey', message: 'must be one of: cloud' },
+        ],
+      } }))),
+    });
+    const fixture = render(api);
+    const page = fixture.componentInstance;
+    page.projectDescription = 'Keep this description after a validation failure.';
+    page.projectFields.businessValue = 4;
+    page.onSubmitProject();
+    fixture.detectChanges();
+    const banner = fixture.nativeElement.querySelector('.validation-summary');
+    expect(banner?.getAttribute('role')).toBe('alert');
+    expect(banner?.textContent).toContain('Effort (person-weeks)');
+    expect(banner?.textContent).toContain('is required');
+    expect(banner?.textContent).toContain('Program');
+    expect(banner?.textContent).toContain('must be one of: cloud');
+    expect(banner?.textContent).toContain('Your entries have been kept');
+    expect(page.projectDescription).toBe('Keep this description after a validation failure.');
+    expect(page.projectFields.businessValue).toBe(4);
+    expect(page.createdProjectId()).toBeNull();
+    expect(page.isSubmitting()).toBe(false);
+  });
+
+  it('lists required fields before calling the API, including the required effort field', async () => {
+    const api = createApi();
+    const fixture = render(api);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const form = fixture.debugElement.query(By.directive(NgForm)).injector.get(NgForm);
+    fixture.debugElement.query(By.css('form')).triggerEventHandler('ngSubmit', {});
+    fixture.detectChanges();
+    expect(form.invalid).toBe(true);
+    expect(api.createProject).not.toHaveBeenCalled();
+    const banner = fixture.nativeElement.querySelector('.validation-summary');
+    expect(banner?.textContent).toContain('Portfolio');
+    expect(banner?.textContent).toContain('Effort (person-weeks)');
+    expect(fixture.nativeElement.querySelector('[name="effortPersonWeeks"]').required).toBe(true);
+  });
+
+  it('explains the description limit without truncating it or sending a rejected request', () => {
+    const api = createApi();
+    const fixture = render(api);
+    const page = fixture.componentInstance;
+    page.projectDescription = 'x'.repeat(1001);
+    page.onSubmitProject();
+    fixture.detectChanges();
+    expect(api.createProject).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.validation-summary')?.textContent).toContain('1000');
+    expect(page.projectDescription).toHaveLength(1001);
   });
 
   it('clears the program when the portfolio is cleared with its own button', () => {
