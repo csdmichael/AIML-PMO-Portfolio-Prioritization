@@ -20,6 +20,7 @@ import {
 } from '@ionic/angular';
 import { PortfolioStore } from '../../services/portfolio.store';
 import { Project, SortField, GroupByOption } from '../../models/portfolio.models';
+import { groupProjects } from '../../core/portfolio-filter';
 import { FilterPanelComponent } from '../../components/filter-panel/filter-panel.component';
 import { DetailPanelComponent } from '../../components/detail-panel/detail-panel.component';
 import { ConfidenceRingComponent } from '../../components/confidence-ring/confidence-ring.component';
@@ -162,6 +163,16 @@ import { ConfigService } from '../../services/config.service';
                 <span>Export</span>
               </button>
 
+              <!-- Trashed Projects Link -->
+              <a
+                routerLink="/trash"
+                class="trash-link-btn"
+                title="View Trashed (Soft-Deleted) Projects"
+              >
+                <ion-icon name="trash-outline"></ion-icon>
+                <span>Trash ({{ store.softDeletedProjects().length }})</span>
+              </a>
+
               <!-- Mobile/Tablet Filters Toggle -->
               <button
                 type="button"
@@ -214,9 +225,9 @@ import { ConfigService } from '../../services/config.service';
           } @else {
             <!-- VIEW: BOARD (Kanban style by groups or tiers) -->
             @if (store.activeView() === 'board') {
-              <div class="board-view-container" [class.single-column-view]="store.groupedProjects().length === 1">
-                @for (grp of store.groupedProjects(); track grp.key) {
-                  <div class="board-column" [class.single-column]="store.groupedProjects().length === 1">
+              <div class="board-view-container" [class.single-column-view]="paginatedGroupedProjects().length === 1">
+                @for (grp of paginatedGroupedProjects(); track grp.key) {
+                  <div class="board-column" [class.single-column]="paginatedGroupedProjects().length === 1">
                     <div class="board-column-header">
                       <div class="col-title-wrap">
                         <span class="col-title">{{ grp.label }}</span>
@@ -242,7 +253,17 @@ import { ConfigService } from '../../services/config.service';
                                 <span class="pin-star">&#9733;</span>
                               }
                             </div>
-                            <span class="card-score">{{ p.priorityScore ?? 'Awaiting analysis' }}</span>
+                            <div class="card-top-right">
+                              <span class="card-score">{{ p.priorityScore ?? 'Awaiting analysis' }}</span>
+                              <a
+                                [routerLink]="['/projects', p.projectId, 'edit']"
+                                class="card-edit-action"
+                                (click)="$event.stopPropagation()"
+                                title="Edit project & AI signals"
+                              >
+                                <ion-icon name="create-outline"></ion-icon>
+                              </a>
+                            </div>
                           </div>
 
                           <div class="card-name">{{ p.projectName }}</div>
@@ -305,47 +326,80 @@ import { ConfigService } from '../../services/config.service';
                         <td>{{ p.goLiveDate }}</td>
                         <td>{{ p.sourcesPresent }}/11</td>
                         <td>
-                          <span class="action-tag">{{ p.recommendedAction }}</span>
+                          <div class="table-action-cell">
+                            <span class="action-tag">{{ p.recommendedAction }}</span>
+                            <a
+                              [routerLink]="['/projects', p.projectId, 'edit']"
+                              class="table-edit-btn"
+                              (click)="$event.stopPropagation()"
+                              title="Edit Project"
+                            >
+                              <ion-icon name="create-outline"></ion-icon>
+                              <span>Edit</span>
+                            </a>
+                          </div>
                         </td>
                       </tr>
                     }
                   </tbody>
                 </table>
+              </div>
+            }
 
-                <!-- Pagination footer -->
-                <div class="table-pagination-footer">
-                  <div class="pagination-info">
-                    Showing {{ paginationStart() }}-{{ paginationEnd() }} of {{ totalProjectsCount() }}
-                  </div>
-                  <div class="pagination-controls">
-                    <span class="page-size-label">Rows per page:</span>
-                    <select
-                      class="page-size-select"
-                      [ngModel]="pageSize()"
-                      (ngModelChange)="onPageSizeChange($event)"
-                    >
-                      @for (sz of availablePageSizes(); track sz) {
-                        <option [value]="sz">{{ sz }}</option>
-                      }
-                    </select>
-                    <button
-                      type="button"
-                      class="page-btn"
-                      [disabled]="currentPage() <= 1"
-                      (click)="onPageChange(currentPage() - 1)"
-                    >
-                      ‹ Prev
-                    </button>
-                    <span class="current-page-num">{{ currentPage() }} / {{ totalPages() }}</span>
-                    <button
-                      type="button"
-                      class="page-btn"
-                      [disabled]="currentPage() >= totalPages()"
-                      (click)="onPageChange(currentPage() + 1)"
-                    >
-                      Next ›
-                    </button>
-                  </div>
+            <!-- Shared Pagination footer for Board & Table -->
+            @if (store.activeView() === 'board' || store.activeView() === 'table') {
+              <div class="workspace-pagination-footer">
+                <div class="pagination-info">
+                  Showing {{ paginationStart() }}–{{ paginationEnd() }} of {{ totalProjectsCount() }} projects
+                </div>
+                <div class="pagination-controls">
+                  <span class="page-size-label">Rows per page:</span>
+                  <select
+                    class="page-size-select"
+                    [ngModel]="pageSize()"
+                    (ngModelChange)="onPageSizeChange($event)"
+                  >
+                    @for (sz of availablePageSizes(); track sz) {
+                      <option [value]="sz">{{ sz }}</option>
+                    }
+                  </select>
+                  <button
+                    type="button"
+                    class="page-btn"
+                    [disabled]="currentPage() <= 1"
+                    (click)="onPageChange(1)"
+                    title="First page"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    class="page-btn"
+                    [disabled]="currentPage() <= 1"
+                    (click)="onPageChange(currentPage() - 1)"
+                    title="Previous page"
+                  >
+                    ‹ Prev
+                  </button>
+                  <span class="current-page-num">{{ currentPage() }} / {{ totalPages() }}</span>
+                  <button
+                    type="button"
+                    class="page-btn"
+                    [disabled]="currentPage() >= totalPages()"
+                    (click)="onPageChange(currentPage() + 1)"
+                    title="Next page"
+                  >
+                    Next ›
+                  </button>
+                  <button
+                    type="button"
+                    class="page-btn"
+                    [disabled]="currentPage() >= totalPages()"
+                    (click)="onPageChange(totalPages())"
+                    title="Last page"
+                  >
+                    »
+                  </button>
                 </div>
               </div>
             }
@@ -797,47 +851,120 @@ import { ConfigService } from '../../services/config.service';
         border-radius: 4px;
         font-weight: 600;
       }
-      .table-pagination-footer {
+      .table-action-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .table-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--pmo-primary, #0078d4);
+        padding: 3px 8px;
+        border-radius: 4px;
+        background: #f0f7fd;
+        border: 1px solid #cce4f7;
+        text-decoration: none;
+      }
+      .table-edit-btn:hover {
+        background: #dbeafc;
+      }
+      .card-top-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-edit-action {
+        color: var(--pmo-primary, #0078d4);
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        padding: 2px;
+        border-radius: 4px;
+        text-decoration: none;
+      }
+      .card-edit-action:hover {
+        background: #e0f2fe;
+      }
+      .trash-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid #fca5a5;
+        color: #b91c1c;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .trash-link-btn:hover {
+        background: #fee2e2;
+        border-color: #ef4444;
+      }
+      .workspace-pagination-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 14px;
-        background: #f8f9fb;
-        border-top: 1px solid var(--pmo-border, #e0e0e0);
+        padding: 10px 16px;
+        margin-top: 12px;
+        background: #ffffff;
+        border: 1px solid var(--pmo-border, #e0e0e0);
+        border-radius: 8px;
         flex-wrap: wrap;
         gap: 10px;
         font-size: 0.8rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
       }
       .pagination-info {
         color: var(--pmo-muted, #666666);
+        font-weight: 500;
       }
       .pagination-controls {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
       }
       .page-size-label {
         color: #555555;
       }
       .page-size-select {
-        padding: 3px 6px;
+        padding: 4px 8px;
         font-size: 0.78rem;
         border: 1px solid var(--pmo-border, #e0e0e0);
         border-radius: 4px;
         background: #ffffff;
       }
       .page-btn {
-        padding: 4px 8px;
+        padding: 4px 10px;
         border: 1px solid var(--pmo-border, #e0e0e0);
         background: #ffffff;
         color: #333333;
         border-radius: 4px;
-        font-size: 0.75rem;
+        font-size: 0.78rem;
+        font-weight: 600;
         cursor: pointer;
+        transition: background 0.15s;
+      }
+      .page-btn:hover:not(:disabled) {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
       }
       .page-btn:disabled {
-        opacity: 0.5;
+        opacity: 0.45;
         cursor: not-allowed;
+      }
+      .current-page-num {
+        font-weight: 600;
+        padding: 0 6px;
+        color: #1e293b;
       }
       .current-page-num {
         font-weight: 600;
@@ -1034,6 +1161,10 @@ export class PrioritizationPageComponent {
     const sz = this.pageSize();
     const start = (page - 1) * sz;
     return all.slice(start, start + sz);
+  });
+
+  readonly paginatedGroupedProjects = computed(() => {
+    return groupProjects(this.paginatedProjects(), this.store.groupBy());
   });
 
   readonly paginationStart = computed<number>(() => {

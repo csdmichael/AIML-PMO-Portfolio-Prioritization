@@ -856,6 +856,59 @@
         }
       }
     },
+    "/v1/projects/{projectId}/recalculate": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Recompute priority scores, tiers, and factor weights with AI signals and attached documents",
+        "operationId": "recalculateProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{projectId}/progress": {
       "patch": {
         "tags": [
@@ -4746,6 +4799,18 @@
               }
             ],
             "title": "Recordedfieldweightedscore"
+          },
+          "fieldProvenance": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fieldprovenance"
           }
         },
         "type": "object",

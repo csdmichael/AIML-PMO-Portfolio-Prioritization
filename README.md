@@ -239,6 +239,12 @@ Lifecycle/demo changes are API overlays; the existing Fabric inference pipeline 
   recorded tiers, confidence, SHAP explanations or predictions.
   Missing analysis is shown explicitly, with no fabricated replacement score.
   The weights screen shows saved results, not an unsaved browser simulation.
+- **Prioritization pagination across views:** Board and Table views feature synchronized client-side pagination (10, 25, 50, 100 rows per page), page jumping, and total item range indicators.
+- **Trashed projects management (`/trash`):** Dedicated audit screen for soft-deleted projects. Offers one-click restore and permanent delete with confirmation modal.
+- **URL-based Project Edit (`/projects/:projectId/edit`):** Standalone page replacing modal dialogs, with breadcrumb navigation and Back to Prioritization.
+- **Field-level AI vs Human provenance:** Every editable field displays an indicator icon (sparkles for AI with confidence %, person icon for human entered/verified) with hover tooltips detailing extraction rationale.
+- **Supporting document attachment & AI recalculation:** Upload project documents (PDF, Word, Excel, TXT) into OneLake, and trigger AI document analysis to recalculate multi-factor weights and priority tiers.
+- **Full Calculation Transparency tab:** Complete methodology breakdown per calculated field, explaining whether it is deterministic (MCDA weighted formulas, governance rule floors) or ML-driven (LightGBM, Random Forest, K-Means), with exact formulas and active rule floors.
 
 Header: Microsoft 4-square logo, app title, subtitle, and live as-of date. Footer: Michael Yaacoub | Sr Solution Engineer with LinkedIn and GitHub links.
 

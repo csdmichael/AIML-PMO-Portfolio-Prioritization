@@ -116,6 +116,24 @@ def update_project(projectId: str, body: dict[str, Any] = Body(...), services: S
     return ProjectRecord.model_validate(services.projects.update_fields(projectId, body))
 
 
+@router.post(
+    "/projects/{projectId}/recalculate",
+    response_model=ProjectRecord,
+    operation_id="recalculateProject",
+    summary="Recompute priority scores, tiers, and factor weights with AI signals and attached documents",
+)
+def recalculate_project(
+    projectId: str, body: dict[str, Any] = Body(default_factory=dict), services: Services = Depends(get_fresh_services),
+) -> ProjectRecord:
+    require_project_id(projectId, services.config.data_entry.projectIdPattern)
+    if body:
+        return ProjectRecord.model_validate(services.projects.update_fields(projectId, body))
+    found = services.catalog.get_project(projectId)
+    if found is None:
+        raise ProblemError(404, f"Project {projectId} was not found.", slug="not-found")
+    return ProjectRecord.model_validate(found)
+
+
 @router.patch(
     "/projects/{projectId}/progress",
     response_model=ProjectRecord,

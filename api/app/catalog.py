@@ -251,6 +251,7 @@ class Catalog:
             "recommendedAction": record.get("recommendedAction"),
             "cluster": record.get("cluster"),
             "isDeleted": bool(record.get("isDeleted", False)),
+            "fieldProvenance": record.get("fieldProvenance"),
             **{key: record.get(key) for key in PROGRESS_FIELDS},
             **{key: record.get(key) for key in _WEIGHT_FIELDS},
         }
@@ -282,6 +283,7 @@ class Catalog:
             "recommendedAction": None,
             "cluster": None,
             "isDeleted": bool(entry.get("isDeleted", False)),
+            "fieldProvenance": entry.get("fieldProvenance"),
             **{key: entry.get(key) for key in PROGRESS_FIELDS},
             **{key: entry.get(key) for key in _WEIGHT_FIELDS},
         }

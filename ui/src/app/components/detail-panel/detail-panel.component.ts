@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import {
   IonCard,
   IonCardHeader,
@@ -36,6 +37,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     IonCard,
     IonCardHeader,
     IonCardTitle,
@@ -106,10 +108,10 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
             <!-- Lifecycle Management Bar -->
             <div class="lifecycle-bar">
               <span class="lifecycle-lbl">Lifecycle Actions:</span>
-              <button type="button" class="life-btn edit-proj-btn" (click)="isEditing.set(true)">
+              <a [routerLink]="['/projects', p.projectId, 'edit']" class="life-btn edit-proj-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                 <ion-icon name="create-outline"></ion-icon>
                 Edit Project & AI Signals
-              </button>
+              </a>
               @if (!p.isDeleted) {
                 <button type="button" class="life-btn active" (click)="isRecordingProgress.set(!isRecordingProgress())">
                   {{ p.completed ? 'View completion' : p.hasStarted ? 'Update progress / complete' : 'Record start / progress' }}

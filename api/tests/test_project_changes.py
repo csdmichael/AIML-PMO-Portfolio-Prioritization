@@ -329,3 +329,27 @@ def test_a_change_that_lost_a_race_is_a_conflict_and_is_not_saved(harness, monke
     response = harness.client.patch("/v1/projects/GIS-0001", json={"sponsorName": "Late Change"})
     assert response.status_code == 409
     assert "executiveSponsor" not in harness.lake.files[harness.services.paths.project_change("GIS-0001")][0].get("values", {})
+
+
+def test_field_provenance_can_be_saved_and_read_on_project(harness):
+    provenance = {
+        "businessValue": {"source": "ai", "confidenceScore": 88, "confidenceLevel": "High", "rationale": "Extracted from charter"},
+        "costEstimateUsd": {"source": "human", "confidenceScore": 100, "confidenceLevel": "Human"},
+    }
+    response = harness.client.patch("/v1/projects/GIS-0001", json={"fieldProvenance": provenance})
+    assert response.status_code == 200
+    assert response.json()["fieldProvenance"] == provenance
+    got = harness.client.get("/v1/projects/GIS-0001").json()
+    assert got["fieldProvenance"] == provenance
+    listed = harness.client.get("/v1/projects").json()["items"]
+    item = next(p for p in listed if p["projectId"] == "GIS-0001")
+    assert item["fieldProvenance"] == provenance
+
+
+def test_recalculate_project_endpoint_returns_updated_scores(harness):
+    recalc = harness.client.post("/v1/projects/GIS-0001/recalculate", json={"businessValue": 5})
+    assert recalc.status_code == 200
+    data = recalc.json()
+    assert data["projectId"] == "GIS-0001"
+    assert data["businessValue"] == 5
+    assert data["priorityScore"] is not None

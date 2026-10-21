@@ -36,7 +36,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         @if (editingProgress()) {
           <app-project-progress [project]="project" (saved)="record.set($event)" (closed)="editingProgress.set(false)" />
         } @else {
-          <ion-button (click)="editingProgress.set(true)">Record project progress</ion-button>
+          <div style="display: flex; gap: 10px; margin-top: 12px;">
+            <ion-button (click)="editingProgress.set(true)">Record project progress</ion-button>
+            <ion-button fill="outline" [routerLink]="['/projects', project.projectId, 'edit']">
+              <ion-icon name="create-outline" slot="start"></ion-icon>
+              Edit Project & AI Signals
+            </ion-button>
+          </div>
         }
       } @else {
         <app-empty-state

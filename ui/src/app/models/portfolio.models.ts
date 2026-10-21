@@ -17,6 +17,7 @@ export interface ProjectProgressRecord {
 export interface ProjectDetailRecord extends ProjectProgressRecord {
   projectName?: string;
   status: string;
+  fieldProvenance?: Record<string, any>;
 }
 
 export interface ProjectProgressUpdate {
@@ -116,6 +117,7 @@ export interface Project extends ProjectProgressRecord, PriorityScoreMetadata {
   deletedAt?: string;
   aiGenerated?: boolean;
   aiGeneratedFields?: string[];
+  fieldProvenance?: Record<string, any>;
 }
 
 export interface CapacityBySkill {

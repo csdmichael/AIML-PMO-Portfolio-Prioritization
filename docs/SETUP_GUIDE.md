@@ -350,6 +350,8 @@ For an in-depth walkthrough of all user interface screens, the AI Copilot Agent,
 
 - 📖 **Markdown User Guide**: [`docs/USER_GUIDE.md`](USER_GUIDE.md)
 - 📑 **PDF User Guide with Screenshots**: [`docs/USER_GUIDE.pdf`](USER_GUIDE.pdf)
+- 🗑️ **Trashed Projects & Audit Lifecycle (`/trash`)**: soft-delete management, restore, and permanent purge
+- ✏️ **URL-Based Project Edit (`/projects/:projectId/edit`)**: field-level AI vs. Human provenance badges with confidence tooltips, supporting document uploads into OneLake, AI-driven recalculation, and complete calculation methodology transparency (LightGBM, MCDA weighted formula, governance rule floors)
 
 To regenerate the user guide and high-resolution screenshots using Playwright at any time:
 

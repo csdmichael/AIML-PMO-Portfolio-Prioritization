@@ -12,6 +12,21 @@ export const routes: Routes = [
       import('./pages/prioritization/prioritization.page').then((m) => m.PrioritizationPageComponent),
   },
   {
+    path: 'trash',
+    loadComponent: () =>
+      import('./pages/trash/trash.page').then((m) => m.TrashPageComponent),
+  },
+  {
+    path: 'projects/:projectId/edit',
+    loadComponent: () =>
+      import('./pages/edit-project/edit-project.page').then((m) => m.EditProjectPageComponent),
+  },
+  {
+    path: 'prioritization/edit/:projectId',
+    redirectTo: 'projects/:projectId/edit',
+    pathMatch: 'full',
+  },
+  {
     path: 'recommendations',
     loadComponent: () =>
       import('./pages/recommendations/recommendations.page').then(

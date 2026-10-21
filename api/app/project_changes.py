@@ -56,6 +56,7 @@ class ProjectChanges:
         is_deleted: bool | None = None,
         deleted: bool = False,
         progress: Mapping[str, Any] | None = None,
+        field_provenance: Mapping[str, Any] | None = None,
         expected_revision: str | None | object = _UNSET,
     ) -> dict[str, Any]:
         path = self._paths.project_change(project_id)
@@ -75,6 +76,8 @@ class ProjectChanges:
             record["deleted"] = True
         if progress is not None:
             record["progress"] = dict(progress)
+        if field_provenance is not None:
+            record["fieldProvenance"] = {**record.get("fieldProvenance", {}), **field_provenance}
         record["revision"] = str(uuid4())
         record["updatedAtUtc"] = utc_now()
         try:
@@ -121,6 +124,8 @@ class ProjectChanges:
             is_deleted = bool(change["isDeleted"])
             applied["isDeleted"] = is_deleted
             applied["deletedAt"] = change.get("updatedAtUtc") if is_deleted else None
+        if "fieldProvenance" in change:
+            applied["fieldProvenance"] = change["fieldProvenance"]
         applied.update(change.get("progress") or {})
         applied["changeRevision"] = change.get("revision")
         applied.update(progress_fields(applied, self._progress_rules))

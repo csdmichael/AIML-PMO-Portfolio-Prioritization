@@ -112,7 +112,10 @@ class ProjectService:
         issues: list[FieldIssue] = []
         if "isDeleted" in body and not isinstance(body["isDeleted"], bool):
             issues.append(FieldIssue("isDeleted", "must be true or false"))
-        values = {key: value for key, value in body.items() if key != "isDeleted"}
+        field_provenance = body.get("fieldProvenance")
+        if field_provenance is not None and not isinstance(field_provenance, Mapping):
+            issues.append(FieldIssue("fieldProvenance", "must be an object"))
+        values = {key: value for key, value in body.items() if key not in ("isDeleted", "fieldProvenance")}
         known = {rule.key for rule in self._contract.projectFields}
         issues.extend(FieldIssue(key, "is not a project field") for key in values if key not in known)
         if "portfolioKey" in values and "programKey" not in values:
@@ -137,8 +140,14 @@ class ProjectService:
             if status in rules.startedStatuses and current.get("hasStarted") is not True:
                 raise ProblemError(422, "Use Record progress to start the project and record its dates.", slug="validation-failed")
         is_deleted = body["isDeleted"] if "isDeleted" in body else None
-        if result.values or is_deleted is not None:
-            self._changes.save(project_id, values=result.values, is_deleted=is_deleted, expected_revision=current.get("changeRevision"))
+        if result.values or is_deleted is not None or field_provenance is not None:
+            self._changes.save(
+                project_id,
+                values=result.values,
+                is_deleted=is_deleted,
+                field_provenance=field_provenance,
+                expected_revision=current.get("changeRevision"),
+            )
         updated = self._catalog.get_project(project_id)
         if updated is None:
             raise ProblemError(404, f"Project {project_id} was not found.", slug="not-found")

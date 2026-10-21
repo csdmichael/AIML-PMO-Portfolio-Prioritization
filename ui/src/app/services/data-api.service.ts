@@ -150,8 +150,17 @@ export class DataApiService {
   }
 
   getProjectUploads(projectId: string): Observable<ProjectUploadMetadata[]> {
-    return this.http.get<ProjectUploadMetadata[]>(
-      `${this.base}/projects/${encodeURIComponent(projectId)}/uploads`,
+    return this.http
+      .get<{ items?: ProjectUploadMetadata[] } | ProjectUploadMetadata[]>(
+        `${this.base}/projects/${encodeURIComponent(projectId)}/uploads`,
+      )
+      .pipe(map((res) => (Array.isArray(res) ? res : (res.items ?? []))));
+  }
+
+  recalculateProject(projectId: string, fields?: Record<string, unknown>): Observable<ProjectDetailRecord> {
+    return this.http.post<ProjectDetailRecord>(
+      `${this.base}/projects/${encodeURIComponent(projectId)}/recalculate`,
+      fields ?? {},
     );
   }
 

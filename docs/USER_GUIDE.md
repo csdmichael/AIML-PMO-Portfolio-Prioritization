@@ -74,6 +74,24 @@ The **Prioritization** workspace provides multiple lenses to examine, rank, and 
 
 ![Prioritization Table View](images/user-guide/03-prioritization-table.png)
 
+### Multi-View Pagination & Trash Access:
+- **Synchronized Pagination**: Both Board and Table views feature synchronized pagination controls at the bottom of the workspace. Select from 10, 25, 50, or 100 projects per page, with Prev/Next, direct first/last jump, and accurate item count indicators (e.g. *Showing 1–25 of 100 projects*).
+- **Direct Edit Links**: Each project card in Board view and each row in Table view includes an **Edit** action linking directly to the URL-based project edit screen.
+- **Trash Access**: A **Trash (N)** button in the workspace toolbar shows the live count of soft-deleted projects and provides instant access to the Trashed Projects screen.
+
+---
+
+## 3.1. Trashed Projects & Audit Lifecycle (`/trash`)
+
+The **Trashed Projects** view (`/trash`) provides a dedicated management workspace for projects that have been soft-deleted from the portfolio:
+
+- **Soft-Delete Safety**: Deleting a project removes it from active prioritization, hierarchy, and executive views while preserving its record in OneLake for audit compliance.
+- **One-Click Restore**: Click **Restore** on any project to immediately return it to active portfolio prioritization.
+- **Restore All**: Bulk action to restore all soft-deleted projects simultaneously.
+- **Confirmed Permanent Purge**: Click **Delete** or **Empty Trash** to permanently purge projects from the database. A confirmation modal guards against accidental deletion.
+- **Search & Filter**: Quickly find trashed projects by ID, name, portfolio, or executive sponsor.
+- **Back to Prioritization**: Seamless top navigation returns you to the active portfolio workspace.
+
 ---
 
 ## 4. Organizational Hierarchy & Rollups
@@ -232,6 +250,38 @@ labelled; they are not assigned invented scores.
 
 The screenshots and printable PDF above are earlier captures; the current
 in-app controls and this Markdown guide describe the updated workflow.
+
+---
+
+## 9.1. URL-Based Project Edit & Calculation Transparency (`/projects/:projectId/edit`)
+
+The **Edit Project** screen is accessible via a dedicated, deep-linkable URL (`/projects/:projectId/edit`) with a **Back to Prioritization** navigation button, replacing popups with a full-screen executive workspace:
+
+### 1. Field-Level AI vs. Human Provenance
+Every field on the edit form displays a visual provenance badge:
+- **AI-Prefilled / Inferred**: Purple sparkle badge (`✨ AI (XX%)`) showing the exact model confidence score (e.g. *85%*). Hovering reveals a detailed tooltip explaining the extraction rationale and source document citation.
+- **Human-Entered**: Blue badge (`👤 Human`) indicating values provided directly by the project sponsor or PM.
+- **Dynamic Provenance**: Editing any field immediately updates its badge to *Human* (100% confidence), reflecting user modifications.
+
+### 2. Supporting Document Attachments & AI Recalculation
+- **Attach Documents**: Upload project charters, business cases, architecture specifications, or risk registers (`.pdf`, `.docx`, `.xlsx`, `.txt`, `.md`, `.csv`, `.json`). Files persist into OneLake storage under the project's folder.
+- **Attached Documents Catalog**: Inspect uploaded files with file size, upload timestamps, and OneLake ingestion status.
+- **AI Recalculation Engine**: Click **Recalculate with AI** to trigger the Foundry agent to analyze all attached documents, extract updated signals (business value, scope urgency, risk, effort, FTE demand), update editable fields, and recalculate priority scores and tier rankings.
+
+### 3. Full Calculation Transparency & ML Methodology Tab
+A dedicated **Calculation Transparency & ML Methodology** tab explains how every single calculated field is derived:
+- **Final Priority Score (Hybrid)**:
+  - **40% Machine Learning Base Score**: Computed by **LightGBM Multi-Class GBDT Classifier** with Platt Scaling calibrated probabilities across the 4 tiers:
+    `ML Base = (1.0 × P_MustDo + 0.7 × P_Proceed + 0.35 × P_CanWait + 0.0 × P_Deprioritize) × 100`
+  - **60% Field Weighted Score**: Multi-Criteria Decision Analysis (MCDA) weighted sum across 11 normalized dimensions, applying active priority weights (Project > Portfolio > Global).
+  - **Blended Score**: `round(0.4 × ML_Base + 0.6 × Field_Weighted, 1)`.
+  - **Governance Rule Floors**: Evaluates whether Rule R1 (Regulatory Floor 85), Rule R3 (Protected Program Floor 80), or Rule R2 (Strategic Alignment Floor 75) overrides the score.
+- **Field Weighted Score (Deterministic)**: MCDA weighted sum breakdown table showing raw project inputs, normalized scores (0–100), and effective percentage weights for Business Value, User Base, Regulatory, Urgency, Sponsor Priority, DT Alignment, Risk, Cost, Dependencies, Effort, and Skill Demand.
+- **Suggested Priority Tier (ML Tier)**: **LightGBM Classifier** predicting class probabilities and TreeSHAP drivers.
+- **Confidence Score & Level**: **Random Forest Ensemble Variance & Multi-Source Data Completeness Model** evaluating missingness across 11 integrated systems (`Sources_Present / 11`) and Shannon entropy.
+- **Strategic Cluster**: **K-Means Clustering with PCA (k=4)** grouping projects by resource and technology profile.
+- **Recommended Action**: Deterministic Business Rules Decision Matrix.
+- **Months to Go-Live**: Deterministic date calculation `(TargetGoLive - AsOfDate) / 30.4375`.
 
 ---
 

@@ -373,6 +373,10 @@ export class PortfolioStore {
     return this.api.deleteProject(projectId).pipe(tap(() => this.refresh()));
   }
 
+  recalculateProject(projectId: string, fields?: Record<string, unknown>): Observable<ProjectDetailRecord> {
+    return this.api.recalculateProject(projectId, fields).pipe(tap(() => this.refresh()));
+  }
+
   /** Reloads the portfolio list after a portfolio is created elsewhere in the app. */
   reloadPortfolioItems(): void {
     this.api.getPortfolios().subscribe({

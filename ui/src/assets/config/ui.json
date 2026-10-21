@@ -24,6 +24,7 @@
     { "id": "powerbi", "label": "Executive Analytics", "icon": "analytics-outline", "route": "/powerbi" },
     { "id": "data-entry", "label": "Data entry", "icon": "create-outline", "route": "/data-entry" },
     { "id": "decisions", "label": "Decisions", "icon": "checkbox-outline", "route": "/decisions" },
+    { "id": "trash", "label": "Trash", "icon": "trash-outline", "route": "/trash" },
     {
       "id": "admin",
       "label": "Admin",

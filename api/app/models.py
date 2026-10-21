@@ -80,6 +80,7 @@ class ProjectListItem(BaseModel):
     priorityScoreReason: str | None = None
     recordedPriorityScore: float | None = None
     recordedFieldWeightedScore: float | None = None
+    fieldProvenance: dict[str, Any] | None = None
 
 
 class ProjectRecord(BaseModel):
