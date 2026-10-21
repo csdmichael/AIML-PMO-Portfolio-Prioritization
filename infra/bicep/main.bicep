@@ -119,7 +119,7 @@ resource apimApi 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
     displayName: create.apimApi.displayName
     path: create.apimApi.path
     format: 'openapi+json'
-    value: loadTextContent('../../docs/api/openapi.json')
+    value: string(loadJsonContent('../../docs/api/openapi.json'))
     serviceUrl: 'https://${apiApp.properties.defaultHostName}'
     protocols: [
       'https'
