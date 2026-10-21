@@ -85,6 +85,8 @@ The **Prioritization** workspace provides multiple lenses to examine, rank, and 
 
 The **Trashed Projects** view (`/trash`) provides a dedicated management workspace for projects that have been soft-deleted from the portfolio:
 
+![Trashed Projects Audit View](images/user-guide/04-trashed-projects.png)
+
 - **Soft-Delete Safety**: Deleting a project removes it from active prioritization, hierarchy, and executive views while preserving its record in OneLake for audit compliance.
 - **One-Click Restore**: Click **Restore** on any project to immediately return it to active portfolio prioritization.
 - **Restore All**: Bulk action to restore all soft-deleted projects simultaneously.
@@ -173,6 +175,8 @@ reads those limits from its shared field definitions rather than inventing repla
 
 When **Demo Environment** is enabled, **Import & Uploads** also provides:
 
+![Demo Controls: Clear all & Load 100 Demo Projects](images/user-guide/00-demo-clear-and-load.png)
+
 - **Load all demo projects**: Replace the current project set with the approved 100-project synthetic snapshot.
 - **Load a portfolio**: Replace projects only within the selected portfolio using its approved demo subset; other portfolios are preserved.
 - **Clear all projects**: Remove the current projects from the application's active view without deleting the original source or decision history.
@@ -259,6 +263,9 @@ The **Edit Project** screen is accessible via a dedicated, deep-linkable URL (`/
 
 ### 1. Field-Level AI vs. Human Provenance
 Every field on the edit form displays a visual provenance badge:
+
+![Edit Project Screen with AI vs Human Field Provenance](images/user-guide/06-edit-project-provenance.png)
+
 - **AI-Prefilled / Inferred**: Purple sparkle badge (`✨ AI (XX%)`) showing the exact model confidence score (e.g. *85%*). Hovering reveals a detailed tooltip explaining the extraction rationale and source document citation.
 - **Human-Entered**: Blue badge (`👤 Human`) indicating values provided directly by the project sponsor or PM.
 - **Dynamic Provenance**: Editing any field immediately updates its badge to *Human* (100% confidence), reflecting user modifications.
@@ -268,8 +275,13 @@ Every field on the edit form displays a visual provenance badge:
 - **Attached Documents Catalog**: Inspect uploaded files with file size, upload timestamps, and OneLake ingestion status.
 - **AI Recalculation Engine**: Click **Recalculate with AI** to trigger the Foundry agent to analyze all attached documents, extract updated signals (business value, scope urgency, risk, effort, FTE demand), update editable fields, and recalculate priority scores and tier rankings.
 
+![Supporting Document Attachments & AI Recalculation](images/user-guide/07-edit-project-documents-recalc.png)
+
 ### 3. Full Calculation Transparency & ML Methodology Tab
 A dedicated **Calculation Transparency & ML Methodology** tab explains how every single calculated field is derived:
+
+![Calculation Transparency & ML Methodology Breakdown](images/user-guide/08-calculation-transparency-methodology.png)
+
 - **Final Priority Score (Hybrid)**:
   - **40% Machine Learning Base Score**: Computed by **LightGBM Multi-Class GBDT Classifier** with Platt Scaling calibrated probabilities across the 4 tiers:
     `ML Base = (1.0 × P_MustDo + 0.7 × P_Proceed + 0.35 × P_CanWait + 0.0 × P_Deprioritize) × 100`

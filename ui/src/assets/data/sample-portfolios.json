@@ -1,0 +1,82 @@
+[
+  {
+    "key": "it-infosec",
+    "displayName": "IT InfoSec",
+    "code": "INFOSEC",
+    "role": "main",
+    "programs": [
+      {
+        "key": "zero-trust-identity",
+        "name": "Zero Trust and Identity"
+      },
+      {
+        "key": "security-operations",
+        "name": "Security Operations"
+      },
+      {
+        "key": "cloud-endpoint-security",
+        "name": "Cloud and Endpoint Security"
+      },
+      {
+        "key": "governance-compliance",
+        "name": "Governance and Compliance"
+      }
+    ]
+  },
+  {
+    "key": "it-software-development",
+    "displayName": "IT Software Development",
+    "code": "SWDEV",
+    "role": "coupled",
+    "programs": [
+      {
+        "key": "application-platform",
+        "name": "Application Platform"
+      },
+      {
+        "key": "integration-apis",
+        "name": "Integration and APIs"
+      }
+    ]
+  },
+  {
+    "key": "it-infrastructure",
+    "displayName": "IT Infrastructure",
+    "code": "INFRA",
+    "role": "coupled",
+    "programs": [
+      {
+        "key": "network-collaboration",
+        "name": "Network and Collaboration"
+      },
+      {
+        "key": "datacenter-cloud",
+        "name": "Datacenter and Cloud"
+      }
+    ]
+  },
+  {
+    "key": "ai-team",
+    "displayName": "AI Team",
+    "code": "AI",
+    "role": "coupled",
+    "programs": [
+      {
+        "key": "ai-platform",
+        "name": "AI Platform and Copilots"
+      }
+    ]
+  },
+  {
+    "key": "data-analytics",
+    "displayName": "Data and Analytics",
+    "code": "DATA",
+    "role": "coupled",
+    "programs": [
+      {
+        "key": "data-platform",
+        "name": "Data Platform and Lakehouse"
+      }
+    ]
+  }
+]

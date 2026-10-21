@@ -1,0 +1,74 @@
+[
+  {
+    "projectId": "GIS-0001",
+    "action": "Approve",
+    "reason": "Edge network security essential for Singapore fab expansion and regulatory compliance.",
+    "timestamp": "2026-10-13T10:15:00Z"
+  },
+  {
+    "projectId": "GIS-0004",
+    "action": "Approve",
+    "reason": "Critical API gateway program with high sponsor backing; slot protected.",
+    "timestamp": "2026-10-13T11:30:00Z"
+  },
+  {
+    "projectId": "GIS-0007",
+    "action": "Approve",
+    "reason": "Endpoint hardening upgrade approved with Q4 2027 delivery target.",
+    "timestamp": "2026-10-13T14:20:00Z"
+  },
+  {
+    "projectId": "GIS-0010",
+    "action": "Adjust",
+    "reason": "Paused for skills reallocation to GIS-0001; adjusted tier to Can wait.",
+    "timestamp": "2026-10-13T15:45:00Z"
+  },
+  {
+    "projectId": "GIS-0014",
+    "action": "Approve",
+    "reason": "Privileged access management is corporate zero trust prerequisite.",
+    "timestamp": "2026-10-13T16:10:00Z"
+  },
+  {
+    "projectId": "GIS-0020",
+    "action": "Approve",
+    "reason": "SIEM upgrade approved under Information Security portfolio.",
+    "timestamp": "2026-10-13T17:00:00Z"
+  },
+  {
+    "projectId": "GIS-0034",
+    "action": "Reject",
+    "reason": "High risk, low sponsor certainty; recommended candidate for deprioritization.",
+    "timestamp": "2026-10-14T08:30:00Z"
+  },
+  {
+    "projectId": "GIS-0041",
+    "action": "Approve",
+    "reason": "MES yield telemetry connector aligned with Digital Transformation core goals.",
+    "timestamp": "2026-10-14T09:00:00Z"
+  },
+  {
+    "projectId": "GIS-0062",
+    "action": "Approve",
+    "reason": "Multi-cloud transit backbone funded; proceed immediately.",
+    "timestamp": "2026-10-14T09:45:00Z"
+  },
+  {
+    "projectId": "GIS-0076",
+    "action": "Approve",
+    "reason": "Wafer defect CV vision model demonstrated 98% recall; high business value.",
+    "timestamp": "2026-10-14T10:15:00Z"
+  },
+  {
+    "projectId": "GIS-0086",
+    "action": "Approve",
+    "reason": "OneLake enterprise data foundation approved by CIO Council.",
+    "timestamp": "2026-10-14T11:00:00Z"
+  },
+  {
+    "projectId": "GIS-0092",
+    "action": "Adjust",
+    "reason": "Adjusted timeline to sync with Fab Operations yield calibration cycle.",
+    "timestamp": "2026-10-14T11:30:00Z"
+  }
+]

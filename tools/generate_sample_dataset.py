@@ -499,7 +499,40 @@ export const SAMPLE_OPTIONS_RESPONSE: OptionsResponse = {{
 export const SAMPLE_PORTFOLIOS: PortfolioItem[] = {json.dumps(clean_portfolios, indent=2)};
 """
 
+# Set a few projects as soft-deleted for the Trashed Projects screen
+projects[-1]["isDeleted"] = True
+projects[-1]["deletedAt"] = "2026-10-18T14:22:00Z"
+projects[-2]["isDeleted"] = True
+projects[-2]["deletedAt"] = "2026-10-19T09:15:00Z"
+projects[-3]["isDeleted"] = True
+projects[-3]["deletedAt"] = "2026-10-20T11:40:00Z"
+
+# Add fieldProvenance for GIS-0001
+projects[0]["aiGenerated"] = True
+projects[0]["fieldProvenance"] = {
+    "projectName": {"source": "human", "confidenceScore": 100, "confidenceLevel": "Human", "rationale": "Direct entry"},
+    "portfolioKey": {"source": "ai", "confidenceScore": 92, "confidenceLevel": "High", "rationale": "Matched IT InfoSec charter domain"},
+    "programKey": {"source": "ai", "confidenceScore": 88, "confidenceLevel": "High", "rationale": "Classified under Zero Trust & Identity"},
+    "businessUnit": {"source": "human", "confidenceScore": 100, "confidenceLevel": "Human"},
+    "primarySkill": {"source": "ai", "confidenceScore": 85, "confidenceLevel": "High", "rationale": "Extracted Cloud & Infrastructure requirement"},
+    "costEstimateUsd": {"source": "human", "confidenceScore": 100, "confidenceLevel": "Human"},
+    "businessValue": {"source": "ai", "confidenceScore": 85, "confidenceLevel": "High", "rationale": "Derived from executive business case"},
+    "riskRating": {"source": "ai", "confidenceScore": 78, "confidenceLevel": "Medium", "rationale": "Risk score computed from architectural dependencies"},
+    "skillDemandFte": {"source": "ai", "confidenceScore": 80, "confidenceLevel": "High", "rationale": "Workforce capacity estimation model"},
+    "effortPersonWeeks": {"source": "human", "confidenceScore": 100, "confidenceLevel": "Human"},
+    "regulatorySecurity": {"source": "ai", "confidenceScore": 95, "confidenceLevel": "High", "rationale": "Triggered by ISO-27001 / Zero Trust compliance"},
+    "dtAlignment": {"source": "ai", "confidenceScore": 82, "confidenceLevel": "High", "rationale": "Digital transformation core milestone"},
+    "protectedProgram": {"source": "ai", "confidenceScore": 90, "confidenceLevel": "High", "rationale": "Executive protected initiative"},
+}
+
 out_file = REPO / "ui" / "src" / "app" / "data" / "sample-portfolio.data.ts"
 out_file.parent.mkdir(parents=True, exist_ok=True)
 out_file.write_text(ts_content, encoding="utf-8")
 print(f"Generated {out_file} with {len(projects)} projects.")
+
+json_dir = REPO / "ui" / "src" / "assets" / "data"
+json_dir.mkdir(parents=True, exist_ok=True)
+(json_dir / "sample-portfolio.json").write_text(json.dumps(dataset, indent=2), encoding="utf-8")
+(json_dir / "sample-portfolios.json").write_text(json.dumps(clean_portfolios, indent=2), encoding="utf-8")
+(json_dir / "sample-decisions.json").write_text(json.dumps(decisions, indent=2), encoding="utf-8")
+print(f"Generated sample JSON assets in {json_dir}.")
