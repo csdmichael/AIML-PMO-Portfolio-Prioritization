@@ -360,53 +360,9 @@ server.listen(PORT, async () => {
     console.log('Saved 02-prioritization-mobile.png');
     await mobileContext.close();
 
-    // 4. Generate PDF from USER_GUIDE.md
-    console.log('Rendering PDF User Guide from Markdown...');
-    const pdfContext = await browser.newContext({ viewport: { width: 1200, height: 1600 } });
-    const pdfPage = await pdfContext.newPage();
-    const mdContent = fs.readFileSync(path.join(REPO, 'docs', 'USER_GUIDE.md'), 'utf8');
-
-    // Simple markdown-to-html converter for PDF generation
-    const htmlBody = mdContent
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-      .replace(/!\[(.*?)\]\((.*?)\)/gim, (match, alt, src) => {
-        const fullSrc = path.join(REPO, 'docs', src);
-        if (fs.existsSync(fullSrc)) {
-          const base64 = fs.readFileSync(fullSrc).toString('base64');
-          return `<div class="img-container"><img alt="${alt}" src="data:image/png;base64,${base64}" /></div>`;
-        }
-        return '';
-      })
-      .replace(/\n\n/gim, '</p><p>')
-      .replace(/\n/gim, '<br/>');
-
-    const fullHtml = `<!DOCTYPE html><html><head><style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; padding: 40px; }
-      h1 { color: #0f172a; border-bottom: 2px solid #0078d4; padding-bottom: 8px; }
-      h2 { color: #0078d4; margin-top: 30px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; page-break-after: avoid; }
-      h3 { color: #334155; page-break-after: avoid; }
-      img { max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-      .img-container { text-align: center; margin: 16px 0; page-break-inside: avoid; }
-      code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
-    </style></head><body>${htmlBody}</body></html>`;
-
-    await pdfPage.setContent(fullHtml, { waitUntil: 'load' });
-    await pdfPage.pdf({
-      path: path.join(REPO, 'docs', 'USER_GUIDE.pdf'),
-      format: 'A4',
-      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-      printBackground: true,
-    });
-    console.log('Saved USER_GUIDE.pdf');
-    await pdfContext.close();
-
     await browser.close();
     server.close();
-    console.log('All high-fidelity screenshots & PDF successfully generated!');
+    console.log('All high-fidelity screenshots successfully generated!');
     process.exit(0);
   } catch (err) {
     console.error('Error during screenshot capture:', err);

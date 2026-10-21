@@ -271,7 +271,6 @@ Rules live in `gold.pmo_rules`, allowing PMO customization. Recommended actions 
 A complete, high-fidelity user guide is published with automated high-resolution screenshots captured across Desktop, Tablet, and Mobile devices using Playwright:
 
 - 📖 **Markdown User Guide**: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
-- 📑 **Printable PDF User Guide**: [`docs/USER_GUIDE.pdf`](docs/USER_GUIDE.pdf)
 - 📸 **High-Resolution Screenshots Directory**: [`docs/images/user-guide/`](docs/images/user-guide/)
 
 ### Screenshots Captured by Playwright:
