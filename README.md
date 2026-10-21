@@ -27,19 +27,26 @@ Prioritize about 100 GIS and BU projects transparently, using existing enterpris
 
 ## 1. Architecture
 
-![AI-Powered Portfolio Prioritization architecture](docs/images/pmo-architecture.png)
+![Current PMO runtime architecture: governed agents, progress and scoped weights](docs/images/pmo-runtime-architecture.svg)
+
+**Latest workflow:** recommendations prioritize only new or confirmed not-started
+projects. Started work is a fixed commitment. Project details record actual start,
+estimated finish, and completion dates. Priority weights inherit **project override
+> portfolio override > global defaults**, and saved analysis is rescored immediately
+without retraining. See the [user guide](docs/USER_GUIDE.md) and the live
+[showcase](https://caldova-pmo-showcase.azurewebsites.net/showcase).
 
 **Reading the diagram: three Foundry agents.** All three agents are defined in one Microsoft Foundry project, `pmo-portfolio` on `foundry-myaacoub-private`, and all three use `gpt-5.6-sol`. The FastAPI API calls them with its managed identity and checks every reply against a JSON contract before the UI sees it. None of the agents writes to OneLake.
 
 | Agent (Foundry name, version) | Role | Tools it uses | What it does |
 |---|---|---|---|
 | `pmo-intake-agent` (v2) | Project intake prefill | Bing grounding (public web) | Fills the Data Entry fields from a project name and a plain-English description. Each value carries an evidence level, a quote, a rationale, and a source URL. A dropdown value that its list does not have becomes a suggestion, and the user can create and apply it with one click. |
-| `pmo-recommendation-agent` (v2) | Portfolio researcher | `query_portfolio` on OneLake through APIM, plus Bing grounding | Recommends new projects for each portfolio and changes to existing projects. Each item cites approved project IDs and public URLs. A person adds the project or records the decision. |
+| `pmo-recommendation-agent` (v3) | Not-started portfolio researcher | `query_portfolio` on OneLake through APIM, plus Bing grounding | Prioritizes only confirmed not-started work and proposes genuinely new projects. Searches the full register, including pending, started and completed projects, to avoid duplicate proposals. People approve actions; started commitments are never replacement or deprioritization targets. |
 | `pmo-portfolio-copilot` (v1) | Portfolio chat | `query_portfolio` on OneLake through APIM | Answers portfolio questions from approved OneLake records and lists the project IDs it used. |
 
-The data path is UI → API → Foundry agent → tools. OneLake tool calls leave Foundry through the private APIM gateway to the `pmo-tools` backend, which reads the approved export. Bing grounding is a Foundry-managed tool, so its calls do not pass through APIM. The API rejects a prefill or recommendation reply unless Bing was actually called, and it rejects any project citation the OneLake tool did not return. Web source URLs are checked for form only, because the Responses API does not return the search results in this configuration. The in-app page **Documentation → AI Agents & Tools** shows the same agent definitions from `ui/src/assets/config/agents.json`.
+The data path is UI → API → Foundry agent → tools. OneLake tool calls leave Foundry through the private APIM MCP gateway to the `pmo-tools` backend, which merges the approved export with pending entries, progress and saved priority settings. Bing grounding is a Foundry-managed tool, so its calls do not pass through APIM. The API rejects a prefill or recommendation reply unless Bing was actually called, and it rejects any project citation the OneLake tool did not return. It also rejects ineligible recommendation targets and duplicate project names, including when a stale action is clicked. Semantic overlap is assessed by the agent; deterministic duplicate checks normalize case, punctuation and spacing, not project meaning. Web source URLs are checked for form only, because the Responses API does not return the search results in this configuration. The in-app page **Documentation → AI Agents & Tools** shows the same agent definitions from `ui/src/assets/config/agents.json`.
 
-**The fourth box.** The diagram's fourth agent card, *Portfolio Ranking & Reasoning*, describes the deterministic ranking that runs in the Fabric notebooks (LightGBM, SHAP, and rules). It is not a Foundry agent, so this solution deploys three.
+**Ranking is separate from the three agents.** The Fabric notebooks run the deterministic ranking pipeline (LightGBM, SHAP, and rules). That pipeline is not a fourth Foundry agent.
 
 **Runtime data flow.** Bing grounding runs inside Foundry and reaches the public web directly, without APIM. OneLake tool calls leave Foundry through the private APIM gateway.
 
@@ -52,7 +59,7 @@ flowchart LR
 
     subgraph foundry["Microsoft Foundry project pmo-portfolio (gpt-5.6-sol)"]
         intake["pmo-intake-agent v2<br/>Quick Add prefill"]
-        recs["pmo-recommendation-agent v2<br/>new projects and changes"]
+        recs["pmo-recommendation-agent v3<br/>new / not-started only"]
         chat["pmo-portfolio-copilot v1<br/>portfolio chat"]
     end
 
@@ -60,8 +67,11 @@ flowchart LR
     recs -->|"Bing grounding"| bing
     recs -->|"query_portfolio (MCP)"| apim["Azure API Management<br/>private gateway"]
     chat -->|"query_portfolio (MCP)"| apim
-    apim -->|"pmo-tools, workload identity"| tools["pmo-tools<br/>bounded read-only queries"]
+    apim -->|"pmo-tools, workload identity"| tools["pmo-tools<br/>rank candidates / search full register"]
     tools --> lake
+    api --> policy["Eligibility + duplicate checks<br/>human-approved actions"]
+    policy -->|"conditional progress / settings / decisions"| lake
+    lake -->|"saved analysis + scoped weights<br/>saved recommendation snapshots"| api
 ```
 
 ### ML algorithms: end-to-end project walkthrough
@@ -196,7 +206,39 @@ API publication also registers missing APIM operations from the configured OpenA
 
 Run UI unit tests with `npm test` from [ui/](ui/). The CI configuration isolates test modules so SDK mocks in different test files cannot overwrite one another.
 
-Lifecycle/demo changes are API overlays; the existing Fabric inference pipeline does not yet consume those overlays. Loading demo projects therefore preserves captured scores rather than recalculating them. After a demo reset, old aggregate capacity and cluster summaries are suppressed and capacity scenarios return an explicit unavailable response instead of showing totals for the previous project set. No new SQL database is introduced: persisted reports, settings, and reset snapshots remain OneLake JSON documents.
+Lifecycle/demo changes are API overlays; the existing Fabric inference pipeline does not yet consume those overlays. Loading demo projects preserves captured model evidence rather than rerunning inference; the API applies the current scoped weights to that evidence on reads. After a demo reset, old aggregate capacity and cluster summaries are suppressed and capacity scenarios return an explicit unavailable response instead of showing totals for the previous project set. No new SQL database is introduced: persisted reports, settings, and reset snapshots remain OneLake JSON documents.
+
+### Progress, recommendation scope and priority weights
+
+- **Project actions:** open a project in Prioritization or at `/projects/<projectId>`,
+  then select **Record start / progress** or **Update progress / complete**. Record
+  actual start and estimated finish; mark completion with its actual date.
+  Starting sets the business status to Active; completion sets Completed.
+  Dates and revision-based conflict checks are validated by the API.
+- **Protected commitments:** Active, On Hold and Completed legacy records are
+  protected even when their dates have not been recorded. Unknown lifecycle states
+  require confirmation. Started work cannot be reset to Planning/Backlog, and
+  completed work cannot be reopened. Pending projects have the same progress API.
+- **Recommendation safeguards:** ranked candidate queries require not-started state.
+  Inventory searches remain read-only and can inspect all registered work.
+  Human-approved recommendation actions recheck eligibility and duplicates against
+  current database records; ordinary human decision recording remains available.
+- **Durable, state-aware reports:** report caches are isolated by policy version,
+  portfolio, research question and current project/weight state. A progress,
+  inventory, weight or dataset change prevents an old report being reused.
+  A concurrent change during generation prevents that report being published.
+- **Admin → Priority Weights:** configure organization defaults, a portfolio
+  override for all its projects, or an individual project override. Partial
+  overrides inherit remaining fields; removing an override restores inheritance.
+  Settings are saved with conditional writes in
+  `Tables/priority_field_weights/records.json`, not SQL.
+- **Immediate scoring:** the API and inference notebook share the field scorer.
+  The field score is the normalized weighted average, blended as
+  `round(0.4 × saved probability score + 0.6 × field score, 1)` with configured
+  rule minimums retained. Changing weights does not retrain LightGBM or alter
+  recorded tiers, confidence, SHAP explanations or predictions.
+  Missing analysis is shown explicitly, with no fabricated replacement score.
+  The weights screen shows saved results, not an unsaved browser simulation.
 
 Header: Microsoft 4-square logo, app title, subtitle, and live as-of date. Footer: Michael Yaacoub | Sr Solution Engineer with LinkedIn and GitHub links.
 
@@ -211,6 +253,9 @@ Filtering and prioritization:
 - **R2 Executive sponsorship**: executive sponsor and business value of 4 or more lifts Can wait or Candidate to deprioritize to **Proceed**.
 - **R3 Protected program**: protected strategic programs lock priority slots and prevent deferral.
 - **R4 Deprioritize guard**: active projects within 6 months of go-live cannot be deprioritized without VP escalation.
+
+These notebook rules do not relax the recommendation agent's stricter eligibility:
+all started or completed projects are protected, regardless of go-live timing.
 - **R5 Cross-portfolio critical path**: projects with 3 or more cross-portfolio dependencies highlight coupling and require synchronized scheduling.
 
 Rules live in `gold.pmo_rules`, allowing PMO customization. Recommended actions map to the proposal's levers: **Protect slot** or **Add capacity** (Must-do-now), **Proceed**, **Re-sequence** (Can wait), and **Pause or divert skills** (Candidate to deprioritize). Every action requires human approval.

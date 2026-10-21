@@ -8,6 +8,9 @@ on:
       - "docs/api/**"
       - "config/*.json"
       - "infra/config/pmo-deployment.json"
+      - "infra/scripts/deploy.ps1"
+      - "infra/scripts/configure-agent-tools.ps1"
+      - "infra/tests/**"
       - ".github/workflows/api.yml"
   pull_request:
     paths:
@@ -15,6 +18,9 @@ on:
       - "docs/api/**"
       - "config/*.json"
       - "infra/config/pmo-deployment.json"
+      - "infra/scripts/deploy.ps1"
+      - "infra/scripts/configure-agent-tools.ps1"
+      - "infra/tests/**"
       - ".github/workflows/api.yml"
   workflow_dispatch:
 
@@ -62,10 +68,15 @@ jobs:
 
       - name: Test gateway operation synchronization
         shell: pwsh
-        run: ./infra/tests/sync-api-operations.tests.ps1
+        run: |
+          ./infra/tests/sync-api-operations.tests.ps1
+          ./infra/tests/sync-agent-tool-schema.tests.ps1
 
   deploy:
     needs: test
+    concurrency:
+      group: pmo-appservice-shared-plan
+      cancel-in-progress: false
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: demo

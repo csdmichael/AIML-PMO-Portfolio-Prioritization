@@ -66,8 +66,11 @@ import { PortfolioStore } from '../../services/portfolio.store';
             <ion-card-content>
               <div class="kpi-label">Avg Priority</div>
               <div class="kpi-value">
-                {{ store.metrics().avgPriority }}
+                {{ store.metrics().avgPriority ?? 'Awaiting analysis' }}
               </div>
+              @if (store.metrics().scoredProjectCount < store.metrics().count) {
+                <small>{{ store.metrics().scoredProjectCount }} projects with available scores</small>
+              }
             </ion-card-content>
           </ion-card>
         </ion-col>

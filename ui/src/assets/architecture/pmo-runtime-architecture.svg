@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1020" role="img" aria-labelledby="title description">
+  <title id="title">PMO portfolio runtime: protected commitments, scoped priority policy and three agents</title>
+  <desc id="description">The UI reads saved recommendations and starts a fresh review. The API validates progress, applies project over portfolio over global priority weights, and checks recommendation eligibility and duplicates. Three read-only Foundry agents use Bing and private APIM OneLake tools. The full register is available for duplicate checks, but only not-started projects can be prioritized. OneLake stores model evidence, pending projects, progress, weights, decisions and report snapshots.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#2563a6"/>
+    </marker>
+    <style>
+      text { font-family: Segoe UI, Arial, sans-serif; fill: #18344f; }
+      .heading { font-size: 28px; font-weight: 700; }
+      .subheading { font-size: 18px; }
+      .label { font-size: 21px; font-weight: 600; }
+      .body { font-size: 18px; }
+      .small { font-size: 16px; }
+      .box { stroke-width: 2; rx: 14; }
+      .flow { fill: none; stroke: #2563a6; stroke-width: 3; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1440" height="1020" fill="#f5f8fc"/>
+  <text class="heading" x="40" y="42">PMO Portfolio Prioritization | Current runtime architecture</text>
+  <text class="subheading" x="40" y="72">New / not-started recommendations. Started work stays protected. People approve every action.</text>
+
+  <rect class="box" x="40" y="100" width="1320" height="100" fill="#e8f2ff" stroke="#3b82c4"/>
+  <text class="label" x="64" y="133">Ionic Angular application | Web, tablet and mobile</text>
+  <text class="body" x="64" y="162">Portfolio views and six explained charts | Intake and dropdown creation | Project start / finish / completion</text>
+  <text class="small" x="64" y="186">Saved report loads first; a fresh review starts on page entry. Admin edits global, portfolio and project priority weights.</text>
+  <path class="flow" d="M700 200 V244"/>
+  <text class="small" x="724" y="229">Browser API requests</text>
+
+  <rect class="box" x="40" y="246" width="1320" height="132" fill="#e9f6ee" stroke="#3a8a61"/>
+  <text class="label" x="64" y="278">FastAPI backend | Validation, governance and saved-analysis scoring</text>
+  <text class="body" x="64" y="307">Project override &gt; portfolio override &gt; global defaults | 40% saved probability score + 60% field score, with rule floors</text>
+  <text class="body" x="64" y="335">Not-started eligibility + duplicate checks | Validated dates + revision conflicts | Human-approved conditional writes</text>
+  <text class="small" x="64" y="362">State-aware report cache: policy + portfolio + question + current project/progress/weight state. No invented replacement scores.</text>
+  <path class="flow" d="M700 378 V425"/>
+  <text class="small" x="724" y="405">Managed identity / pinned agent versions</text>
+
+  <rect class="box" x="40" y="428" width="1320" height="180" fill="#f2edfc" stroke="#8767b4"/>
+  <text class="label" x="64" y="460">Microsoft Foundry | Three read-only agents in one project</text>
+  <rect class="box" x="62" y="477" width="402" height="110" fill="#ffffff" stroke="#b3a0d3"/>
+  <text class="label" x="82" y="508">Intake agent v2</text>
+  <text class="body" x="82" y="537">Missing-only prefill + dropdown suggestions</text>
+  <text class="small" x="82" y="564">Public evidence, confidence and review</text>
+  <rect class="box" x="494" y="477" width="402" height="110" fill="#ffffff" stroke="#b3a0d3"/>
+  <text class="label" x="514" y="508">Recommendation agent v3</text>
+  <text class="body" x="514" y="537">New / confirmed not-started work only</text>
+  <text class="small" x="514" y="564">Search full register for overlapping work</text>
+  <rect class="box" x="926" y="477" width="412" height="110" fill="#ffffff" stroke="#b3a0d3"/>
+  <text class="label" x="946" y="508">Portfolio chat agent v1</text>
+  <text class="body" x="946" y="537">Portfolio questions, evidence and exports</text>
+  <text class="small" x="946" y="564">Read-only database evidence, not web search</text>
+
+  <path class="flow" d="M250 608 V664"/>
+  <path class="flow" d="M560 608 L438 664"/>
+  <path class="flow" d="M770 608 V664"/>
+  <path class="flow" d="M1135 608 V664"/>
+  <text class="small" x="65" y="644">Foundry-managed public search</text>
+  <text class="small" x="900" y="644">Native MCP calls</text>
+
+  <rect class="box" x="62" y="667" width="402" height="112" fill="#fff4dc" stroke="#c89b38"/>
+  <text class="label" x="82" y="700">Bing grounding</text>
+  <text class="body" x="82" y="729">Public context for intake and opportunities</text>
+  <text class="small" x="82" y="756">Managed by Foundry; not routed via APIM</text>
+  <rect class="box" x="520" y="667" width="818" height="112" fill="#e8f2ff" stroke="#3b82c4"/>
+  <text class="label" x="542" y="700">Private APIM OneLake MCP + workload-authenticated query adapter</text>
+  <text class="body" x="542" y="729">Candidate rankings: notStartedOnly | Inventory: ALL registered statuses + pending work</text>
+  <text class="small" x="542" y="756">JWT checks at gateway and backend | Read-only | 25 rows per query, at most 4 MCP calls per run</text>
+  <path class="flow" d="M1030 779 V854"/>
+  <text class="small" x="1052" y="825">Bounded register evidence</text>
+
+  <rect class="box" x="62" y="858" width="566" height="124" fill="#f0edf9" stroke="#8767b4"/>
+  <text class="label" x="82" y="891">Fabric notebooks | Saved analysis</text>
+  <text class="body" x="82" y="920">Calibrated LightGBM + SHAP + KMeans</text>
+  <text class="small" x="82" y="947">Logistic regression baseline | Confidence + rules R1-R5</text>
+  <text class="small" x="82" y="969">Shared field scorer; weight edits do not retrain predictions</text>
+  <path class="flow" d="M628 918 H730"/>
+  <rect class="box" x="734" y="858" width="604" height="124" fill="#e9f6ee" stroke="#3a8a61"/>
+  <text class="label" x="754" y="891">Fabric OneLake | Durable database records</text>
+  <text class="body" x="754" y="920">Published analysis + pending entries + project progress</text>
+  <text class="body" x="754" y="947">Scoped weights + decisions + recommendation snapshots</text>
+  <text class="small" x="754" y="970">JSON-backed app settings / changes; no new SQL database</text>
+  <path class="flow" d="M1360 310 H1396 V918 H1338"/>
+  <text class="small" transform="translate(1420 492) rotate(90)">API reads / human-approved writes / saved reports</text>
+</svg>

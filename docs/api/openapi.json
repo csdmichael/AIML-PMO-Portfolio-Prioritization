@@ -366,6 +366,18 @@
               "title": "Runpipeline"
             },
             "description": "Start the pipeline after the entry is written"
+          },
+          {
+            "name": "recommendation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Recheck a recommendation against the current register before approval",
+              "default": false,
+              "title": "Recommendation"
+            },
+            "description": "Recheck a recommendation against the current register before approval"
           }
         ],
         "requestBody": {
@@ -452,6 +464,7 @@
                       "Planning",
                       "Active",
                       "On Hold",
+                      "Completed",
                       "Backlog"
                     ],
                     "description": "Status"
@@ -826,6 +839,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectRemoved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}/progress": {
+      "patch": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Record a project's start, planned finish, or completion without reopening committed work",
+        "operationId": "updateProjectProgress",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Projectid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectProgressUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRecord"
                 }
               }
             }
@@ -1756,7 +1821,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Get configurable priority weights from OneLake priority_field_weights table",
+        "summary": "Get global, portfolio and project priority weights from OneLake JSON records",
         "operationId": "getPriorityWeights",
         "responses": {
           "200": {
@@ -1775,7 +1840,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Update priority weights and write to OneLake priority_field_weights table",
+        "summary": "Patch scoped priority weights with a conditional OneLake JSON write",
         "operationId": "updatePriorityWeights",
         "requestBody": {
           "content": {
@@ -2615,6 +2680,11 @@
           "projectId": {
             "type": "string",
             "title": "Projectid"
+          },
+          "recommendation": {
+            "type": "boolean",
+            "title": "Recommendation",
+            "default": false
           },
           "decision": {
             "type": "string",
@@ -3534,6 +3604,9 @@
             "type": "integer",
             "title": "Firstnewprojectnumber"
           },
+          "progress": {
+            "$ref": "#/components/schemas/ProjectProgressRules"
+          },
           "options": {
             "$ref": "#/components/schemas/OptionLists"
           },
@@ -3570,6 +3643,7 @@
           "projectIdPrefix",
           "projectIdDigits",
           "firstNewProjectNumber",
+          "progress",
           "options",
           "projectFields",
           "portfolioFields",
@@ -3805,6 +3879,7 @@
             "type": "string",
             "enum": [
               "projects",
+              "projectInventory",
               "budgetByBusinessUnit",
               "capacity"
             ],
@@ -3843,6 +3918,30 @@
           "includeDetails": {
             "type": "boolean",
             "title": "Includedetails"
+          },
+          "notStartedOnly": {
+            "type": "boolean",
+            "title": "Notstartedonly",
+            "default": false
+          },
+          "portfolioKey": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Portfoliokey",
+            "default": ""
+          },
+          "search": {
+            "type": "string",
+            "maxLength": 160,
+            "title": "Search",
+            "default": ""
+          },
+          "offset": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
           }
         },
         "additionalProperties": false,
@@ -3931,12 +4030,93 @@
         ],
         "title": "PortfolioView"
       },
+      "PriorityFieldWeight": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "higherIsBetter": {
+            "type": "boolean",
+            "title": "Higherisbetter",
+            "default": true
+          },
+          "defaultWeight": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Defaultweight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "category",
+          "description",
+          "min",
+          "max",
+          "defaultWeight"
+        ],
+        "title": "PriorityFieldWeight"
+      },
+      "PriorityWeightPreset": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0.0
+            },
+            "type": "object",
+            "title": "Weights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "weights"
+        ],
+        "title": "PriorityWeightPreset"
+      },
       "PriorityWeightsResponse": {
         "properties": {
           "version": {
             "type": "integer",
             "title": "Version",
-            "default": 1
+            "default": 2
           },
           "description": {
             "type": "string",
@@ -3944,23 +4124,35 @@
           },
           "availableFields": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PriorityFieldWeight"
             },
             "type": "array",
             "title": "Availablefields"
           },
           "defaultWeights": {
             "additionalProperties": {
-              "type": "number"
+              "type": "number",
+              "minimum": 0.0
             },
             "type": "object",
             "title": "Defaultweights"
           },
+          "portfolioOverrides": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0.0
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Portfoliooverrides"
+          },
           "projectOverrides": {
             "additionalProperties": {
               "additionalProperties": {
-                "type": "number"
+                "type": "number",
+                "minimum": 0.0
               },
               "type": "object"
             },
@@ -3969,19 +4161,28 @@
           },
           "presets": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PriorityWeightPreset"
             },
             "type": "array",
             "title": "Presets"
+          },
+          "etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etag"
           }
         },
         "type": "object",
         "required": [
           "description",
           "availableFields",
-          "defaultWeights",
-          "projectOverrides"
+          "defaultWeights"
         ],
         "title": "PriorityWeightsResponse"
       },
@@ -3991,7 +4192,8 @@
             "anyOf": [
               {
                 "additionalProperties": {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": 0.0
                 },
                 "type": "object"
               },
@@ -4001,14 +4203,47 @@
             ],
             "title": "Defaultweights"
           },
+          "portfolioOverrides": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": {
+                        "type": "number",
+                        "minimum": 0.0
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfoliooverrides"
+          },
           "projectOverrides": {
             "anyOf": [
               {
                 "additionalProperties": {
-                  "additionalProperties": {
-                    "type": "number"
-                  },
-                  "type": "object"
+                  "anyOf": [
+                    {
+                      "additionalProperties": {
+                        "type": "number",
+                        "minimum": 0.0
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 },
                 "type": "object"
               },
@@ -4017,8 +4252,21 @@
               }
             ],
             "title": "Projectoverrides"
+          },
+          "etag": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etag"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "PriorityWeightsUpdateRequest"
       },
@@ -4339,14 +4587,283 @@
             "type": "boolean",
             "title": "Isdeleted",
             "default": false
+          },
+          "progressStatus": {
+            "type": "string",
+            "enum": [
+              "notStarted",
+              "started",
+              "completed",
+              "unconfirmed"
+            ],
+            "title": "Progressstatus"
+          },
+          "hasStarted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hasstarted"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startdate"
+          },
+          "estimatedFinishDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimatedfinishdate"
+          },
+          "completionDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completiondate"
+          },
+          "changeRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changerevision"
+          },
+          "priorityWeightScope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "project",
+                  "portfolio",
+                  "global"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priorityweightscope"
+          },
+          "effectivePriorityWeights": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effectivepriorityweights"
+          },
+          "fieldWeightedScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fieldweightedscore"
+          },
+          "priorityScoreState": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "weighted",
+                  "awaiting-analysis",
+                  "requires-analysis"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priorityscorestate"
+          },
+          "priorityScoreReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priorityscorereason"
+          },
+          "recordedPriorityScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordedpriorityscore"
+          },
+          "recordedFieldWeightedScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordedfieldweightedscore"
           }
         },
         "type": "object",
         "required": [
           "projectId",
-          "status"
+          "status",
+          "progressStatus",
+          "hasStarted",
+          "completed"
         ],
         "title": "ProjectListItem"
+      },
+      "ProjectProgressRules": {
+        "properties": {
+          "notStartedStatuses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notstartedstatuses"
+          },
+          "startedStatuses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Startedstatuses"
+          },
+          "completedStatus": {
+            "type": "string",
+            "title": "Completedstatus"
+          },
+          "startStatus": {
+            "type": "string",
+            "title": "Startstatus"
+          },
+          "planningStatus": {
+            "type": "string",
+            "title": "Planningstatus"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "notStartedStatuses",
+          "startedStatuses",
+          "completedStatus",
+          "startStatus",
+          "planningStatus"
+        ],
+        "title": "ProjectProgressRules"
+      },
+      "ProjectProgressUpdate": {
+        "properties": {
+          "hasStarted": {
+            "type": "boolean",
+            "title": "Hasstarted"
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startdate"
+          },
+          "estimatedFinishDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimatedfinishdate"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed",
+            "default": false
+          },
+          "completionDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completiondate"
+          },
+          "expectedRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedrevision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "hasStarted",
+          "expectedRevision"
+        ],
+        "title": "ProjectProgressUpdate"
       },
       "ProjectRecord": {
         "properties": {

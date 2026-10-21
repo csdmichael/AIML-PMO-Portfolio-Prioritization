@@ -17,14 +17,14 @@ interface FieldGuide {
 
 export const PROJECT_FIELD_GUIDE: Record<string, FieldGuide> = {
   projectName: { description: 'Human-readable project title for intake, search, and review; not an ML feature.', example: 'Secure Network Refresh' },
-  portfolioKey: { description: 'Existing portfolio that owns the project; establishes governance and reporting context.', example: 'it-infosec' },
+  portfolioKey: { description: 'Portfolio that owns the project and supplies its priority-weight overrides. Individual project overrides take precedence; otherwise portfolio settings inherit organization defaults.', example: 'it-infosec' },
   programKey: { description: 'Existing program within the selected portfolio; must belong to that portfolio.', example: 'grc' },
   businessUnit: { description: 'Accountable business unit used for budget aggregation and portfolio reporting.', example: 'Corporate IT' },
   site: { description: 'Primary delivery location for reporting and coordination.', example: 'Fremont' },
   sponsorName: { description: 'Named accountable sponsor. The separate sponsor-level signal, not the person’s name, influences the model.', example: 'Alex Morgan' },
   sponsorEmail: { description: 'Sponsor contact information; not a predictive feature.', example: 'sponsor@example.com' },
   projectManager: { description: 'Delivery owner for project coordination and review; not an ML feature.', example: 'Jordan Lee' },
-  projectStatus: { description: 'Current delivery lifecycle state for operational filtering and governance.', example: 'Planning' },
+  projectStatus: { description: 'Delivery state. Only confirmed not-started work is eligible for recommendations. Use Record progress to start or complete work with validated dates; started commitments cannot return to Planning or Backlog.', example: 'Planning' },
   goLiveDate: { description: 'Target delivery date. The pipeline derives timing urgency relative to its as-of date.', example: '2027-06-30', signal: 'timing_urgency', policy: 'Near-term go-live guard can restrict deprioritization.' },
   businessValue: { description: 'Business value rating from 1 (lowest) to 5 (highest), supported by the business case.', example: '5', signal: 'business_value', policy: 'High value combined with executive sponsorship can trigger a policy rule.' },
   userBase: { description: 'Estimated affected-user count, collected for intake context. Not one of the current ten trained model signals.', example: '1200' },
@@ -54,6 +54,18 @@ export const PROJECT_FIELD_GUIDE: Record<string, FieldGuide> = {
         <h1>Project fields: importance and intake requirements</h1>
         <p>Every input field comes from the active API intake contract. Mandatory/optional
           refers to direct project submission; quick-add drafts may be incomplete until reviewed.</p>
+        <section aria-label="Priority settings and project progress">
+          <h2>Configurable priority policy</h2>
+          <p>Admin / Priority Weights supports organization defaults, portfolio overrides and project overrides,
+            in that order of increasing precedence. Partial overrides inherit the remaining fields.
+            Saving immediately updates scores using saved analysis; it does not retrain predictions or change
+            their tiers, confidence or explanations. Missing analysis is shown explicitly.</p>
+          <h2>Progress fields are recorded separately</h2>
+          <p>Open a project's detail page to confirm whether work has started and record actual start,
+            estimated finish and actual completion dates. They are progress records, not AI-prefilled intake
+            fields or numeric priority factors. Active, on-hold and completed work remains protected even
+            when historical dates have not been recorded. Unknown progress needs confirmation.</p>
+        </section>
         <aside>
           <strong>Priority impact is not a fixed weight.</strong> LightGBM is nonlinear and
           policy rules can override its tier. Percentages below are each signal’s share of the

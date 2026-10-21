@@ -39,6 +39,11 @@ export const DEFAULT_FILTER_CRITERIA: FilterCriteria = {
   includeDeleted: false,
 };
 
+export function isScoredProject(project: Project): project is Project & { priorityScore: number } {
+  return typeof project.priorityScore === 'number' && Number.isFinite(project.priorityScore)
+    && project.priorityScoreState !== 'awaiting-analysis' && project.priorityScoreState !== 'requires-analysis';
+}
+
 export function filterProjects(projects: readonly Project[], criteria: FilterCriteria): Project[] {
   const searchNormalized = criteria.search.trim().toLowerCase();
 
@@ -141,7 +146,9 @@ export function filterProjects(projects: readonly Project[], criteria: FilterCri
       return false;
     }
 
-    if (p.priorityScore < criteria.minPriorityScore || p.priorityScore > criteria.maxPriorityScore) {
+    if (isScoredProject(p)
+      ? p.priorityScore < criteria.minPriorityScore || p.priorityScore > criteria.maxPriorityScore
+      : criteria.minPriorityScore !== 0 || criteria.maxPriorityScore !== 100) {
       return false;
     }
 
@@ -172,6 +179,8 @@ export function sortProjects(
   result.sort((a, b) => {
     switch (field) {
       case 'priority':
+        if (!isScoredProject(a)) return isScoredProject(b) ? 1 : 0;
+        if (!isScoredProject(b)) return -1;
         return (a.priorityScore - b.priorityScore) * mult;
       case 'confidence':
         return (a.confidenceScore - b.confidenceScore) * mult;

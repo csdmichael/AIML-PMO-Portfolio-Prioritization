@@ -71,6 +71,14 @@ class PipelineContract(Contract):
     maxWaitMinutes: int
 
 
+class ProjectProgressRules(Contract):
+    notStartedStatuses: list[str]
+    startedStatuses: list[str]
+    completedStatus: str
+    startStatus: str
+    planningStatus: str
+
+
 class DataEntryContract(Contract):
     schemaVersion: int
     description: str
@@ -78,6 +86,7 @@ class DataEntryContract(Contract):
     projectIdPrefix: str
     projectIdDigits: int
     firstNewProjectNumber: int
+    progress: ProjectProgressRules
     options: OptionLists
     projectFields: list[FieldRule]
     portfolioFields: list[FieldRule]
@@ -171,6 +180,7 @@ class RecommendationLimits(Contract):
 
 class RecommendationCacheSettings(Contract):
     oneLakeFolder: str
+    policyVersion: str
 
     @field_validator("oneLakeFolder")
     @classmethod

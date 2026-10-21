@@ -12,6 +12,8 @@ from app.lake_paths import LakePaths
 from app.onelake import LakeConflict, OneLakeClient
 from app.problems import FieldIssue, ProblemError
 from app.project_changes import ProjectChanges
+from app.project_progress import ProjectProgressUpdate, validate_progress
+from app.recommendation_policy import new_project
 from app.store import EntryStore
 from app.validation import FieldValidator, RecordResult
 
@@ -61,17 +63,25 @@ class ProjectService:
     ) -> RecordResult:
         return self.validator().check_record(self._contract.projectFields, values, partial=partial, context=context)
 
-    def create(self, values: Mapping[str, Any], *, extra: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    def create(
+        self, values: Mapping[str, Any], *, extra: Mapping[str, Any] | None = None, recommendation: bool = False,
+    ) -> dict[str, Any]:
         result = self.validate(values)
         if not result.valid:
             raise ProblemError(422, "The project does not match the data-entry rules.", slug="validation-failed", errors=result.issues)
-        return self.write_entry(result.values, extra=extra)
+        return self.write_entry(result.values, extra=extra, recommendation=recommendation)
 
-    def write_entry(self, validated: Mapping[str, Any], *, extra: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    def write_entry(
+        self, validated: Mapping[str, Any], *, extra: Mapping[str, Any] | None = None, recommendation: bool = False,
+    ) -> dict[str, Any]:
         contract = self._contract
         reserved: set[str] = set()
         for _ in range(self._project_settings.idAssignmentAttempts):
             taken = set(self._catalog.project_ids()) | reserved
+            if recommendation:
+                new_project(
+                    validated, self._catalog.agent_snapshot()["projects"], planning_status=contract.progress.planningStatus,
+                )
             try:
                 project_id = next_project_id(
                     taken,
@@ -115,13 +125,42 @@ class ProjectService:
         issues.extend(result.issues)
         if issues:
             raise ProblemError(422, "Some fields are not valid.", slug="validation-failed", errors=issues)
+        status = result.values.get("projectStatus")
+        rules = self._contract.progress
+        if status is not None:
+            if current.get("hasStarted") is True and status in rules.notStartedStatuses:
+                raise ProblemError(409, "Started projects cannot be returned to the not-started queue.", slug="conflict")
+            if current.get("completed") is True and status != rules.completedStatus:
+                raise ProblemError(409, "A completed project cannot be reopened.", slug="conflict")
+            if status == rules.completedStatus and not current.get("completed"):
+                raise ProblemError(422, "Use Record progress to complete the project and record its completion date.", slug="validation-failed")
+            if status in rules.startedStatuses and current.get("hasStarted") is not True:
+                raise ProblemError(422, "Use Record progress to start the project and record its dates.", slug="validation-failed")
         is_deleted = body["isDeleted"] if "isDeleted" in body else None
         if result.values or is_deleted is not None:
-            self._changes.save(project_id, values=result.values, is_deleted=is_deleted)
+            self._changes.save(project_id, values=result.values, is_deleted=is_deleted, expected_revision=current.get("changeRevision"))
         updated = self._catalog.get_project(project_id)
         if updated is None:
             raise ProblemError(404, f"Project {project_id} was not found.", slug="not-found")
         return updated
+
+    def update_progress(self, project_id: str, body: ProjectProgressUpdate) -> dict[str, Any]:
+        current = self.require_project(project_id)
+        if current.get("isDeleted"):
+            raise ProblemError(409, "Restore the project before updating its progress.", slug="conflict")
+        progress = validate_progress(body, current)
+        rules = self._contract.progress
+        status = (
+            rules.completedStatus if body.completed
+            else current.get("projectStatus") if body.hasStarted and current.get("projectStatus") in rules.startedStatuses
+            else rules.startStatus if body.hasStarted
+            else current.get("projectStatus") if current.get("projectStatus") in rules.notStartedStatuses
+            else rules.planningStatus
+        )
+        self._changes.save(
+            project_id, values={"projectStatus": status}, progress=progress, expected_revision=body.expectedRevision,
+        )
+        return self.require_project(project_id)
 
     def remove(self, project_id: str) -> dict[str, Any]:
         """Remove a project from every view. The entry stays in OneLake for audit."""

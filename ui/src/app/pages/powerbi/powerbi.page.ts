@@ -41,6 +41,7 @@ import { PortfolioStore } from '../../services/portfolio.store';
 import { Project } from '../../models/portfolio.models';
 import { PowerBiEmbedComponent } from '../../components/powerbi-embed/powerbi-embed.component';
 import { businessText } from '../../core/problem-detail';
+import { isScoredProject } from '../../core/portfolio-filter';
 
 echarts.use([
   BarChart,
@@ -806,14 +807,14 @@ export class PowerBiPageComponent implements OnInit {
   );
 
   readonly topRankedProjects = computed(() => {
-    return [...this.filteredProjects()]
+    return this.filteredProjects().filter(isScoredProject)
       .sort((a, b) => b.priorityScore - a.priorityScore)
       .slice(0, 10);
   });
 
   // Visual 1: Scatter plot option
   readonly scatterOption = computed(() => {
-    const projs = this.filteredProjects();
+    const projs = this.filteredProjects().filter(isScoredProject);
     const data = projs.map((p) => [
       p.businessValue,
       Math.round((p.costEstimateUsd / 1000000) * 10) / 10,

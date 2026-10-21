@@ -50,6 +50,7 @@
       "recommendations": { "fileName": "recommendations.json", "repoSource": "config/recommendations.json" },
       "onelakeDatasets": { "fileName": "onelake-datasets.json", "repoSource": "config/onelake-datasets.json" },
       "priorityWeights": { "fileName": "priority-weights.json", "repoSource": "config/priority-weights.json" },
+      "mlModel": { "fileName": "ml-model.json", "repoSource": "config/ml-model.json" },
       "systemSettings": { "fileName": "system-settings.json", "repoSource": "config/system-settings.json" }
     }
   },

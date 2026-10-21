@@ -53,6 +53,13 @@ REPORT = {
     "sourceUrls": ["https://example.org/segmentation"],
 }
 
+INVENTORY = {"projects": [
+    {"projectId": "GIS-0002", "projectName": "Cloud Segmentation", "portfolioKey": "it-infosec",
+     "progressStatus": "notStarted", "hasStarted": False, "completed": False},
+    {"projectId": "GIS-0003", "projectName": "HR Policies Website", "portfolioKey": "it-infosec",
+     "progressStatus": "started", "hasStarted": True, "completed": False},
+]}
+
 
 @pytest.fixture
 def lake():
@@ -64,6 +71,7 @@ def harness(monkeypatch, lake):
     credentials = Mock()
     credentials.bearer_token.return_value = "test-token"
     catalog = Mock()
+    catalog.agent_snapshot.return_value = copy.deepcopy(INVENTORY)
     catalog.portfolios.return_value = [
         {"key": "it-infosec", "displayName": "IT - InfoSec", "programs": [{"key": "cloud-program", "displayName": "Cloud"}]},
     ]
@@ -72,7 +80,7 @@ def harness(monkeypatch, lake):
         config=config,
         catalog=catalog,
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
-        recommendation_cache=RecommendationCache(lake=lake, paths=LakePaths(config)),
+        recommendation_cache=RecommendationCache(lake=lake, paths=LakePaths(config), state_provider=catalog.agent_snapshot),
     )
     post = Mock(return_value=agent_reply(copy.deepcopy(REPORT)))
     monkeypatch.setattr("app.agent.httpx.post", post)
@@ -199,7 +207,7 @@ def test_report_is_persisted_and_can_be_read_after_rebuilding_the_cache(harness,
     post.assert_not_called()
 
     config = load_config()
-    rebuilt = RecommendationCache(lake=lake, paths=LakePaths(config))
+    rebuilt = RecommendationCache(lake=lake, paths=LakePaths(config), state_provider=lambda: INVENTORY)
     assert rebuilt.read(portfolio_key=None, query=None) == fresh
     assert all(path.startswith(config.recommendations.cache.oneLakeFolder + "/") for path in lake.files)
 
@@ -305,4 +313,60 @@ def test_an_agent_run_started_before_a_reset_cannot_publish_to_the_new_dataset_c
     post.side_effect = reset_during_agent_run
     response = client.get("/v1/recommendations")
     assert response.status_code == 409
+    assert client.get("/v1/recommendations/cached").json() is None
+
+
+def inventory_for(client):
+    return client.app.dependency_overrides[get_services]().catalog.agent_snapshot.return_value
+
+
+@pytest.mark.parametrize("state", ["started", "completed", "unconfirmed"])
+def test_existing_recommendations_never_target_committed_or_unconfirmed_work(harness, state):
+    client, _ = harness
+    project = inventory_for(client)["projects"][0]
+    project.update(progressStatus=state, hasStarted=True if state != "unconfirmed" else None, completed=state == "completed")
+    response = client.get("/v1/recommendations")
+    assert response.status_code == 502
+    assert "Only confirmed not-started" in response.json()["detail"]
+    assert client.get("/v1/recommendations/cached").json() is None
+
+
+def test_started_context_is_not_allowed_as_an_actionless_existing_project_recommendation(harness):
+    client, post = harness
+    report = copy.deepcopy(REPORT)
+    report["sections"][0]["items"][0]["actions"] = []
+    inventory_for(client)["projects"][0].update(progressStatus="started", hasStarted=True)
+    post.return_value = agent_reply(report)
+    assert client.get("/v1/recommendations").status_code == 502
+
+
+def test_new_project_duplicates_are_rejected_across_started_work_and_punctuation(harness):
+    client, post = harness
+    report = copy.deepcopy(REPORT)
+    report["sections"][0]["items"][0]["actions"] = [{
+        "id": "add", "label": "Add project", "type": "addProject",
+        "payload": {"projectName": " HR  Policies - Website! ", "projectStatus": "Planning"},
+    }]
+    post.return_value = agent_reply(report)
+    response = client.get("/v1/recommendations")
+    assert response.status_code == 502
+    assert "already exists as GIS-0003" in response.json()["detail"]
+
+
+def test_progress_and_inventory_changes_invalidate_saved_reports(harness):
+    client, _ = harness
+    assert client.get("/v1/recommendations").status_code == 200
+    inventory_for(client)["projects"][0].update(progressStatus="started", hasStarted=True)
+    assert client.get("/v1/recommendations/cached").json() is None
+
+
+def test_a_start_during_generation_cannot_publish_a_report(harness):
+    client, post = harness
+
+    def start_during_run(*args, **kwargs):
+        inventory_for(client)["projects"][1]["estimatedFinishDate"] = "2027-01-01"
+        return agent_reply(copy.deepcopy(REPORT))
+
+    post.side_effect = start_during_run
+    assert client.get("/v1/recommendations").status_code == 409
     assert client.get("/v1/recommendations/cached").json() is None

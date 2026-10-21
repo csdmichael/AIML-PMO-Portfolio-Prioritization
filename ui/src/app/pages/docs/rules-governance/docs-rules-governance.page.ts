@@ -64,20 +64,42 @@ interface RuleDetail {
         </div>
       </div>
 
+      <ion-card class="docs-card">
+        <ion-card-header><ion-card-title>Not-started recommendations and protected commitments</ion-card-title></ion-card-header>
+        <ion-card-content>
+          <p>The recommendation assistant prioritizes only confirmed not-started projects and genuinely new
+            opportunities. Started, on-hold and completed projects are fixed commitments, never candidates to
+            stop, replace or deprioritize. This eligibility rule applies independently of the older R1-R5 scoring rules.</p>
+          <p>Project details record actual start, estimated finish and completion dates with conflict detection.
+            Started work cannot return to Planning or Backlog; completed work cannot be reopened.
+            Legacy records keep their protection without invented dates.</p>
+          <p>The full register, including pending work, remains available for duplicate/context checks.
+            The server rechecks action targets and normalized project names when a person approves an action.
+            Progress, inventory and weight changes invalidate incompatible saved reports.</p>
+        </ion-card-content>
+      </ion-card>
+
       <!-- Priority Score Formula Card -->
       <ion-card class="docs-card">
         <ion-card-header>
           <ion-card-title>Priority Score Mathematical Formulation</ion-card-title>
-          <ion-card-subtitle>Continuous scoring across the 4 strategic priority tiers with rule floors</ion-card-subtitle>
+          <ion-card-subtitle>Saved prediction evidence blended with configurable field weights and rule floors</ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
           <div class="formula-box">
             <div class="formula-latex">
               <strong>Priority Score</strong> = max(
                 <em>Rule Priority Floor</em>,
-                100 &times; [ (1.0 &times; P<sub>Must-do-now</sub>) + (0.7 &times; P<sub>Proceed</sub>) + (0.4 &times; P<sub>Can wait</sub>) + (0.1 &times; P<sub>Deprioritize</sub>) ]
+                round(0.4 &times; <em>Saved Probability Score</em> + 0.6 &times; <em>Field Weighted Score</em>, 1)
               )
             </div>
+            <p>The field score is the normalized weighted average of configured priority factors.
+              Project overrides take precedence over portfolio overrides, then organization defaults.
+              Partial overrides inherit remaining fields. Saving weights updates existing scores immediately
+              from saved analysis and applies to future projects; it does not retrain the model or rewrite tiers,
+              confidence or explanations. Missing evidence is reported, not replaced with assumed values.</p>
+            <p>The probability score uses the configured tier coefficients below, multiplied by the saved
+              calibrated probabilities and by 100. These coefficients are separate from editable field weights.</p>
           </div>
           <div class="weights-explanation">
             <div class="weight-item">
@@ -92,13 +114,13 @@ interface RuleDetail {
             </div>
             <div class="weight-item">
               <span class="tier-pill canwait">Can wait</span>
-              <span class="weight-mult">&times; 0.4</span>
+              <span class="weight-mult">&times; 0.35</span>
               <span class="weight-desc">Moderate priority score for deferrable or non-blocking projects.</span>
             </div>
             <div class="weight-item">
               <span class="tier-pill deprioritize">Deprioritize</span>
-              <span class="weight-mult">&times; 0.1</span>
-              <span class="weight-desc">Residual weight for deprioritization candidates.</span>
+              <span class="weight-mult">&times; 0.0</span>
+              <span class="weight-desc">No probability-base contribution for deprioritization candidates.</span>
             </div>
           </div>
         </ion-card-content>

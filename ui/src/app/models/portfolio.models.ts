@@ -1,5 +1,32 @@
+import type { PriorityScoreMetadata } from '../pages/admin/priority-weights/priority-weights.models';
+
 export type SponsorLevel = 'Executive' | 'Director' | 'Manager' | 'Individual' | 'Unknown';
-export type ProjectStatus = 'Planning' | 'Active' | 'On Hold' | 'Backlog';
+export type ProjectStatus = 'Planning' | 'Active' | 'On Hold' | 'Completed' | 'Backlog';
+export interface ProjectProgressRecord {
+  projectId: string;
+  projectStatus: ProjectStatus;
+  progressStatus?: 'notStarted' | 'started' | 'completed' | 'unconfirmed';
+  hasStarted?: boolean | null;
+  completed?: boolean;
+  startDate?: string | null;
+  estimatedFinishDate?: string | null;
+  completionDate?: string | null;
+  changeRevision?: string | null;
+}
+
+export interface ProjectDetailRecord extends ProjectProgressRecord {
+  projectName?: string;
+  status: string;
+}
+
+export interface ProjectProgressUpdate {
+  hasStarted: boolean;
+  startDate: string | null;
+  estimatedFinishDate: string | null;
+  completed: boolean;
+  completionDate: string | null;
+  expectedRevision: string | null;
+}
 export type RiskRating = 'Low' | 'Medium' | 'High' | 'Critical' | 'Unknown';
 export type PriorityTier = 'Must-do-now' | 'Proceed' | 'Can wait' | 'Candidate to deprioritize';
 export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
@@ -41,7 +68,7 @@ export interface SignalDriver {
   featureValue: number;
 }
 
-export interface Project {
+export interface Project extends ProjectProgressRecord, PriorityScoreMetadata {
   projectId: string;
   projectName: string;
   portfolio: string;
@@ -78,8 +105,8 @@ export interface Project {
   mlTier: PriorityTier;
   finalTier: PriorityTier;
   tierProbabilities: TierProbabilities;
-  priorityScore: number; // 0-100
-  fieldWeightedScore?: number; // 0-100 computed from configured field weights
+  priorityScore: number | null; // 0-100, or unavailable until saved analysis is sufficient
+  fieldWeightedScore?: number | null; // 0-100 computed from configured field weights
   ruleOverrides: string[];
   recommendedAction: RecommendedAction;
   cluster: string;

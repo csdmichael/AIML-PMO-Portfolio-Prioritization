@@ -82,9 +82,11 @@ class OptionsStore:
                 raise ProblemError(
                     502, f"{self._path} holds option lists that do not match the contract.", slug="upstream-failure",
                 ) from error
+            self._include_workflow_statuses(self._contract.options)
         self._loaded_at = self._clock()
 
     def _save(self, options: OptionLists) -> None:
+        self._include_workflow_statuses(options)
         document = {**self._contract.model_dump(), "options": options.model_dump()}
         try:
             etag = self._lake.write_json(self._path, document, etag=self._etag)
@@ -95,3 +97,9 @@ class OptionsStore:
         self._contract.options = options
         self._etag = etag
         self._loaded_at = self._clock()
+
+    def _include_workflow_statuses(self, options: OptionLists) -> None:
+        rules = self._contract.progress
+        for status in [*rules.notStartedStatuses, *rules.startedStatuses, rules.completedStatus]:
+            if status not in options.projectStatuses:
+                options.projectStatuses.append(status)

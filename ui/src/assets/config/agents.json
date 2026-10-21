@@ -26,15 +26,15 @@
       "icon": "sparkles-outline",
       "role": "Portfolio researcher",
       "name": "pmo-recommendation-agent",
-      "version": "2",
+      "version": "3",
       "trigger": "AI Recommendations page: it runs when the page opens, when the portfolio filter changes, and for each research question.",
-      "description": "Recommends new projects for each portfolio and changes to existing projects, such as raising a priority, adding skill capacity, or deprioritizing. It combines approved OneLake evidence with public context. People add a suggested project or record a suggested decision. The agent cannot change records.",
+      "description": "Recommends genuinely new opportunities and prioritizes only confirmed not-started projects. Started, on-hold and completed work stays protected. It reads the full project register, including pending entries, to compare proposed work with existing names and scope. People approve every new project or decision, and the API rechecks eligibility and duplicate names before saving.",
       "tools": [
         {
           "name": "query_portfolio",
           "kind": "OneLake MCP tool through APIM",
           "connection": "pmo-onelake-apim",
-          "purpose": "Reads approved project rankings, budgets by business unit, and skill supply and demand from Fabric OneLake."
+          "purpose": "Ranks confirmed not-started candidates, searches the full register for duplicates (including pending, started and completed work), and reads budgets and skill supply/demand. Queries are read-only and bounded."
         },
         {
           "name": "Bing grounding",

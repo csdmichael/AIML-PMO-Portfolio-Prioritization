@@ -18,6 +18,7 @@ class LakePaths:
         self._drafts = f"{self.raw_root}/{onelake.uiEntryFolders.drafts}"
         self._project_changes = f"{self.raw_root}/{onelake.uiEntryFolders.projectChanges}"
         self._recommendations = config.recommendations.cache.oneLakeFolder
+        self.recommendation_policy_version = config.recommendations.cache.policyVersion
         self._demo = config.api.demo
         self._upload_folder_template = uploads.oneLakeFolderTemplate
         self._file_name_template = uploads.fileNameTemplate

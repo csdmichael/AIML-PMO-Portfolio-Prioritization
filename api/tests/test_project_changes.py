@@ -1,3 +1,4 @@
+import copy
 from types import SimpleNamespace
 
 import pytest
@@ -9,8 +10,11 @@ from app.config import load_config
 from app.lake_paths import LakePaths
 from app.main import create_app
 from app.options_store import OptionsStore
+from app.priority_scoring import PRIORITY_FIELD_KEYS
+from app.priority_weights import PriorityWeightsService
 from app.project_changes import ProjectChanges
 from app.projects import ProjectService
+from app.recommendation_cache import RecommendationCache
 from app.routes.deps import get_services
 from app.store import EntryStore, ExportReader
 from tests.lake_doubles import MemoryLake
@@ -144,6 +148,76 @@ def harness():
 def export_project(client, project_id):
     export = client.get("/v1/portfolio").json()
     return next((item for item in export["projects"] if item["projectId"] == project_id), None)
+
+
+def test_saved_weight_scopes_rescore_every_http_view_and_invalidate_recommendations(harness):
+    services, client = harness.services, harness.client
+    saved = harness.lake.files[services.paths.portfolio_export()][0]
+    record = saved["projects"][0]
+    record.update({
+        "monthsToGoLive": 12,
+        "userBase": 1000,
+        "mlTier": "Proceed",
+        "tierProbabilities": {"mustDoNow": 0.1, "proceed": 0.5, "canWait": 0.3, "deprioritize": 0.1},
+        "ruleOverrides": [],
+        "topDrivers": [{"signalKey": "business_value", "shapValue": 0.17}],
+    })
+    saved["projects"].extend([
+        {**record, "projectId": "GIS-0003", "portfolioKey": "data-analytics"},
+        {**record, "projectId": "GIS-0004"},
+    ])
+    original = copy.deepcopy(saved)
+    services.priority_weights = PriorityWeightsService(harness.config, harness.lake)
+    services.catalog = Catalog(
+        exports=services.exports, entries=EntryStore(harness.lake), paths=services.paths,
+        statuses=harness.config.api.projects, contract=harness.config.data_entry,
+        changes=services.changes, priority_weights=services.priority_weights,
+    )
+    cache = RecommendationCache(lake=harness.lake, paths=services.paths, state_provider=services.catalog.agent_snapshot)
+
+    def weights(field):
+        return {key: float(key == field) for key in PRIORITY_FIELD_KEYS}
+
+    current = client.get("/v1/admin/priority-weights").json()
+    response = client.put("/v1/admin/priority-weights", json={
+        "defaultWeights": weights("businessValue"), "projectOverrides": {"GIS-0001": {}}, "etag": current["etag"],
+    })
+    assert response.status_code == 200
+
+    def assert_views(project_id, score, scope):
+        detail = client.get(f"/v1/projects/{project_id}").json()
+        listed = next(item for item in client.get("/v1/projects").json()["items"] if item["projectId"] == project_id)
+        exported = export_project(client, project_id)
+        for view in (detail, listed, exported):
+            assert view["priorityScore"] == score
+            assert view["priorityWeightScope"] == scope
+            assert view["priorityScoreState"] == "weighted"
+        for key in ("tierProbabilities", "mlTier", "finalTier", "confidenceScore", "confidenceLevel", "topDrivers"):
+            assert detail[key] == record[key]
+            assert exported[key] == record[key]
+
+    assert_views("GIS-0001", 70.2, "global")
+    revision = cache.revision()
+    response = client.put("/v1/admin/priority-weights", json={
+        "portfolioOverrides": {"it-infosec": weights("userBase")}, "etag": response.json()["etag"],
+    })
+    assert response.status_code == 200
+    assert cache.revision() != revision
+    assert_views("GIS-0001", 58.2, "portfolio")
+    assert_views("GIS-0004", 58.2, "portfolio")
+    assert_views("GIS-0003", 70.2, "global")
+    revision = cache.revision()
+    response = client.put("/v1/admin/priority-weights", json={
+        "projectOverrides": {"GIS-0001": weights("businessValue")}, "etag": response.json()["etag"],
+    })
+    assert response.status_code == 200
+    assert cache.revision() != revision
+    assert_views("GIS-0001", 70.2, "project")
+    assert_views("GIS-0004", 58.2, "portfolio")
+    pending = client.get("/v1/projects/GIS-0002").json()
+    assert pending["priorityScore"] is None
+    assert pending["priorityScoreState"] == "awaiting-analysis"
+    assert saved == original
 
 
 def test_a_status_change_shows_in_the_export_at_once_and_leaves_the_rollups_alone(harness):

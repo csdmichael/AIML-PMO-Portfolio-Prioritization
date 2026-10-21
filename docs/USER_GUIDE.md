@@ -146,7 +146,18 @@ Demo loading reuses the snapshot's recorded priorities and scores; it is not a n
 
 Opening **AI Recommendations** starts two independent requests: one retrieves the last saved report for the chosen portfolio and question; the other asks the recommendation assistant for a fresh report. You can read the saved report, with its original generation time, while the refresh runs. A successful fresh report replaces it and is saved to the database. If the refresh fails, the saved report remains visible with an error and retry option.
 
-Portfolio choices use their saved identifiers, and changing portfolio clears the previous portfolio's report. A demo reset prevents recommendations from the old project set from being reused. Proposed projects and changes still require human review before they are saved.
+Recommendations focus only on genuinely new opportunities and confirmed **not-started** projects.
+Started, on-hold and completed work is a protected commitment, not a candidate to stop,
+replace or deprioritize. The assistant can read the full project register, including
+pending and committed projects, to compare opportunities with work that already exists.
+It considers purpose and scope; the server additionally blocks matching names after
+normalizing case, punctuation and spacing. A semantic comparison is not a guaranteed
+automatic duplicate detector.
+
+Portfolio choices use their saved identifiers, and changing portfolio clears the previous portfolio's report.
+Progress, project, priority-weight and demo-reset changes invalidate incompatible saved reports.
+If records change during a review, refresh instead of applying an outdated recommendation.
+Every action is checked again at approval time and still needs an explicit human click.
 
 ---
 
@@ -172,10 +183,34 @@ Clicking any project opens the **Detail Inspector** displaying all 10 canonical 
 ### Key Elements:
 - **Confidence Ring Gauge**: Visual breakdown of Completeness, Quality, and Model Certainty.
 - **SHAP Feature Importance Waterfall**: Explains *why* the model scored the project high or low (e.g. high business value increasing score by +0.72; high cost reducing score by -0.18).
-- **Lifecycle actions**: *Mark as Backlog* or *Move to Active*, *Soft Delete (Trash)* and *Restore*, and *Permanent Delete* (asks for confirmation). Each action is saved through the API and the screen reloads from OneLake.
-- **Edit Project**: Changes to project inputs (portfolio and program, business unit, site, sponsor, status, go-live date, value, skill, cost, risk, and effort) save through the API. The lists come from the configuration. Model outputs (tiers, priority and confidence scores, clusters) are read-only and come from the pipeline.
+- **Record start / progress**: Confirm whether work has started and record its actual start and estimated finish dates. The start cannot be in the future, and the estimated finish cannot precede the start. A past estimate is allowed for overdue work.
+- **Update progress / complete**: Update the estimate, or mark the project complete with its actual completion date. A completion date must fall between the start date and today. Started work cannot go back to the not-started queue; completed work cannot be reopened.
+- **Legacy and pending projects**: Existing Active, On Hold and Completed records stay protected even when dates have not been recorded. Missing dates are shown as not recorded, never invented. Unknown progress needs confirmation. A newly created project links directly to its progress screen even before analysis is available.
+- **Other lifecycle actions**: *Mark as Backlog* is available only before work starts. *Soft Delete (Trash)*, *Restore*, and confirmed *Permanent Delete* still persist through the API.
+- **Edit Project**: Changes to project inputs save through the API. Use the progress action, not the status dropdown, to start or complete work. Recorded tiers, confidence and explanations remain read-only. Priority scores also reflect the currently saved priority weights.
 - **Rule Overrides Badge**: Transparent indicators showing which deterministic business rules (R1 Regulatory First, R2 Executive Sponsorship, R3 Protected Programs, R4 Deprioritize Guard, R5 Cross-Portfolio Critical Path) altered the machine learning rank.
 - **Cross-Source Provenance**: Checkmarks showing which of the 11 enterprise systems contributed data.
+
+### Organization, portfolio and project priority settings
+
+Open **Admin → Priority Weights**. Configure global defaults, select a portfolio
+to set its own weights, or set an individual project override. Precedence is
+**project → portfolio → organization defaults**. A partial override inherits
+the remaining fields; clearing an override restores inherited values.
+
+Save applies the policy immediately to existing projects using their saved
+analysis, and future analyzed projects inherit the same policy. The editor shows
+saved scores rather than pretending an unsaved draft is a live preview.
+Conditional saves warn if another person changed the settings first.
+
+The priority score combines 40% of the saved probability-based assessment with
+60% of the configurable field score, retaining applicable rule minimums.
+Weights do not retrain the prediction, change its tier/confidence, or rewrite
+its explanations. Projects with insufficient saved analysis are explicitly
+labelled; they are not assigned invented scores.
+
+The screenshots and printable PDF above are earlier captures; the current
+in-app controls and this Markdown guide describe the updated workflow.
 
 ---
 

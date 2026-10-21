@@ -10,6 +10,7 @@ from app.files import utc_now
 from app.ids import new_identifier
 from app.lake_paths import LakePaths
 from app.problems import FieldIssue, ProblemError
+from app.recommendation_policy import candidate_project
 from app.store import EntryStore
 
 
@@ -59,6 +60,8 @@ class DecisionService:
             issues.append(FieldIssue("decidedBy", f"must be at most {self._settings.decidedByMaxLength} characters"))
         if issues:
             raise ProblemError(422, "The decision does not match the decision rules.", slug="validation-failed", errors=issues)
+        if body.get("recommendation"):
+            candidate_project(project_id, self._catalog.agent_snapshot()["projects"])
         decision_id = new_identifier(self._settings.idPrefix)
         entry = {
             "decisionId": decision_id,

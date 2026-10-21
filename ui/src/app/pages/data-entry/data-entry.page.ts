@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Observable, Subscription, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import {
   IonContent,
@@ -59,6 +60,7 @@ export interface ProjectFormFields {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -135,6 +137,7 @@ export interface ProjectFormFields {
               <ion-card-content>
                 <p>The project record has been registered and scheduled for prioritization scoring.</p>
                 <div class="success-actions">
+                  <ion-button fill="outline" [routerLink]="['/projects', createdProjectId()]">Record project progress</ion-button>
                   <ion-button color="primary" (click)="resetWizard()">
                     <ion-icon name="add-outline" slot="start"></ion-icon>
                     Create Another Project

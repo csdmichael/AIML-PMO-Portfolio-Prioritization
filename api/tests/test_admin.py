@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from app.main import create_app
 from app.container import build_services
 from app.options_store import OptionsStore
+from app.priority_weights import PriorityWeightsService
 from app.routes.deps import get_services
 
 
@@ -19,6 +20,9 @@ def get_test_services():
     services.options = OptionsStore(
         lake=mock_lake, contract=services.config.data_entry, path=services.config.api.oneLake.lookupsFile, ttl_seconds=0,
     )
+    services.priority_weights = PriorityWeightsService(services.config, mock_lake)
+    services.catalog = Mock()
+    services.catalog.get_project.return_value = {"projectId": "GIS-0001", "portfolioKey": "it-infosec"}
     return services
 
 
@@ -54,6 +58,8 @@ def test_admin_get_and_update_priority_weights():
     assert "defaultWeights" in data
     assert data["defaultWeights"]["businessValue"] > 0
     assert "userBase" in data["defaultWeights"]
+    assert data["portfolioOverrides"] == {}
+    assert data["etag"] is None
 
     # Update default weights and a project override
     weights = data["defaultWeights"]
@@ -83,5 +89,4 @@ def test_admin_settings():
 
     # Revert to true
     client.put("/v1/admin/settings", json={"isDemoEnvironment": True})
-
 

@@ -1,5 +1,29 @@
 # Architecture: governed Fabric evidence and ML flow
 
+## Current runtime and governance
+
+![Current runtime architecture](images/pmo-runtime-architecture.svg)
+
+The API merges published analysis with persisted project edits and progress.
+It applies one saved weight snapshot per list/export using project overrides,
+then portfolio overrides, then global defaults. Scores use the existing 40% saved
+probability score / 60% field score blend and configured rule floors. The shared
+scorer is also embedded in Notebook 02. Tiers, confidence and explanations remain
+recorded model evidence, not retrained outputs. Insufficient evidence yields an
+explicit unavailable score and preserves the original score separately.
+
+Progress is a per-project conditional JSON change with a unique revision.
+Start and completion dates are validated; started/completed commitments cannot
+be reset through ordinary edits. Legacy Active/On Hold/Completed statuses are
+protected without invented historical dates.
+
+Recommendation reports have a policy-versioned, state-aware cache. Full-register
+inventory reads include pending and committed projects for duplicate/context
+checks, while prioritization targets must be confirmed not-started projects.
+Generated actions and later human approvals both receive server-side checks.
+Case/punctuation-normalized duplicate names are blocked deterministically;
+semantic overlap is assessed by the agent, not guaranteed by a string match.
+
 ## ML algorithms, end to end
 
 ![End-to-end project walkthrough](images/End-to-end%20project%20flow%20-%20ML%20Algos.png)
@@ -51,8 +75,10 @@ flowchart LR
 
 Three agents run in the `pmo-portfolio` Foundry project, all on `gpt-5.6-sol`.
 `pmo-portfolio-copilot` answers portfolio chat from OneLake only.
-`pmo-recommendation-agent` recommends new projects and changes to existing
-projects from OneLake and public web sources. `pmo-intake-agent` prefills Quick
+`pmo-recommendation-agent:3` recommends new opportunities and prioritizes only
+confirmed not-started projects from OneLake and public web sources. Started work
+is fixed context, never a stop/replacement/deprioritization target.
+`pmo-intake-agent` prefills Quick
 Add fields from public web sources. The sequence below shows the chat path, and
 the other two follow the same pattern. Foundry runs the tools that each agent is
 configured with, and the backend validates the reply against the evidence it
@@ -78,7 +104,7 @@ sequenceDiagram
     T->>T: Validate JWT issuer/audience/caller/role
     T->>Q: Forward authenticated bounded query
     Q->>Q: Validate token again
-    Q->>L: Read approved portfolio export
+    Q->>L: Read approved export, pending entries, progress and weight settings
     L-->>Q: Export (existing 120-second cache applies)
     Q-->>T: Selected fields/rows + source/query IDs
     T-->>F: MCP tool result, not the full export

@@ -55,7 +55,7 @@ describe('DocsArchitecturePageComponent', () => {
     ]);
     const panels = Array.from(host.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
     expect(panels.filter(panel => !panel.hidden).map(panel => panel.id)).toEqual(['arch-panel-solution']);
-    expect(host.querySelector('#arch-panel-solution img')?.getAttribute('src')).toBe('assets/images/pmo-architecture.png');
+    expect(host.querySelector('#arch-panel-solution img')?.getAttribute('src')).toBe('assets/architecture/pmo-runtime-architecture.svg');
     expect(host.querySelectorAll('#arch-panel-solution app-ml-flow-diagrams')).toHaveLength(0);
     expect(host.querySelectorAll('#arch-panel-ml img')).toHaveLength(2);
 

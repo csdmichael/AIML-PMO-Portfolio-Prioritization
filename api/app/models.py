@@ -1,10 +1,11 @@
 """Response and request models. Field names are the JSON names that clients see."""
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict
 
 from app.contracts import DataEntryContract
+from app.priority_weights import PriorityScoreState, PriorityWeightScope
 
 T = TypeVar("T")
 
@@ -65,6 +66,20 @@ class ProjectListItem(BaseModel):
     recommendedAction: str | None = None
     cluster: str | None = None
     isDeleted: bool = False
+    progressStatus: Literal["notStarted", "started", "completed", "unconfirmed"]
+    hasStarted: bool | None
+    completed: bool
+    startDate: str | None = None
+    estimatedFinishDate: str | None = None
+    completionDate: str | None = None
+    changeRevision: str | None = None
+    priorityWeightScope: PriorityWeightScope | None = None
+    effectivePriorityWeights: dict[str, float] | None = None
+    fieldWeightedScore: float | None = None
+    priorityScoreState: PriorityScoreState | None = None
+    priorityScoreReason: str | None = None
+    recordedPriorityScore: float | None = None
+    recordedFieldWeightedScore: float | None = None
 
 
 class ProjectRecord(BaseModel):
@@ -157,6 +172,7 @@ class DecisionCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     projectId: str
+    recommendation: bool = False
     decision: str
     reason: str
     decidedBy: str | None = None

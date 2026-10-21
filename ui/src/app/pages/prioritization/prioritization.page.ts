@@ -242,7 +242,7 @@ import { ConfigService } from '../../services/config.service';
                                 <span class="pin-star">&#9733;</span>
                               }
                             </div>
-                            <span class="card-score">{{ p.priorityScore }}</span>
+                            <span class="card-score">{{ p.priorityScore ?? 'Awaiting analysis' }}</span>
                           </div>
 
                           <div class="card-name">{{ p.projectName }}</div>
@@ -287,7 +287,7 @@ import { ConfigService } from '../../services/config.service';
                         (click)="onSelectProject(p.projectId)"
                       >
                         <td class="td-priority">
-                          <strong>{{ p.priorityScore }}</strong>
+                          <strong>{{ p.priorityScore ?? 'Awaiting analysis' }}</strong>
                         </td>
                         <td class="td-name">
                           <span class="pid">{{ p.projectId }}</span>
@@ -1111,7 +1111,7 @@ export class PrioritizationPageComponent {
     const rows = projects.map((p) => [
       p.projectId,
       p.projectName,
-      p.priorityScore.toString(),
+      p.priorityScore?.toString() ?? 'Awaiting analysis',
       p.finalTier,
       `${p.confidenceScore}%`,
       p.businessUnit,

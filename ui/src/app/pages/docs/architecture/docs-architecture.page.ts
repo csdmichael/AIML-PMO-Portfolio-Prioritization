@@ -75,6 +75,20 @@ interface ArchStep {
 
       <section id="arch-panel-solution" role="tabpanel" aria-labelledby="arch-tab-solution"
         tabindex="0" [hidden]="activeTab() !== 'solution'">
+      <ion-card class="docs-card">
+        <ion-card-header><ion-card-title>Current runtime: progress, priority policy and three agents</ion-card-title></ion-card-header>
+        <ion-card-content>
+          <img src="assets/architecture/pmo-runtime-architecture.svg"
+            alt="Three read-only Foundry agents, private APIM OneLake tools, database-backed reports, protected project progress and scoped priority weights"
+            style="width: 100%; height: auto;" />
+          <p>Recommendations target only new or confirmed not-started work. Full-register searches include pending,
+            started and completed projects to avoid duplicate proposals. Started work is a fixed commitment.</p>
+          <p>Project start/completion and priority settings are conditional database records.
+            Project overrides take precedence over portfolio overrides and global defaults.
+            The API immediately rescores saved analysis with the shared 40% probability / 60% field-weight blend,
+            retaining rule floors and recorded predictions. State-aware cached reports load before a fresh review.</p>
+        </ion-card-content>
+      </ion-card>
       <!-- Architecture Diagram Section -->
       <ion-card class="docs-card" id="arch-diagram">
         <ion-card-header>
@@ -280,12 +294,14 @@ interface ArchStep {
         <ion-card-header><ion-card-title>Governed Foundry-to-Fabric query path</ion-card-title></ion-card-header>
         <ion-card-content>
           <p>UI → application APIM API → backend orchestrator → Foundry agent.</p>
-          <p>Foundry function request → backend validation → private APIM tool API →
-            workload-authenticated query endpoint → approved OneLake export → bounded tool result → Foundry answer.</p>
+          <p>Foundry-native MCP call → private APIM MCP server → workload-authenticated query endpoint →
+            approved OneLake export, pending entries and persisted changes → bounded tool result → Foundry answer →
+            backend evidence and eligibility validation.</p>
           <p>Dedicated workload identity; JWT audience, issuer, caller, and role checks at APIM and
             the query endpoint; no arbitrary SQL, URLs, writes, or browser-supplied evidence.
             At most 25 rows per query and four tool calls per answer.</p>
-          <p>This is a custom read-only Fabric query adapter, not a native Fabric data agent or MCP server.
+          <p>This is a solution-specific OneLake MCP server exported by APIM over a read-only query adapter,
+            not Fabric Core MCP or a general-purpose Fabric data agent.
             End-user RLS is not implemented. Private Fabric/Foundry connectivity must be verified
             for the target deployment; a private APIM alone does not make the entire application private.</p>
         </ion-card-content>
@@ -1153,8 +1169,10 @@ export class DocsArchitecturePageComponent {
         'Data entry and governance endpoints append approved records to OneLake with audit trails',
       ],
       outputs: [
-        'GET /api/v1/portfolio/latest (JSON export payload for UI rendering)',
-        'POST /api/v1/intake/ai-prefill (Extracted PMO fields with evidence quotes)',
+        'GET /api/v1/portfolio (current project view with saved weight policy applied)',
+        'POST /api/v1/intake/drafts/{draftId}/prefill (missing-only suggested fields with evidence)',
+        'PATCH /api/v1/projects/{projectId}/progress (validated start and completion records)',
+        'PUT /api/v1/admin/priority-weights (global, portfolio and project policy)',
         'POST /api/v1/decisions (Recorded human committee governance log)',
       ],
       icon: 'server-outline',
@@ -1166,7 +1184,7 @@ export class DocsArchitecturePageComponent {
       layer: 'Layer 5: Presentation & Copilot',
       technologies: ['Ionic Framework', 'Angular 19+', 'ECharts Core', 'AI Copilot Agent FAB', 'MSAL Auth'],
       inputs: [
-        'Portfolio dataset payload from backend API or OneLake fallback cache',
+        'Portfolio dataset from backend API; saved recommendation reports from a database cache',
         'Direct Lake Power BI embed tokens generated via Microsoft Entra ID',
         'Natural language queries entered into PMO Portfolio Copilot',
       ],

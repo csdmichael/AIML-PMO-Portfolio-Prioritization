@@ -8,6 +8,7 @@ from app.catalog import ProjectFilters, paginate
 from app.container import Services
 from app.models import ImportedProject, Page, ProjectCreated, ProjectImportResult, ProjectListItem, ProjectRecord, ProjectRemoved
 from app.problems import FieldIssue, ProblemError
+from app.project_progress import ProjectProgressUpdate
 from app.routes.deps import get_fresh_services, get_services, require_project_id
 
 router = APIRouter(tags=["projects"])
@@ -78,9 +79,10 @@ def import_projects(
 def create_project(
     payload: dict[str, Any] = Body(...),
     runPipeline: bool = Query(True, description="Start the pipeline after the entry is written"),
+    recommendation: bool = Query(False, description="Recheck a recommendation against the current register before approval"),
     services: Services = Depends(get_fresh_services),
 ) -> ProjectCreated:
-    entry = services.projects.create(payload)
+    entry = services.projects.create(payload, recommendation=recommendation)
     run_id: str | None = None
     warnings: list[str] = []
     if runPipeline:
@@ -112,6 +114,19 @@ def get_project(projectId: str, services: Services = Depends(get_services)) -> P
 def update_project(projectId: str, body: dict[str, Any] = Body(...), services: Services = Depends(get_fresh_services)) -> ProjectRecord:
     require_project_id(projectId, services.config.data_entry.projectIdPattern)
     return ProjectRecord.model_validate(services.projects.update_fields(projectId, body))
+
+
+@router.patch(
+    "/projects/{projectId}/progress",
+    response_model=ProjectRecord,
+    operation_id="updateProjectProgress",
+    summary="Record a project's start, planned finish, or completion without reopening committed work",
+)
+def update_project_progress(
+    projectId: str, body: ProjectProgressUpdate, services: Services = Depends(get_fresh_services),
+) -> ProjectRecord:
+    require_project_id(projectId, services.config.data_entry.projectIdPattern)
+    return ProjectRecord.model_validate(services.projects.update_progress(projectId, body))
 
 
 @router.delete(

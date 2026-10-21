@@ -25,6 +25,9 @@ DEPLOYMENT = json.loads((REPO / "infra" / "config" / "pmo-deployment.json").read
 MARKER = "# %%"
 MARKDOWN_MARKER = "# %% [markdown]"
 KERNELSPEC = {"name": "synapse_pyspark", "display_name": "Synapse PySpark", "language": "python"}
+SHARED_SOURCE_PARTS = {
+    "inference-predictions": [REPO / "api" / "app" / "priority_scoring.py"],
+}
 
 
 def split_cells(text: str) -> list[dict]:
@@ -71,7 +74,14 @@ def build(notebook: dict, check_only: bool) -> None:
     parts = sorted(parts_dir.glob("*.py"))
     if not parts:
         raise SystemExit(f"No source parts found in {notebook['sourceParts']}")
-    text = "\n".join(part.read_text(encoding="utf-8") for part in parts) + "\n"
+    shared = SHARED_SOURCE_PARTS.get(notebook["key"], [])
+    shared_text = "\n".join(
+        "# %%\n# Shared API/notebook priority scorer (generated from api/app/priority_scoring.py).\n"
+        + part.read_text(encoding="utf-8")
+        for part in shared
+    )
+    parts_text = "\n".join(part.read_text(encoding="utf-8") for part in parts)
+    text = (shared_text + "\n" if shared_text else "") + parts_text + "\n"
     cells = split_cells(text)
     lakehouse = {
         "default_lakehouse": DEPLOYMENT["fabric"]["lakehouseId"],

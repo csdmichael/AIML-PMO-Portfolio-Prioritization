@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory)][string]$ApiAppName,
     [Parameter(Mandatory)][string]$FoundryProjectResourceId,
+    [switch]$SchemaOnly,
     [switch]$Apply
 )
 
@@ -57,11 +58,50 @@ function Invoke-JsonBody {
     }
 }
 
+function Sync-PortfolioToolSchema {
+    param([string]$ToolApiArm, [object]$ExistingOperation = $null)
+    $toolJson = & uv run --frozen --project (Join-Path $repo "api") --directory (Join-Path $repo "api") python -c "import json; from app.agent_tools import tool_definition; print(json.dumps(tool_definition()))"
+    if ($LASTEXITCODE -ne 0) { throw "Unable to load the shared portfolio query schema." }
+    $tool = $toolJson | ConvertFrom-Json
+    Invoke-JsonBody PUT "$ToolApiArm/schemas/portfolio-query?api-version=2024-05-01" @{
+        properties = @{ contentType = "application/vnd.oai.openapi.components+json"; document = @{
+            components = @{ schemas = @{ PortfolioQuery = $tool.parameters } }
+        } }
+    } | Out-Null
+    $properties = if ($null -ne $ExistingOperation) {
+        $ExistingOperation.properties
+    } else {
+        @{
+            displayName = "query_portfolio"; method = "POST"; urlTemplate = "/portfolio/query"
+            request = @{ representations = @(@{ contentType = "application/json"; schemaId = "portfolio-query"; typeName = "PortfolioQuery" }) }
+        }
+    }
+    $properties.description = $tool.description
+    Invoke-JsonBody PUT "$ToolApiArm/operations/queryFabricPortfolio?api-version=2024-05-01" @{ properties = $properties } | Out-Null
+    return $tool
+}
+
 $account = Invoke-AzJson @("account", "show")
 if ($account.id -ne $cfg.subscriptionId -or $account.tenantId -ne $cfg.tenantId) { throw "Select the approved subscription and tenant first." }
 $apim = Invoke-AzJson @("apim", "show", "-g", $cfg.reuse.apim.resourceGroup, "-n", $cfg.reuse.apim.name)
 if ($apim.publicNetworkAccess -ne "Disabled") { throw "This private-tool rollout requires APIM public access to remain disabled." }
 $api = Invoke-AzJson @("webapp", "show", "-g", $cfg.resourceGroup, "-n", $ApiAppName)
+$toolApiId = "$ApiAppName-tools"
+$arm = "https://management.azure.com/subscriptions/$($cfg.subscriptionId)/resourceGroups/$($cfg.reuse.apim.resourceGroup)/providers/Microsoft.ApiManagement/service/$($cfg.reuse.apim.name)/apis/$toolApiId"
+if ($SchemaOnly) {
+    $operation = Invoke-AzJson @("rest", "--method", "get", "--url", "$arm/operations/queryFabricPortfolio?api-version=2024-05-01")
+    if ($operation.properties.method -ne "POST" -or $operation.properties.urlTemplate -ne "/portfolio/query") {
+        throw "The existing query operation does not match the approved tool path."
+    }
+    if (-not $Apply) {
+        Write-Output "Plan: refresh only the portfolio-query schema and queryFabricPortfolio description on the existing private tool API."
+        Write-Output "Policies, identities, permissions, networks, application settings and data remain unchanged."
+        return
+    }
+    Sync-PortfolioToolSchema -ToolApiArm $arm -ExistingOperation $operation | Out-Null
+    Write-Output "Updated only the existing portfolio tool schema and operation description; MCP retains the same operation reference."
+    return
+}
 $project = Invoke-AzJson @("rest", "--method", "get", "--url", "https://management.azure.com${FoundryProjectResourceId}?api-version=2025-10-01-preview")
 if (-not $project.identity.principalId) { throw "The Foundry project must have a system-assigned identity." }
 $foundry = Invoke-AzJson @("cognitiveservices", "account", "show", "-g", $cfg.resourceGroup, "-n", $accountName)
@@ -133,26 +173,11 @@ if ($integrations.Count -eq 0) {
     throw "API already uses a different integration subnet. Refusing to replace it."
 }
 
-$toolApiId = "$ApiAppName-tools"
-$arm = "https://management.azure.com/subscriptions/$($cfg.subscriptionId)/resourceGroups/$($cfg.reuse.apim.resourceGroup)/providers/Microsoft.ApiManagement/service/$($cfg.reuse.apim.name)/apis/$toolApiId"
 Invoke-JsonBody PUT "${arm}?api-version=2024-05-01" @{
     properties = @{ displayName = "PMO read-only Fabric tools"; path = "pmo-tools"; protocols = @("https");
         serviceUrl = "https://$($api.defaultHostName)"; subscriptionRequired = $false }
 } | Out-Null
-$toolJson = & uv run --frozen --project (Join-Path $repo "api") --directory (Join-Path $repo "api") python -c "import json; from app.agent_tools import tool_definition; print(json.dumps(tool_definition()))"
-if ($LASTEXITCODE -ne 0) { throw "Unable to load the shared portfolio query schema." }
-$tool = $toolJson | ConvertFrom-Json
-Invoke-JsonBody PUT "$arm/schemas/portfolio-query?api-version=2024-05-01" @{
-    properties = @{ contentType = "application/vnd.oai.openapi.components+json"; document = @{
-        components = @{ schemas = @{ PortfolioQuery = $tool.parameters } }
-    } }
-} | Out-Null
-Invoke-JsonBody PUT "$arm/operations/queryFabricPortfolio?api-version=2024-05-01" @{
-    properties = @{
-        displayName = "query_portfolio"; description = $tool.description; method = "POST"; urlTemplate = "/portfolio/query"
-        request = @{ representations = @(@{ contentType = "application/json"; schemaId = "portfolio-query"; typeName = "PortfolioQuery" }) }
-    }
-} | Out-Null
+$tool = Sync-PortfolioToolSchema -ToolApiArm $arm
 $policy = @"
 <policies>
   <inbound>

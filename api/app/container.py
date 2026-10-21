@@ -15,6 +15,7 @@ from app.onelake import OneLakeClient
 from app.options_store import OptionsStore
 from app.pipeline import PipelineService
 from app.portfolios import PortfolioService
+from app.priority_weights import PriorityWeightsService
 from app.project_changes import ProjectChanges
 from app.project_import import ProjectImport
 from app.projects import ProjectService
@@ -34,6 +35,7 @@ class Services:
     catalog: Catalog
     projects: ProjectService
     changes: ProjectChanges
+    priority_weights: PriorityWeightsService
     demo: DemoDataService
     imports: ProjectImport
     portfolios: PortfolioService
@@ -72,8 +74,10 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         entries=entries, paths=paths, contract=config.data_entry,
         cache=TtlCache(api.cache.ttlSeconds), reset_cache=TtlCache(api.cache.ttlSeconds),
     )
+    priority_weights = PriorityWeightsService(config, lake)
     catalog = Catalog(
         exports=exports, entries=entries, paths=paths, statuses=api.projects, contract=config.data_entry, changes=changes,
+        priority_weights=priority_weights,
     )
     projects = ProjectService(
         lake=lake,
@@ -124,6 +128,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         catalog=catalog,
         projects=projects,
         changes=changes,
+        priority_weights=priority_weights,
         demo=DemoDataService(config=config, lake=lake, paths=paths, catalog=catalog, changes=changes),
         imports=imports,
         portfolios=portfolios,
@@ -132,7 +137,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         options=options,
         agent=FoundryAgentClient(load_agent_settings("portfolio-agent.json"), credentials),
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
-        recommendation_cache=RecommendationCache(lake=lake, paths=paths),
+        recommendation_cache=RecommendationCache(lake=lake, paths=paths, state_provider=catalog.agent_snapshot),
         intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),
         tool_tokens=ToolTokenVerifier(),
     )

@@ -86,6 +86,29 @@ describe('DataApiService', () => {
     request.flush({});
   });
 
+  it('records project dates and revision through the dedicated progress API', () => {
+    const body = {
+      hasStarted: true, startDate: '2020-01-01', estimatedFinishDate: '2020-12-31',
+      completed: false, completionDate: null, expectedRevision: 'revision-1',
+    };
+    service.updateProjectProgress('GIS-0001', body).subscribe();
+    const request = httpController.expectOne('/api/v1/projects/GIS-0001/progress');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual(body);
+    request.flush({});
+  });
+
+  it('forces recommendation-origin guards on approved actions', () => {
+    service.createProject({ projectName: 'New Project' }, true, true).subscribe();
+    const create = httpController.expectOne((request) => request.url === '/api/v1/projects');
+    expect(create.request.params.get('recommendation')).toBe('true');
+    create.flush({});
+    service.postDecision({ projectId: 'GIS-0001', recommendation: false }, true).subscribe();
+    const decision = httpController.expectOne('/api/v1/decisions');
+    expect(decision.request.body.recommendation).toBe(true);
+    decision.flush({});
+  });
+
   it('loads the demo catalog through the API rather than browser sample data', () => {
     service.getDemoProjectCatalog().subscribe();
     const request = httpController.expectOne('/api/v1/demo/projects');

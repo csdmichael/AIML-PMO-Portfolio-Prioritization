@@ -53,13 +53,13 @@
   ],
   "recommendations": {
     "title": "AI Recommendations",
-    "subtitle": "Your AI assistant reviews approved project records in the database and public research to suggest new opportunities and changes to existing projects. You decide which projects to add and which recommendations to approve.",
+    "subtitle": "Your AI assistant reviews database records and public research to suggest new opportunities and prioritize projects that have not started. Started work stays protected. You approve every action.",
     "researchPlaceholder": "Ask a question about your portfolio",
     "askLabel": "Ask assistant",
     "quickPrompts": [
-      { "label": "Priority elevation", "prompt": "Which projects should have their priority raised, and why?" },
-      { "label": "Skill bottlenecks", "prompt": "Where are the skill capacity bottlenecks, and which projects depend on them?" },
-      { "label": "New opportunities", "prompt": "What new projects should each portfolio consider, based on the evidence and public context?" }
+      { "label": "Not-started priorities", "prompt": "Which confirmed not-started projects should be prioritized next, and why? Keep started work unchanged." },
+      { "label": "Available capacity", "prompt": "Which not-started projects fit available skill capacity without disrupting started commitments?" },
+      { "label": "New opportunities", "prompt": "What genuinely new projects should each portfolio consider? Check the full register for existing or overlapping work first." }
     ]
   },
   "breakpoints": {

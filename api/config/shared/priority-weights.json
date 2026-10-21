@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Field weights and per-project overrides determining priority score impact in Fabric OneLake and ML Notebooks.",
+  "version": 2,
+  "description": "Relative field weights for priority scores: project overrides inherit portfolio overrides, which inherit global defaults. Scores use 40% saved ML evidence and 60% normalized field weights, preserving recorded rule floors. Runtime settings are JSON records in Tables/priority_field_weights/records.json; saved analysis is reweighted immediately and future projects inherit their portfolio's weights.",
   "availableFields": [
     {
       "key": "businessValue",
@@ -126,6 +126,7 @@
     "effort": 0.0,
     "skillDemand": 0.0
   },
+  "portfolioOverrides": {},
   "projectOverrides": {
     "GIS-0001": {
       "businessValue": 30.0,

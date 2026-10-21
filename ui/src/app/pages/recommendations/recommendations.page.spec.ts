@@ -130,7 +130,7 @@ describe('AI recommendations page', () => {
     const action = report.sections[0].items[0].actions[0];
     fixture.componentInstance.runAction(0, 0, 0, action);
     fixture.detectChanges();
-    expect(api.postDecision).toHaveBeenCalledWith(action.payload);
+    expect(api.postDecision).toHaveBeenCalledWith(action.payload, true);
     const status = fixture.nativeElement.querySelector('.action-status.failed');
     expect(status?.textContent).toContain('decision: must be a tier');
   });

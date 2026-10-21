@@ -59,82 +59,46 @@ print(f"rule triggers: {RULE_TRIGGERS['rule_id'].value_counts().to_dict()}")
 
 # %%
 WEIGHTS = CONFIG["confidence"]["weights"]
-PRIORITY_WEIGHT = CONFIG["tiers"]["priorityWeight"]
 dq_totals = DQ.groupby("project_id")["passed"].agg(["sum", "size"])
 P["quality"] = (dq_totals["sum"] / dq_totals["size"]).reindex(P.index).fillna(0.0)
 P["completeness"] = P["signals_present"] / len(CONFIG["features"])
 P["confidence_score"] = (100 * (WEIGHTS["completeness"] * P["completeness"] + WEIGHTS["quality"] * P["quality"] + WEIGHTS["modelCertainty"] * P["model_certainty"])).round(CONFIG["confidence"]["decimals"])
 P["confidence_level"] = P["confidence_score"].map(lambda s: next(level["name"] for level in CONFIG["confidence"]["levels"] if s >= level["minScore"]))
 
-# Load configured field weights from OneLake config or default table
+# Runtime JSON records are authoritative; the config is only the initial fallback.
+# The shared scorer is embedded by fabric/scripts/build_notebooks.py.
 WEIGHTS_FILE = CFG_DIR / "priority-weights.json"
-DEFAULT_FIELD_WEIGHTS = {
-    "businessValue": 25.0,
-    "userBase": 20.0,
-    "regulatorySecurity": 15.0,
-    "timingUrgency": 15.0,
-    "sponsorPriority": 10.0,
-    "dtAlignment": 5.0,
-    "risk": 5.0,
-    "cost": 5.0,
-    "dependencies": 0.0,
-    "effort": 0.0,
-    "skillDemand": 0.0,
+RUNTIME_WEIGHTS_FILE = LAKE / PRIORITY_WEIGHTS_PATH
+pw_cfg = json.loads(WEIGHTS_FILE.read_text(encoding="utf-8"))
+pw_records = json.loads(RUNTIME_WEIGHTS_FILE.read_text(encoding="utf-8")) if RUNTIME_WEIGHTS_FILE.exists() else None
+DEFAULT_FIELD_WEIGHTS, PORTFOLIO_WEIGHT_OVERRIDES, PROJECT_WEIGHT_OVERRIDES = priority_weight_settings(pw_cfg, pw_records)
+
+ML_BASE_SCORES = {
+    pid: saved_ml_base_score(
+        {"tierProbabilities": {key: float(PROBA[i, t]) for t, key in enumerate(TIER_PROBABILITY_KEYS)}}, CONFIG,
+    )
+    for i, pid in enumerate(X.index)
 }
-PROJECT_WEIGHT_OVERRIDES = {}
-if WEIGHTS_FILE.exists():
+EFFECTIVE_FIELD_WEIGHTS, PRIORITY_WEIGHT_SCOPES = {}, {}
+FIELD_SCORES, PRIORITY_SCORES, PRIORITY_SCORE_ERRORS = {}, {}, {}
+for pid, row in P.iterrows():
+    scope, weights = resolve_priority_weights(
+        DEFAULT_FIELD_WEIGHTS, PORTFOLIO_WEIGHT_OVERRIDES, PROJECT_WEIGHT_OVERRIDES,
+        project_id=pid, portfolio_key=row.get("portfolio_key"),
+    )
+    EFFECTIVE_FIELD_WEIGHTS[pid], PRIORITY_WEIGHT_SCOPES[pid] = weights, scope
     try:
-        pw_cfg = json.loads(WEIGHTS_FILE.read_text(encoding="utf-8"))
-        DEFAULT_FIELD_WEIGHTS = pw_cfg.get("defaultWeights", DEFAULT_FIELD_WEIGHTS)
-        PROJECT_WEIGHT_OVERRIDES = pw_cfg.get("projectOverrides", {})
-    except Exception as exc:
-        print(f"Using default priority weights: {exc}")
-
-# Create and persist gold.priority_field_weights table in OneLake
-pw_rows = []
-for k, v in DEFAULT_FIELD_WEIGHTS.items():
-    pw_rows.append(("*", k, k, float(v), True, pd.Timestamp(SCORED_AT)))
-for pid, overrides in PROJECT_WEIGHT_OVERRIDES.items():
-    for k, v in overrides.items():
-        pw_rows.append((pid, k, k, float(v), True, pd.Timestamp(SCORED_AT)))
-PW_DF = pd.DataFrame(pw_rows, columns=["project_id", "field_key", "field_label", "weight_percent", "is_active", "updated_at"])
-write_table(PW_DF, "gold.priority_field_weights")
-
-
-def compute_field_weighted_score(row, weights):
-    months_val = float(row.get("months") or 36)
-    urgency_val = min(1.0, max(0.0, (CONFIG["urgency"]["horizonMonths"] - months_val) / CONFIG["urgency"]["horizonMonths"]))
-    factors = {
-        "businessValue": (float(row.get("business_value_num") or 1) / 5.0) * 100.0,
-        "userBase": min(100.0, max(0.0, (math.log10(max(1.0, float(row.get("user_base") or 10))) / 5.0) * 100.0)),
-        "regulatorySecurity": 100.0 if row.get("regulatory") == 1 else 0.0,
-        "timingUrgency": urgency_val * 100.0,
-        "sponsorPriority": (float(row.get("sponsor_priority") or 1) / 4.0) * 100.0,
-        "dtAlignment": 100.0 if row.get("dt_alignment") else 0.0,
-        "risk": (float(row.get("risk") or 1) / 4.0) * 100.0,
-        "cost": min(100.0, max(0.0, ((math.log10(max(1000.0, float(row.get("cost_usd") or 10000))) - 4.0) / 3.0) * 100.0)),
-        "dependencies": min(100.0, float(row.get("dependencies") or 0) * 20.0),
-        "effort": min(100.0, float(row.get("effort_person_weeks") or 0) * 2.5),
-        "skillDemand": min(100.0, float(row.get("skill_demand_fte") or 0) * 10.0),
-    }
-    total_w = sum(weights.values()) or 1.0
-    score = sum(factors.get(k, 0.0) * weights.get(k, 0.0) for k in weights) / total_w
-    return round(score, 1)
-
-
-ml_base_scores = [
-    round(CONFIG["priority"]["scale"] * sum(PROBA[i, t] * PRIORITY_WEIGHT[TIERS[t]] for t in range(len(TIERS))), CONFIG["priority"]["decimals"])
-    for i in range(len(P))
-]
-P["field_weighted_score"] = [
-    compute_field_weighted_score(row, PROJECT_WEIGHT_OVERRIDES.get(pid, DEFAULT_FIELD_WEIGHTS))
-    for pid, row in P.iterrows()
-]
-P["priority_score"] = [
-    round(0.4 * ml + 0.6 * fw, 1)
-    for ml, fw in zip(ml_base_scores, P["field_weighted_score"])
-]
-P["priority_score"] = [max(score, FLOORS[pid]) if FLOORS[pid] else score for pid, score in zip(P.index, P["priority_score"])]
+        FIELD_SCORES[pid] = compute_field_weighted_score(row, weights, CONFIG)
+        PRIORITY_SCORES[pid] = blend_priority_score(ML_BASE_SCORES[pid], FIELD_SCORES[pid], FLOORS[pid])
+    except ScoringEvidenceError as exc:
+        FIELD_SCORES[pid], PRIORITY_SCORES[pid] = None, None
+        PRIORITY_SCORE_ERRORS[pid] = str(exc)
+P["ml_base_score"] = pd.Series(ML_BASE_SCORES, dtype=float)
+P["field_weighted_score"] = pd.Series(FIELD_SCORES, dtype=float)
+P["priority_score"] = pd.Series(PRIORITY_SCORES, dtype=float)
+P["priority_floor"] = pd.Series(FLOORS, dtype=float)
+P["priority_weight_scope"] = pd.Series(PRIORITY_WEIGHT_SCOPES)
+P["priority_score_state"] = ["requires-analysis" if pid in PRIORITY_SCORE_ERRORS else "weighted" for pid in P.index]
 
 # %%
 SUPPLY_UTIL = CONFIG["capacity"]["supplyUtilization"]

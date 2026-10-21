@@ -192,7 +192,7 @@ import { DataApiService } from '../../services/data-api.service';
 
                 <div class="form-field col-half">
                   <label class="field-label">Priority Score (0 - 100)</label>
-                  <div class="readonly-value">{{ form().priorityScore }}</div>
+                  <div class="readonly-value">{{ form().priorityScore ?? 'Awaiting analysis' }}</div>
                 </div>
 
                 <div class="form-field col-half">

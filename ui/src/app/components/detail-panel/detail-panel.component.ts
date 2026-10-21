@@ -23,6 +23,7 @@ import { DataApiService } from '../../services/data-api.service';
 import { ConfidenceRingComponent } from '../confidence-ring/confidence-ring.component';
 import { Project, DecisionAction, LocalDecision } from '../../models/portfolio.models';
 import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
+import { ProjectProgressComponent } from '../project-progress/project-progress.component';
 import { ConfigService } from '../../services/config.service';
 import { problemMessage } from '../../core/problem-detail';
 import { Observable } from 'rxjs';
@@ -48,6 +49,7 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
     ConfidenceRingComponent,
     NgxEchartsDirective,
     EditProjectModalComponent,
+    ProjectProgressComponent,
   ],
   providers: [provideEchartsCore({ echarts })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -108,13 +110,14 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                 <ion-icon name="create-outline"></ion-icon>
                 Edit Project & AI Signals
               </button>
-              @if (p.projectStatus !== 'Backlog') {
+              @if (!p.isDeleted) {
+                <button type="button" class="life-btn active" (click)="isRecordingProgress.set(!isRecordingProgress())">
+                  {{ p.completed ? 'View completion' : p.hasStarted ? 'Update progress / complete' : 'Record start / progress' }}
+                </button>
+              }
+              @if (p.progressStatus === 'notStarted' && p.projectStatus !== 'Backlog') {
                 <button type="button" class="life-btn backlog" (click)="runLifecycle(store.setProjectStatus(p.projectId, 'Backlog'))">
                   Mark as Backlog
-                </button>
-              } @else {
-                <button type="button" class="life-btn active" (click)="runLifecycle(store.setProjectStatus(p.projectId, 'Active'))">
-                  Move to Active
                 </button>
               }
               @if (p.isDeleted) {
@@ -133,6 +136,25 @@ echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
                 Permanent Delete
               </button>
             </div>
+
+            <p class="progress-summary">
+              {{ p.completed ? 'Completed' : p.hasStarted ? 'Started - protected commitment' : p.progressStatus === 'notStarted' ? 'Not started - eligible for recommendations' : 'Progress confirmation needed' }}
+              @if (p.hasStarted) {
+                <br />Start: {{ p.startDate || 'Not recorded' }}. Estimated finish: {{ p.estimatedFinishDate || 'Not recorded' }}.
+              }
+              @if (p.completed) {
+                Completion: {{ p.completionDate || 'Not recorded' }}.
+              }
+            </p>
+            @if (p.priorityScoreReason) {
+              <p role="status">{{ p.priorityScoreReason }} No replacement score has been invented.</p>
+            }
+            @if (p.priorityWeightScope) {
+              <p>Priority settings: {{ p.priorityWeightScope }}. Project choices take precedence over portfolio settings, then organization defaults.</p>
+            }
+            @if (isRecordingProgress()) {
+              <app-project-progress [project]="p" (saved)="isRecordingProgress.set(false)" (closed)="isRecordingProgress.set(false)" />
+            }
 
             <!-- TIER PREDICTION & RULE OVERRIDES -->
             <div class="detail-section tier-section">
@@ -762,6 +784,7 @@ export class DetailPanelComponent {
   private readonly selectedId = computed(() => this.store.selectedProject()?.projectId ?? null);
 
   readonly isEditing = signal<boolean>(false);
+  readonly isRecordingProgress = signal(false);
   readonly editError = signal<string | null>(null);
   readonly lifecycleError = signal<string | null>(null);
   readonly latestDecision = signal<LocalDecision | null>(null);
@@ -801,6 +824,7 @@ export class DetailPanelComponent {
 
   private resetFor(projectId: string | null): void {
     this.isEditing.set(false);
+    this.isRecordingProgress.set(false);
     this.lifecycleError.set(null);
     this.decisionError.set(null);
     this.latestDecision.set(null);

@@ -5,6 +5,8 @@ import { ConfigService } from './config.service';
 import {
   PortfolioDataset,
   Project,
+  ProjectProgressUpdate,
+  ProjectDetailRecord,
   LocalDecision,
   CapacityBySkill,
   DecisionList,
@@ -13,6 +15,7 @@ import {
 } from '../models/portfolio.models';
 import { RecommendationReport } from '../models/recommendation.models';
 import { OneLakeDatasetList, OneLakeDatasetView } from '../models/onelake.models';
+import type { PriorityWeightsResponse, PriorityWeightsUpdateRequest } from '../pages/admin/priority-weights/priority-weights.models';
 import {
   OptionsResponse,
   DemoProjectCatalog,
@@ -90,18 +93,23 @@ export class DataApiService {
     });
   }
 
-  getProject(projectId: string): Observable<Project> {
-    return this.http.get<Project>(`${this.base}/projects/${encodeURIComponent(projectId)}`);
+  getProject(projectId: string): Observable<ProjectDetailRecord> {
+    return this.http.get<ProjectDetailRecord>(`${this.base}/projects/${encodeURIComponent(projectId)}`);
   }
 
-  createProject(projectData: Record<string, unknown>, runPipeline = true): Observable<CreateProjectResponse> {
-    const params = new HttpParams().set('runPipeline', runPipeline.toString());
+  createProject(projectData: Record<string, unknown>, runPipeline = true, recommendation = false): Observable<CreateProjectResponse> {
+    let params = new HttpParams().set('runPipeline', runPipeline.toString());
+    if (recommendation) params = params.set('recommendation', 'true');
     return this.http.post<CreateProjectResponse>(`${this.base}/projects`, projectData, { params });
   }
 
   /** Changes a project's fields, or soft deletes or restores it (isDeleted). The API validates every field. */
   updateProject(projectId: string, changes: Record<string, unknown>): Observable<Project> {
     return this.http.patch<Project>(`${this.base}/projects/${encodeURIComponent(projectId)}`, changes);
+  }
+
+  updateProjectProgress(projectId: string, progress: ProjectProgressUpdate): Observable<ProjectDetailRecord> {
+    return this.http.patch<ProjectDetailRecord>(`${this.base}/projects/${encodeURIComponent(projectId)}/progress`, progress);
   }
 
   /** Removes a project from every view. Its entry stays in OneLake for audit. */
@@ -238,15 +246,12 @@ export class DataApiService {
     return this.http.put<{ isDemoEnvironment: boolean; environmentName?: string }>(`${this.base}/admin/settings`, settings);
   }
 
-  getPriorityWeights(): Observable<any> {
-    return this.http.get<any>(`${this.base}/admin/priority-weights`);
+  getPriorityWeights(): Observable<PriorityWeightsResponse> {
+    return this.http.get<PriorityWeightsResponse>(`${this.base}/admin/priority-weights`);
   }
 
-  updatePriorityWeights(data: {
-    defaultWeights?: Record<string, number>;
-    projectOverrides?: Record<string, Record<string, number>>;
-  }): Observable<any> {
-    return this.http.put<any>(`${this.base}/admin/priority-weights`, data);
+  updatePriorityWeights(data: PriorityWeightsUpdateRequest): Observable<PriorityWeightsResponse> {
+    return this.http.put<PriorityWeightsResponse>(`${this.base}/admin/priority-weights`, data);
   }
 
   getLookups(): Observable<any> {
@@ -274,8 +279,8 @@ export class DataApiService {
     return this.http.post<RecommendationReport>(`${this.base}/recommendations/research`, { query, portfolioKey });
   }
 
-  postDecision(decision: Record<string, unknown>): Observable<{ decisionId: string }> {
-    return this.http.post<{ decisionId: string }>(`${this.base}/decisions`, decision);
+  postDecision(decision: Record<string, unknown>, recommendation = false): Observable<{ decisionId: string }> {
+    return this.http.post<{ decisionId: string }>(`${this.base}/decisions`, { ...decision, recommendation });
   }
 
   listOneLakeDatasets(): Observable<OneLakeDatasetList> {

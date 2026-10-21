@@ -69,6 +69,14 @@ describe('Portfolio Filter, Sort, Group, and Rollup logic', () => {
   const p3 = createDummyProject('GIS-0003', 'Gamma Project', 'Supply Chain', 'Fremont', 80, 45, 3000000);
   const list = [p1, p2, p3];
 
+  it('keeps unavailable scores visible by default, unranked last, and out of numeric score ranges', () => {
+    const awaiting: Project = { ...p1, projectId: 'pending', priorityScore: null, priorityScoreState: 'awaiting-analysis' };
+    expect(filterProjects([awaiting], DEFAULT_FILTER_CRITERIA)).toEqual([awaiting]);
+    expect(filterProjects([awaiting], { ...DEFAULT_FILTER_CRITERIA, minPriorityScore: 1 })).toEqual([]);
+    expect(sortProjects([awaiting, p2, p1], 'priority', 'desc').map((p) => p.projectId)).toEqual(['GIS-0001', 'GIS-0002', 'pending']);
+    expect(sortProjects([awaiting, p2, p1], 'priority', 'asc').map((p) => p.projectId)).toEqual(['GIS-0002', 'GIS-0001', 'pending']);
+  });
+
   it('filters by search term across ID and name', () => {
     const res = filterProjects(list, { ...DEFAULT_FILTER_CRITERIA, search: 'Beta' });
     expect(res.length).toBe(1);

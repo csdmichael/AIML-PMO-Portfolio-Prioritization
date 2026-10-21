@@ -7,6 +7,7 @@ the values the pipeline computed until it does.
 
 from collections.abc import Callable, Mapping
 from typing import Any, Literal
+from uuid import uuid4
 
 from app.cache import TtlCache
 from app.contracts import DataEntryContract
@@ -14,9 +15,11 @@ from app.files import utc_now
 from app.lake_paths import LakePaths
 from app.onelake import LakeConflict
 from app.problems import ProblemError
+from app.project_progress import progress_fields
 from app.store import EntryStore
 
 CACHE_KEY = "changes"
+_UNSET = object()
 
 PortfolioIndex = Callable[[], Mapping[str, Mapping[str, Any]]]
 
@@ -37,6 +40,7 @@ class ProjectChanges:
         self._reset_cache = reset_cache or TtlCache(0)
         self._export_keys = {rule.key: rule.exportKey or rule.key for rule in contract.projectFields}
         self._skill_names = {skill.key: skill.displayName for skill in contract.options.skills}
+        self._progress_rules = contract.progress
 
     def all(self) -> dict[str, dict[str, Any]]:
         return self._cache.get_or_load(CACHE_KEY, self._load_all)
@@ -51,6 +55,8 @@ class ProjectChanges:
         values: Mapping[str, Any] | None = None,
         is_deleted: bool | None = None,
         deleted: bool = False,
+        progress: Mapping[str, Any] | None = None,
+        expected_revision: str | None | object = _UNSET,
     ) -> dict[str, Any]:
         path = self._paths.project_change(project_id)
         found = self._entries.get_with_etag(path)
@@ -59,12 +65,17 @@ class ProjectChanges:
         if found is not None and (current is None or found[0].get("resetRevision") == current.get("resetRevision")):
             current = found[0]
         record: dict[str, Any] = dict(current) if current is not None else {"projectId": project_id, "values": {}}
+        if expected_revision is not _UNSET and record.get("revision") != expected_revision:
+            raise ProblemError(409, "The project changed. Reload its current details before saving.", slug="conflict")
         if values:
             record["values"] = {**record.get("values", {}), **values}
         if is_deleted is not None:
             record["isDeleted"] = is_deleted
         if deleted:
             record["deleted"] = True
+        if progress is not None:
+            record["progress"] = dict(progress)
+        record["revision"] = str(uuid4())
         record["updatedAtUtc"] = utc_now()
         try:
             if found is None:
@@ -88,8 +99,7 @@ class ProjectChanges:
         Export records use the export's key names; pending entries use the contract's key names.
         """
         change = self.get(str(record.get("projectId")))
-        if change is None:
-            return dict(record)
+        change = change or {}
         if change.get("deleted"):
             return None
         values: Mapping[str, Any] = change.get("values") or {}
@@ -111,13 +121,16 @@ class ProjectChanges:
             is_deleted = bool(change["isDeleted"])
             applied["isDeleted"] = is_deleted
             applied["deletedAt"] = change.get("updatedAtUtc") if is_deleted else None
+        applied.update(change.get("progress") or {})
+        applied["changeRevision"] = change.get("revision")
+        applied.update(progress_fields(applied, self._progress_rules))
         return applied
 
     def apply_export(self, export: Mapping[str, Any], *, portfolios: PortfolioIndex) -> dict[str, Any]:
         """The portfolio export with the project changes applied. The rollups stay as the pipeline computed them."""
         export = self.extend_export(export)
         projects = export.get("projects")
-        if not self.all() or not isinstance(projects, list):
+        if not isinstance(projects, list):
             return dict(export)
         applied: list[Any] = []
         for item in projects:

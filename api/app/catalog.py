@@ -9,13 +9,19 @@ from app.config import ProjectSettings
 from app.contracts import DataEntryContract
 from app.lake_paths import LakePaths
 from app.problems import ProblemError
+from app.priority_weights import PriorityWeightsService
 from app.project_changes import ProjectChanges
+from app.project_progress import PROGRESS_FIELDS
 from app.store import EntryStore, ExportReader
 
 T = TypeVar("T")
 _STATIC_OPTION_SOURCE = "options."
 _DYNAMIC_PORTFOLIOS = "portfolios"
 _DYNAMIC_PROGRAMS = "programsOfPortfolio"
+_WEIGHT_FIELDS = (
+    "priorityWeightScope", "effectivePriorityWeights", "fieldWeightedScore", "priorityScoreState", "priorityScoreReason",
+    "recordedPriorityScore", "recordedFieldWeightedScore", "mlBaseScore", "priorityFloor",
+)
 
 
 @dataclass(frozen=True)
@@ -106,6 +112,7 @@ class Catalog:
         statuses: ProjectSettings,
         contract: DataEntryContract,
         changes: ProjectChanges,
+        priority_weights: PriorityWeightsService | None = None,
     ) -> None:
         self._exports = exports
         self._entries = entries
@@ -113,6 +120,7 @@ class Catalog:
         self._statuses = statuses
         self._contract = contract
         self._changes = changes
+        self._priority_weights = priority_weights
 
     def options(self) -> CatalogOptions:
         return CatalogOptions(contract=self._contract, catalog=self)
@@ -125,7 +133,23 @@ class Catalog:
         return self._changes.extend_export(value) if isinstance(value, dict) else {}
 
     def export(self) -> dict[str, Any]:
-        return self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
+        export = self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
+        return self._priority_weights.apply_export(export) if self._priority_weights is not None else export
+
+    def agent_snapshot(self) -> dict[str, Any]:
+        """Read the full register, including pending work, without inventing analysis scores."""
+        self._changes.invalidate()
+        snapshot = self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
+        projects = list(snapshot.get("projects") or [])
+        known = {item["projectId"] for item in projects}
+        portfolios = self.portfolio_index()
+        for _, entry in self._entries.list(self._paths.project_entries_folder()):
+            if entry.get("projectId") and entry["projectId"] not in known:
+                record = self._changes.apply(entry, shape="entry", portfolios=lambda: portfolios)
+                if record is not None:
+                    projects.append({**record, **self._summary_from_entry(record, portfolios)})
+        snapshot = {**snapshot, "projects": projects}
+        return self._priority_weights.apply_export(snapshot) if self._priority_weights is not None else snapshot
 
     def _export_projects(self) -> list[dict[str, Any]]:
         return [item for item in self._export().get("projects") or [] if isinstance(item, dict)]
@@ -154,6 +178,7 @@ class Catalog:
 
     def list_projects(self, filters: ProjectFilters) -> list[dict[str, Any]]:
         portfolios = self.portfolio_index()
+        weights = self._priority_weights.get() if self._priority_weights is not None else None
         processed = self._export_projects()
         processed_ids = {item.get("projectId") for item in processed}
         items: list[dict[str, Any]] = []
@@ -162,12 +187,16 @@ class Catalog:
                 continue
             record = self._changes.apply(item, shape="export", portfolios=self.portfolio_index)
             if record is not None:
+                if self._priority_weights is not None:
+                    record = self._priority_weights.apply_project(record, weights)
                 items.append(self._summary_from_export(record))
         for _, entry in self._entries.list(self._paths.project_entries_folder()):
             project_id = entry.get("projectId")
             if project_id and project_id not in processed_ids:
                 record = self._changes.apply({**entry, "projectId": project_id}, shape="entry", portfolios=self.portfolio_index)
                 if record is not None:
+                    if self._priority_weights is not None:
+                        record = self._priority_weights.apply_project({**record, "status": self._statuses.statusPending}, weights)
                     items.append(self._summary_from_entry(record, portfolios))
         matching = [item for item in items if _matches(item, filters)]
         return sorted(matching, key=lambda item: str(item["projectId"]))
@@ -178,7 +207,10 @@ class Catalog:
             for record in self._export_projects():
                 if record.get("projectId") == project_id:
                     applied = self._changes.apply(record, shape="export", portfolios=self.portfolio_index)
-                    return None if applied is None else {**applied, "status": self._statuses.statusProcessed}
+                    if applied is None:
+                        return None
+                    applied = {**applied, "status": self._statuses.statusProcessed}
+                    return self._priority_weights.apply_project(applied) if self._priority_weights is not None else applied
         except ProblemError as error:
             if error.slug != "lake-data-missing":
                 raise
@@ -186,7 +218,10 @@ class Catalog:
         entry = self._entries.get(self._paths.project_entry(project_id))
         if entry is not None:
             applied = self._changes.apply({**entry, "projectId": project_id}, shape="entry", portfolios=self.portfolio_index)
-            return None if applied is None else {**applied, "projectId": project_id, "status": self._statuses.statusPending}
+            if applied is None:
+                return None
+            applied = {**applied, "projectId": project_id, "status": self._statuses.statusPending}
+            return self._priority_weights.apply_project(applied) if self._priority_weights is not None else applied
         if missing is not None:
             raise missing
         return None
@@ -216,6 +251,8 @@ class Catalog:
             "recommendedAction": record.get("recommendedAction"),
             "cluster": record.get("cluster"),
             "isDeleted": bool(record.get("isDeleted", False)),
+            **{key: record.get(key) for key in PROGRESS_FIELDS},
+            **{key: record.get(key) for key in _WEIGHT_FIELDS},
         }
 
     def _summary_from_entry(self, entry: dict[str, Any], portfolios: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -245,6 +282,8 @@ class Catalog:
             "recommendedAction": None,
             "cluster": None,
             "isDeleted": bool(entry.get("isDeleted", False)),
+            **{key: entry.get(key) for key in PROGRESS_FIELDS},
+            **{key: entry.get(key) for key in _WEIGHT_FIELDS},
         }
 
 

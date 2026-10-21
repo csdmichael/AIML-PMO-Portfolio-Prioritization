@@ -65,6 +65,9 @@ jobs:
 
   deploy:
     needs: build
+    concurrency:
+      group: pmo-appservice-shared-plan
+      cancel-in-progress: false
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment: demo

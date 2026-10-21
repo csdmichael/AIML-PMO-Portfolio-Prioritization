@@ -60,6 +60,7 @@ function problemText(err: unknown): string {
           <div class="agent-pill"><ion-icon name="sparkles-outline"></ion-icon> Portfolio recommendations assistant</div>
           <h2 class="page-title">{{ report()?.title || ui.title }}</h2>
           <p class="page-subtitle">{{ ui.subtitle }}</p>
+          <p class="page-subtitle">New opportunities and confirmed not-started projects only. Started work remains a protected commitment. The full project register is checked to avoid duplicate proposals.</p>
         </div>
         <div class="header-controls">
           <label class="portfolio-filter">
@@ -351,8 +352,8 @@ export class RecommendationsPageComponent implements OnDestroy {
     this.setState(key, { status: 'running', message: 'Working' });
     const write$: Observable<string> =
       action.type === 'addProject'
-        ? this.dataApi.createProject(action.payload, true).pipe(map((res) => `Added as ${res.projectId}`))
-        : this.dataApi.postDecision(action.payload).pipe(map((res) => `Recorded ${res.decisionId}`));
+        ? this.dataApi.createProject(action.payload, true, true).pipe(map((res) => `Added as ${res.projectId}`))
+        : this.dataApi.postDecision(action.payload, true).pipe(map((res) => `Recorded ${res.decisionId}`));
     write$.subscribe({
       next: (message) => {
         this.setState(key, { status: 'done', message });

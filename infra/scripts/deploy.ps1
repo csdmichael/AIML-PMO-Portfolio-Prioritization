@@ -209,6 +209,15 @@ function Publish-Apps($outputs) {
                 -ResourceGroup $cfg.reuse.apim.resourceGroup -ServiceName $cfg.reuse.apim.name `
                 -ApiPath $cfg.create.apimApi.path
         }
+        Invoke-Checked "Synchronize existing agent tool schema" {
+            $agentConfig = Get-Content -Raw (Join-Path $repoRoot "api/config/portfolio-agent.json") | ConvertFrom-Json
+            if ($agentConfig.projectEndpoint -notmatch '^https://(?<account>[^.]+)\.services\.ai\.azure\.com/api/projects/(?<project>[^/]+)$') {
+                throw "The portfolio agent project endpoint is invalid."
+            }
+            $projectId = "/subscriptions/$($cfg.subscriptionId)/resourceGroups/$resourceGroup/providers/Microsoft.CognitiveServices/accounts/$($Matches.account)/projects/$($Matches.project)"
+            & (Join-Path $repoRoot "infra/scripts/configure-agent-tools.ps1") `
+                -ApiAppName $outputs.api_app_name -FoundryProjectResourceId $projectId -SchemaOnly -Apply
+        }
     }
     if ($publishUi) {
         $uiZip = Join-Path $stage "pmo-ui.zip"

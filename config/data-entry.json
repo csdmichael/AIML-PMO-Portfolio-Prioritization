@@ -5,6 +5,13 @@
   "projectIdPrefix": "GIS-",
   "projectIdDigits": 4,
   "firstNewProjectNumber": 101,
+  "progress": {
+    "notStartedStatuses": ["Planning", "Backlog"],
+    "startedStatuses": ["Active", "On Hold"],
+    "completedStatus": "Completed",
+    "startStatus": "Active",
+    "planningStatus": "Planning"
+  },
   "options": {
     "businessUnits": [
       "Semiconductor Process Equipment",
@@ -30,6 +37,7 @@
       "Planning",
       "Active",
       "On Hold",
+      "Completed",
       "Backlog"
     ],
     "sponsorLevels": [

@@ -5,11 +5,11 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.container import Services
 from app.contracts import OptionLists, SkillOption
-from app.problems import ProblemError
+from app.priority_weights import PriorityWeightsResponse, PriorityWeightsUpdateRequest
 from app.routes.deps import get_fresh_services, get_services
 from app.system_settings import AdminSettings, read_settings
 
@@ -24,26 +24,6 @@ class LookupUpdateRequest(BaseModel):
     riskRatings: list[str] | None = None
     skills: list[SkillOption] | None = None
     relationshipTypes: list[str] | None = None
-
-
-class PriorityFieldWeight(BaseModel):
-    key: str
-    label: str
-    category: str
-    description: str
-    min: float
-    max: float
-    higherIsBetter: bool = True
-    defaultWeight: float
-
-
-class PriorityWeightsResponse(BaseModel):
-    version: int = 1
-    description: str
-    availableFields: list[dict[str, Any]]
-    defaultWeights: dict[str, float]
-    projectOverrides: dict[str, dict[str, float]]
-    presets: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class AdminSettingsUpdateRequest(BaseModel):
@@ -104,30 +84,6 @@ def update_admin_settings(
     return settings
 
 
-class PriorityWeightsUpdateRequest(BaseModel):
-    defaultWeights: dict[str, float] | None = None
-    projectOverrides: dict[str, dict[str, float]] | None = None
-
-
-def _weights_from_rows(rows: list[dict[str, Any]]) -> tuple[dict[str, float], dict[str, dict[str, float]]]:
-    defaults: dict[str, float] = {}
-    overrides: dict[str, dict[str, float]] = {}
-    for row in rows:
-        field = row.get("field_key")
-        project = row.get("project_id", "*")
-        if not field:
-            continue
-        try:
-            weight = float(row.get("weight_percent"))
-        except (TypeError, ValueError) as error:
-            raise ProblemError(502, f"The OneLake priority weight for {field} is not a number.", slug="upstream-failure") from error
-        if project == "*":
-            defaults[field] = weight
-        else:
-            overrides.setdefault(project, {})[field] = weight
-    return defaults, overrides
-
-
 @router.get(
     "/lookups",
     response_model=OptionLists,
@@ -173,62 +129,19 @@ def update_lookups(
     "/priority-weights",
     response_model=PriorityWeightsResponse,
     operation_id="getPriorityWeights",
-    summary="Get configurable priority weights from OneLake priority_field_weights table",
+    summary="Get global, portfolio and project priority weights from OneLake JSON records",
 )
-def get_priority_weights(services: Services = Depends(get_services)) -> dict[str, Any]:
-    base = _shared_json(services, "priorityWeights")
-    rows = services.lake.read_table("priority_field_weights") or []
-    if not rows:
-        return base
-    defaults, overrides = _weights_from_rows(rows)
-    return {**base, "defaultWeights": defaults or base.get("defaultWeights", {}), "projectOverrides": overrides}
+def get_priority_weights(services: Services = Depends(get_services)) -> PriorityWeightsResponse:
+    return services.priority_weights.get()
 
 
 @router.put(
     "/priority-weights",
     response_model=PriorityWeightsResponse,
     operation_id="updatePriorityWeights",
-    summary="Update priority weights and write to OneLake priority_field_weights table",
+    summary="Patch scoped priority weights with a conditional OneLake JSON write",
 )
 def update_priority_weights(
     body: PriorityWeightsUpdateRequest, services: Services = Depends(get_services)
-) -> dict[str, Any]:
-    cfg = get_priority_weights(services)
-
-    if body.defaultWeights is not None:
-        total = sum(body.defaultWeights.values())
-        if total <= 0:
-            raise ProblemError(422, "Total weight must be greater than zero", slug="validation-failed")
-        cfg["defaultWeights"] = {k: round(float(v), 2) for k, v in body.defaultWeights.items()}
-
-    if body.projectOverrides is not None:
-        cfg["projectOverrides"] = {
-            pid: {k: round(float(v), 2) for k, v in weights.items()}
-            for pid, weights in body.projectOverrides.items()
-        }
-
-    now = datetime.now(timezone.utc).isoformat()
-    # 1. Write directly to OneLake table Tables/priority_field_weights
-    table_rows = []
-    for k, v in cfg["defaultWeights"].items():
-        table_rows.append({
-            "project_id": "*",
-            "field_key": k,
-            "field_label": k,
-            "weight_percent": float(v),
-            "is_active": True,
-            "updated_at": now,
-        })
-    for pid, overrides in cfg["projectOverrides"].items():
-        for k, v in overrides.items():
-            table_rows.append({
-                "project_id": pid,
-                "field_key": k,
-                "field_label": k,
-                "weight_percent": float(v),
-                "is_active": True,
-                "updated_at": now,
-            })
-
-    services.lake.write_table("priority_field_weights", table_rows)
-    return cfg
+) -> PriorityWeightsResponse:
+    return services.priority_weights.update(body, services.catalog)

@@ -4,6 +4,8 @@ import {
   PortfolioDataset,
   Project,
   ProjectStatus,
+  ProjectProgressUpdate,
+  ProjectDetailRecord,
   FilterCriteria,
   SortField,
   SortDirection,
@@ -20,6 +22,7 @@ import {
   groupProjects,
   buildHierarchyTree,
   exportProjectsToCsv,
+  isScoredProject,
 } from '../core/portfolio-filter';
 import { PortfolioService } from './portfolio.service';
 import { DataApiService } from './data-api.service';
@@ -173,8 +176,9 @@ export class PortfolioStore {
     const totalCost = projects.reduce((s, p) => s + p.costEstimateUsd, 0);
     const avgConfidence =
       count === 0 ? 0 : Math.round((projects.reduce((s, p) => s + p.confidenceScore, 0) / count) * 10) / 10;
-    const avgPriority =
-      count === 0 ? 0 : Math.round((projects.reduce((s, p) => s + p.priorityScore, 0) / count) * 10) / 10;
+    const scored = projects.filter(isScoredProject);
+    const avgPriority = count === 0 ? 0 : scored.length === 0 ? null
+      : Math.round((scored.reduce((sum, project) => sum + project.priorityScore, 0) / scored.length) * 10) / 10;
     const mustDoNowCount = projects.filter((p) => p.finalTier === 'Must-do-now').length;
     const proceedCount = projects.filter((p) => p.finalTier === 'Proceed').length;
     const canWaitCount = projects.filter((p) => p.finalTier === 'Can wait').length;
@@ -185,6 +189,7 @@ export class PortfolioStore {
       totalCost,
       avgConfidence,
       avgPriority,
+      scoredProjectCount: scored.length,
       mustDoNowCount,
       proceedCount,
       canWaitCount,
@@ -354,6 +359,10 @@ export class PortfolioStore {
 
   setProjectStatus(projectId: string, status: ProjectStatus): Observable<unknown> {
     return this.updateProject(projectId, { projectStatus: status });
+  }
+
+  updateProjectProgress(projectId: string, progress: ProjectProgressUpdate): Observable<ProjectDetailRecord> {
+    return this.api.updateProjectProgress(projectId, progress).pipe(tap(() => this.refresh()));
   }
 
   setSoftDeleted(projectId: string, isDeleted: boolean): Observable<unknown> {

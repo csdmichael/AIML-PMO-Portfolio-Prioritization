@@ -75,7 +75,7 @@ def setup(monkeypatch):
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
         intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),
         exports=exports,
-        catalog=SimpleNamespace(export=lambda: exports.read("Files/exports/portfolio.json")),
+        catalog=SimpleNamespace(agent_snapshot=lambda: exports.read("Files/exports/portfolio.json")),
         paths=SimpleNamespace(portfolio_export=lambda: "Files/exports/portfolio.json"), tool_tokens=token_verifier,
     )
     app = create_app()
@@ -250,3 +250,20 @@ def test_capacity_and_query_limits():
 def test_malformed_lake_evidence_is_an_explicit_error(snapshot):
     with pytest.raises(ProblemError):
         query_portfolio(snapshot, PortfolioQuery.model_validate(QUERY))
+
+
+def test_inventory_checks_all_statuses_without_requiring_scores():
+    snapshot = {"projects": [
+        {"projectId": "GIS-0001", "projectName": "HR Policies", "progressStatus": "completed", "hasStarted": True},
+        {"projectId": "GIS-0002", "projectName": "HR Onboarding", "status": "pending", "progressStatus": "notStarted", "hasStarted": False},
+        {"projectId": "GIS-0003", "projectName": "Network", "priorityScore": 70, "progressStatus": "started", "hasStarted": True},
+    ]}
+    query = PortfolioQuery.model_validate({**QUERY, "kind": "projectInventory", "tier": "", "search": "hr", "limit": 1})
+    first = query_portfolio(snapshot, query)
+    assert first["totalMatching"] == 2 and first["truncated"] is True
+    assert first["records"][0]["progressStatus"] == "completed"
+    second = query_portfolio(snapshot, query.model_copy(update={"offset": 1}))
+    assert second["sourceProjectIds"] == ["GIS-0002"] and second["truncated"] is False
+    ranked = query_portfolio(snapshot, query.model_copy(update={"kind": "projects", "notStartedOnly": True, "search": "", "limit": 25}))
+    assert ranked["records"] == []
+    assert ranked["awaitingAnalysisProjectIds"] == ["GIS-0002"]
