@@ -312,6 +312,7 @@ The **AI Portfolio Copilot** is accessible from any screen via the Floating Acti
   - 🔍 *Explain the Top Project*
   - 🛡️ *Regulatory & Security Projects*
   - ⚡ *Cross-Portfolio Dependencies*
+- **Saved priority rankings**: **Top 5 Must-Do-Now Projects** returns the five highest matching priority scores, with project IDs, names and citations. If current scoring inputs need a refresh, it ranks all matching analyzed projects using their last saved scores and labels them accordingly instead of hiding previously prioritized work. It never mixes current and saved scores. New or reset projects awaiting analysis and deleted projects are excluded.
 - **Table vs Chart Switcher**: Seamlessly toggle any Copilot response between a structured data table and an interactive chart.
 - **Chart Type Selector**: Switch between **Bar**, **Line**, **Pie / Donut**, and **Radar / Spider** charts with a single click.
 - **Multi-Format Export**: Export any Copilot answer directly to:

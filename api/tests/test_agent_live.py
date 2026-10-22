@@ -18,15 +18,23 @@ def test_deployed_chat_matches_onelake_priority_order():
         portfolio = client.get("/api/v1/portfolio")
         portfolio.raise_for_status()
         projects = portfolio.json()["projects"]
+        matching = [
+            project for project in projects if project.get("finalTier") == "Must-do-now"
+            and not project.get("isDeleted") and project.get("priorityScoreState") != "awaiting-analysis"
+        ]
+        score_key = "recordedPriorityScore" if any(
+            project.get("priorityScoreState") == "requires-analysis" and project.get("recordedPriorityScore") is not None
+            for project in matching
+        ) else "priorityScore"
         expected = sorted(
-            [project for project in projects if project.get("finalTier") == "Must-do-now"
-             and isinstance(project.get("priorityScore"), (int, float))],
-            key=lambda project: project["priorityScore"], reverse=True,
+            [project for project in matching if isinstance(project.get(score_key), (int, float))],
+            key=lambda project: project[score_key], reverse=True,
         )[:5]
         response = client.post("/api/v1/agent/chat", json={"question": (
             "Show exactly the top 5 Must-do-now projects sorted by priorityScore descending. "
             "Preserve the snapshot project order for equal scores. "
-            "Table columns must be Project ID and Priority Score. Cite those project IDs."
+            "Table columns must be Project ID and Priority Score. Cite those project IDs. "
+            "If current scoring needs a refresh, display the last saved ranking and label its scores as saved."
         )})
         response.raise_for_status()
         answer = response.json()
@@ -43,4 +51,4 @@ def test_deployed_chat_matches_onelake_priority_order():
         assert answer["text"].strip()
         for row, project in zip(answer["tableData"]["rows"], expected, strict=True):
             assert row[0] == project["projectId"]
-            assert float(row[1]) == pytest.approx(project["priorityScore"])
+            assert float(row[1]) == pytest.approx(project[score_key])

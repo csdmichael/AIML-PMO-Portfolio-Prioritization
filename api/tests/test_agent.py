@@ -303,3 +303,53 @@ def test_rankings_distinguish_new_projects_from_existing_tiers_with_missing_scor
     all_tiers = query_portfolio(snapshot, PortfolioQuery.model_validate({**QUERY, "tier": ""}))
     assert all_tiers["awaitingAnalysisCount"] == 1
     assert all_tiers["requiresAnalysisCount"] == 45
+
+
+def test_top_five_must_do_now_uses_saved_analysis_when_current_scores_need_refresh():
+    projects = [
+        {"projectId": f"GIS-{index:04}", "projectName": f"Project {index}", "priorityScore": None,
+         "recordedPriorityScore": 100 - index, "priorityScoreState": "requires-analysis",
+         "finalTier": "Must-do-now", "priorityScoreReason": "userBase is missing.", "status": "processed"}
+        for index in range(1, 46)
+    ]
+    snapshot = {"projects": [
+        *projects,
+        {"projectId": "NEW", "priorityScore": None, "recordedPriorityScore": 1000,
+         "priorityScoreState": "awaiting-analysis", "finalTier": "Must-do-now", "status": "pending"},
+        {"projectId": "DELETED", "priorityScore": None, "recordedPriorityScore": 1000,
+         "priorityScoreState": "requires-analysis", "finalTier": "Must-do-now", "isDeleted": True},
+    ]}
+    result = query_portfolio(snapshot, PortfolioQuery.model_validate(QUERY))
+    assert result["scoreBasis"] == "last-saved-analysis"
+    assert result["sourceProjectIds"] == [f"GIS-{index:04}" for index in range(1, 6)]
+    assert [row["priorityScore"] for row in result["records"]] == [99, 98, 97, 96, 95]
+    assert all(row["currentPriorityScore"] is None for row in result["records"])
+    assert result["requiresAnalysisCount"] == 45
+    assert result["awaitingAnalysisCount"] == 1
+    assert result["totalMatching"] == 45 and result["truncated"] is True
+    assert all(project["priorityScore"] is None for project in projects)
+
+
+def test_saved_ranking_does_not_mix_current_and_saved_scores_and_preserves_ties():
+    snapshot = {"projects": [
+        {"projectId": "FIRST", "priorityScore": 10, "recordedPriorityScore": 90},
+        {"projectId": "SECOND", "priorityScore": None, "recordedPriorityScore": 90,
+         "priorityScoreState": "requires-analysis"},
+        {"projectId": "THIRD", "priorityScore": 100, "recordedPriorityScore": 70},
+        {"projectId": "NO-SAVED-SCORE", "priorityScore": None, "priorityScoreState": "requires-analysis"},
+    ]}
+    result = query_portfolio(snapshot, PortfolioQuery.model_validate({**QUERY, "tier": ""}))
+    assert result["scoreBasis"] == "last-saved-analysis"
+    assert result["sourceProjectIds"] == ["FIRST", "SECOND", "THIRD"]
+    assert [row["priorityScore"] for row in result["records"]] == [90, 90, 70]
+    assert [row["currentPriorityScore"] for row in result["records"]] == [10, None, 100]
+
+
+@pytest.mark.parametrize("score", [True, "99", float("nan"), float("inf")])
+def test_invalid_saved_scores_are_not_ranked(score):
+    snapshot = {"projects": [{
+        "projectId": "INVALID", "priorityScore": None, "recordedPriorityScore": score,
+        "priorityScoreState": "requires-analysis",
+    }]}
+    with pytest.raises(ProblemError, match="numeric evidence"):
+        query_portfolio(snapshot, PortfolioQuery.model_validate({**QUERY, "tier": ""}))

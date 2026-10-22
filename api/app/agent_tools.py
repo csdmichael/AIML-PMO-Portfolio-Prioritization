@@ -72,6 +72,7 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
     ]
     awaiting = []
     requires_analysis = []
+    score_basis = "current-weighted"
     matched_count = len(selected)
     if query.kind == "projects":
         awaiting = [
@@ -79,7 +80,14 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
             or (p.get("status") == "pending" and p.get("priorityScore") is None)
         ]
         requires_analysis = [p for p in selected if p.get("priorityScoreState") == "requires-analysis" and p not in awaiting]
-        selected = [p for p in selected if p not in awaiting and p not in requires_analysis]
+        if any(p.get("recordedPriorityScore") is not None for p in requires_analysis):
+            score_basis = "last-saved-analysis"
+            selected = [
+                {**p, "currentPriorityScore": p.get("priorityScore"), "priorityScore": p["recordedPriorityScore"]}
+                for p in selected if p not in awaiting and p.get("recordedPriorityScore") is not None
+            ]
+        else:
+            selected = [p for p in selected if p not in awaiting and p not in requires_analysis]
     required = {"projects": ("priorityScore",), "budgetByBusinessUnit": ("costEstimateUsd",)}.get(query.kind, ())
     if any(
         isinstance(p.get(field), bool) or not isinstance(p.get(field), (int, float)) or not math.isfinite(p[field])
@@ -95,6 +103,7 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
             "businessValue", "costEstimateUsd", "confidenceScore", "recommendedAction", "regulatorySecurity",
             "projectStatus", "progressStatus", "hasStarted", "completed", "startDate", "estimatedFinishDate", "completionDate",
             "isDeleted", "status", "priorityWeightScope", "priorityScoreState", "priorityScoreReason",
+            "currentPriorityScore", "recordedPriorityScore",
         )
         page = selected[query.offset:query.offset + query.limit]
         records = [{key: p[key] for key in fields if key in p} for p in page]
@@ -138,6 +147,8 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
         ],
         "totalRegisteredMatching": matched_count,
     }
+    if query.kind == "projects":
+        result["scoreBasis"] = score_basis
     if len(json.dumps(result).encode("utf-8")) > 64000:
         raise ProblemError(502, "The Fabric query result exceeds the evidence size limit. Narrow the query.", slug="upstream-failure")
     return result
