@@ -309,6 +309,21 @@ def test_a_pending_entry_can_be_removed_and_stays_in_oneLake(harness):
     assert harness.lake.read_json(harness.services.paths.project_entry("GIS-0002")) is not None
 
 
+def test_pending_entries_are_in_the_portfolio_export_that_every_view_reads(harness):
+    export = harness.client.get("/v1/portfolio").json()
+    assert [item["projectId"] for item in export["projects"]] == ["GIS-0001", "GIS-0002"]
+    pending = export["projects"][1]
+    assert pending["projectName"] == "Pending Identity Review"
+    assert pending["executiveSponsor"] == "Dana Park"
+    assert pending["projectManager"] == "Lee Chen"
+    assert pending["portfolio"] == "IT InfoSec"
+    assert pending["program"] == "Zero Trust and Identity"
+    assert pending["status"] == harness.config.api.projects.statusPending
+    assert pending.get("priorityScore") is None
+    assert harness.client.delete("/v1/projects/GIS-0002").status_code == 200
+    assert [item["projectId"] for item in harness.client.get("/v1/portfolio").json()["projects"]] == ["GIS-0001"]
+
+
 def test_changes_to_unknown_projects_are_not_found(harness):
     status = harness.config.data_entry.options.projectStatuses[-1]
     assert harness.client.patch("/v1/projects/GIS-9999", json={"projectStatus": status}).status_code == 404

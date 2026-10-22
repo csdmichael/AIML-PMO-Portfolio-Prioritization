@@ -134,7 +134,42 @@ class Catalog:
 
     def export(self) -> dict[str, Any]:
         export = self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
+        projects = export.get("projects")
+        if isinstance(projects, list):
+            known = {str(item["projectId"]) for item in projects if isinstance(item, dict) and item.get("projectId")}
+            export = {**export, "projects": [*projects, *self._pending_export_projects(known)]}
         return self._priority_weights.apply_export(export) if self._priority_weights is not None else export
+
+    def _pending_export_projects(self, known_ids: set[str]) -> list[dict[str, Any]]:
+        """Data-entry projects the pipeline has not exported yet, with export key names so every view reads them."""
+        pending = [
+            entry
+            for _, entry in self._entries.list(self._paths.project_entries_folder())
+            if entry.get("projectId") and str(entry["projectId"]) not in known_ids
+        ]
+        if not pending:
+            return []
+        portfolios = self.portfolio_index()
+        export_keys = {rule.key: rule.exportKey or rule.key for rule in self._contract.projectFields}
+        skill_names = {skill.key: skill.displayName for skill in self._contract.options.skills}
+        records: list[dict[str, Any]] = []
+        for entry in pending:
+            record = self._changes.apply(entry, shape="entry", portfolios=lambda: portfolios)
+            if record is None:
+                continue
+            portfolio = portfolios.get(str(record.get("portfolioKey") or ""), {})
+            program = next((item for item in portfolio.get("programs") or [] if item.get("key") == record.get("programKey")), {})
+            exported = {export_keys.get(key, key): value for key, value in record.items()}
+            exported["primarySkill"] = skill_names.get(str(record.get("primarySkill")), record.get("primarySkill"))
+            exported.update(
+                portfolio=portfolio.get("displayName"),
+                portfolioCode=portfolio.get("code"),
+                portfolioRole=portfolio.get("role"),
+                program=program.get("displayName"),
+                status=self._statuses.statusPending,
+            )
+            records.append(exported)
+        return records
 
     def agent_snapshot(self) -> dict[str, Any]:
         """Read the full register, including pending work, without inventing analysis scores."""

@@ -122,7 +122,7 @@ def test_portfolio_load_replaces_only_the_selected_scope_including_pending_proje
     assert harness.client.get("/v1/projects/GIS-0102").status_code == 200
     other = harness.client.get("/v1/projects/GIS-0080").json()
     assert other["projectName"] == "Keep other portfolio unchanged"
-    assert len(harness.client.get("/v1/portfolio").json()["projects"]) == 41
+    assert len(harness.client.get("/v1/portfolio").json()["projects"]) == 42
     assert load(harness, "it-infosec").json()["totalProjects"] == 42
 
 
