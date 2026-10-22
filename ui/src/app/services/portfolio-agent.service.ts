@@ -63,7 +63,7 @@ export class PortfolioAgentService {
   toggleOpen(): void { this.isOpen.update(value => !value); }
   setOpen(open: boolean): void { this.isOpen.set(open); }
 
-  async askQuestion(query: string): Promise<void> {
+  async askQuestion(query: string, retries = 1): Promise<void> {
     if (this.isThinking()) return;
     query = query.trim();
     if (!query || query.length > 4000) {
@@ -72,23 +72,36 @@ export class PortfolioAgentService {
     }
     this.error.set(null);
     this.isThinking.set(true);
-    try {
-      const history = this.messages().filter(message => message.provenance).slice(-6).flatMap(message => [
-        { role: 'user', content: message.query.slice(0, 12000) },
-        { role: 'assistant', content: message.text.slice(0, 12000) },
-      ]);
-      const answer = await firstValueFrom(this.http.post<AgentAnswer>(
-        `${this.config.config.api.basePath.replace(/\/$/, '')}/agent/chat`, { question: query, history },
-      ));
-      this.messages.update(messages => [...messages, {
-        ...answer, id: answer.provenance.responseId, query, activeView: 'table', activeChartType: 'bar',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      }]);
-    } catch (error: unknown) {
-      this.error.set(problemMessage(error, 'Your portfolio assistant could not answer. Please try again; no example results were substituted.'));
-    } finally {
-      this.isThinking.set(false);
+
+    const history = this.messages().filter(message => message.provenance).slice(-6).flatMap(message => [
+      { role: 'user', content: message.query.slice(0, 12000) },
+      { role: 'assistant', content: message.text.slice(0, 12000) },
+    ]);
+
+    const maxAttempts = retries;
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const answer = await firstValueFrom(this.http.post<AgentAnswer>(
+          `${this.config.config.api.basePath.replace(/\/$/, '')}/agent/chat`, { question: query, history },
+        ));
+        this.messages.update(messages => [...messages, {
+          ...answer, id: answer.provenance.responseId, query, activeView: 'table', activeChartType: 'bar',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }]);
+        this.isThinking.set(false);
+        return;
+      } catch (error: unknown) {
+        lastError = error;
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 400));
+        }
+      }
     }
+
+    this.error.set(problemMessage(lastError, 'Your portfolio assistant could not answer. Please try again; no example results were substituted.'));
+    this.isThinking.set(false);
   }
 
   toggleMessageView(id: string): void {

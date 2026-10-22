@@ -326,7 +326,15 @@ echarts.use([
             </div>
           }
           @if (agent.error()) {
-            <p class="agent-error" role="alert">{{ agent.error() }}</p>
+            <div class="agent-error-box" role="alert">
+              <p class="agent-error">{{ agent.error() }}</p>
+              @if (lastQuestion(); as q) {
+                <button type="button" class="retry-agent-btn" [disabled]="agent.isThinking()" (click)="onRetry()">
+                  <ion-icon name="refresh-outline"></ion-icon>
+                  <span>Retry question</span>
+                </button>
+              }
+            </div>
           }
         </div>
 
@@ -370,7 +378,45 @@ echarts.use([
   styles: [
     `
       .agent-provenance { font-size: 0.7rem; overflow-wrap: anywhere; color: #605e5c; }
-      .agent-error { padding: 12px; border: 1px solid #a4262c; color: #a4262c; }
+      .agent-error-box {
+        padding: 10px 14px;
+        background: #fdf3f2;
+        border: 1px solid #f8d7da;
+        border-radius: 8px;
+        margin: 8px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .agent-error {
+        margin: 0;
+        color: #a4262c;
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+      .retry-agent-btn {
+        align-self: flex-start;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: #ffffff;
+        border: 1px solid #d13438;
+        color: #d13438;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .retry-agent-btn:hover:not(:disabled) {
+        background: #d13438;
+        color: #ffffff;
+      }
+      .retry-agent-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       /* Floating Action Button (FAB) */
       .copilot-fab-container {
         position: fixed;
@@ -999,6 +1045,7 @@ export class AgentFabComponent {
   readonly transcriptContainer = viewChild<ElementRef<HTMLDivElement>>('transcriptContainer');
 
   userInput = '';
+  readonly lastQuestion = signal<string | null>(null);
   readonly isMaximized = signal<boolean>(false);
   readonly exportToast = signal<string | null>(null);
 
@@ -1014,7 +1061,8 @@ export class AgentFabComponent {
   }
 
   async onPromptClick(prompt: string): Promise<void> {
-    await this.agent.askQuestion(prompt);
+    this.lastQuestion.set(prompt);
+    await this.agent.askQuestion(prompt, 2);
     this.scrollToBottom();
   }
 
@@ -1022,8 +1070,17 @@ export class AgentFabComponent {
     if (!this.userInput || !this.userInput.trim()) return;
     const q = this.userInput.trim();
     this.userInput = '';
-    await this.agent.askQuestion(q);
+    this.lastQuestion.set(q);
+    await this.agent.askQuestion(q, 2);
     this.scrollToBottom();
+  }
+
+  async onRetry(): Promise<void> {
+    const q = this.lastQuestion();
+    if (q) {
+      await this.agent.askQuestion(q, 2);
+      this.scrollToBottom();
+    }
   }
 
   async onExportWord(msg: AgentStructuredResponse): Promise<void> {

@@ -922,16 +922,16 @@ interface FieldProvenanceItem {
                         <div class="prob-row">
                           <span>Must-do-now:</span>
                           <div class="prob-bar-wrap">
-                            <div class="prob-bar red" [style.width.%]="(form().tierProbabilities?.mustDoNow ?? 0.1) * 100"></div>
+                            <div class="prob-bar red" [style.width.%]="(form().tierProbabilities ? form().tierProbabilities.mustDoNow : 0.1) * 100"></div>
                           </div>
-                          <span>{{ ((form().tierProbabilities?.mustDoNow ?? 0.1) * 100).toFixed(1) }}%</span>
+                          <span>{{ ((form().tierProbabilities ? form().tierProbabilities.mustDoNow : 0.1) * 100).toFixed(1) }}%</span>
                         </div>
                         <div class="prob-row">
                           <span>Proceed:</span>
                           <div class="prob-bar-wrap">
-                            <div class="prob-bar green" [style.width.%]="(form().tierProbabilities?.proceed ?? 0.5) * 100"></div>
+                            <div class="prob-bar green" [style.width.%]="(form().tierProbabilities ? form().tierProbabilities.proceed : 0.5) * 100"></div>
                           </div>
-                          <span>{{ ((form().tierProbabilities?.proceed ?? 0.5) * 100).toFixed(1) }}%</span>
+                          <span>{{ ((form().tierProbabilities ? form().tierProbabilities.proceed : 0.5) * 100).toFixed(1) }}%</span>
                         </div>
                         <div class="prob-row">
                           <span>Can wait:</span>
@@ -1252,15 +1252,17 @@ interface FieldProvenanceItem {
         gap: 8px;
         margin-bottom: 16px;
         border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 4px;
+        padding: 4px 0 8px 0;
         flex-wrap: wrap;
+        width: 100%;
+        box-sizing: border-box;
       }
       .tab-btn {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         padding: 9px 16px;
-        border: none;
+        border: 1px solid transparent;
         background: none;
         font-size: 0.86rem;
         font-weight: 600;
@@ -1268,6 +1270,8 @@ interface FieldProvenanceItem {
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
       .tab-btn:hover {
         background: #f1f5f9;

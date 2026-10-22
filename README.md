@@ -29,6 +29,8 @@ Prioritize about 100 GIS and BU projects transparently, using existing enterpris
 
 ![Current PMO runtime architecture: governed agents, progress and scoped weights](docs/images/pmo-runtime-architecture.svg)
 
+![Solution and Fabric OneLake architecture diagram](docs/images/pmo-architecture.png)
+
 **Latest workflow:** recommendations prioritize only new or confirmed not-started
 projects. Started work is a fixed commitment. Project details record actual start,
 estimated finish, and completion dates. Priority weights inherit **project override
@@ -157,6 +159,10 @@ Each of the ten candidate signals resolves from the first available source in a 
 Levels: **High** at 75 or more, **Medium** from 50 to 74.9, **Low** below 50.
 
 ## 4. ML algorithms
+
+![End-to-End Project Flow and Machine Learning Architecture](docs/images/End-to-end%20project%20flow%20-%20ML%20Algos.png)
+
+![Detailed Machine Learning Algorithms & Decision Pipeline Flow](docs/images/ML-Algos-Flow.png)
 
 <!-- ML_TABLE_START -->
 | Algorithm | What it does | Most important feature | Output table in OneLake | Sample output (GIS-0001) | Algo used |

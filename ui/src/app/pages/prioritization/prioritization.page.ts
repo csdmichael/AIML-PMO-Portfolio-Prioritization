@@ -1057,7 +1057,7 @@ import { ConfigService } from '../../services/config.service';
         bottom: 0;
         left: 0;
         right: 0;
-        max-height: 85vh;
+        max-height: calc(100vh - 100px);
         background: #ffffff;
         border-radius: 16px 16px 0 0;
         z-index: 10001;

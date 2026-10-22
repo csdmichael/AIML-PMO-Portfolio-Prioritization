@@ -32,6 +32,26 @@
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* Ensure top page elements are not flush or obscured by fixed/global layout headers */
+ion-content.ion-padding,
+.page-header,
+.overview-header-row,
+.workspace-toolbar,
+.top-nav-bar,
+.doc-header {
+  scroll-margin-top: 16px;
+}
+
+/* Ensure view segment in Prioritization does not clip or overflow its first button */
+.view-segment {
+  width: auto !important;
+  min-width: 290px !important;
+  justify-content: flex-start !important;
+}
+
+.view-segment ion-segment-button {
+  min-width: 82px !important;
+  --padding-start: 10px !important;
+  --padding-end: 10px !important;
+}
+
