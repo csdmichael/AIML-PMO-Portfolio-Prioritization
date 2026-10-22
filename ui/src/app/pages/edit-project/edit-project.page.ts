@@ -2021,7 +2021,8 @@ export class EditProjectPageComponent implements OnInit {
   getConfidence(fieldKey: string): number {
     const prov = this.fieldProvenance()[fieldKey];
     if (prov?.confidenceScore) {
-      return prov.confidenceScore;
+      // Stored AI evidence scores are fractions (explicit 0.90); show them as percentages.
+      return prov.confidenceScore <= 1 ? Math.round(prov.confidenceScore * 100) : prov.confidenceScore;
     }
     return this.form().confidenceScore ?? 85;
   }

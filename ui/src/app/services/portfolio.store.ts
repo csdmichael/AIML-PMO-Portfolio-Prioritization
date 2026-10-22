@@ -23,6 +23,7 @@ import {
   buildHierarchyTree,
   exportProjectsToCsv,
   isScoredProject,
+  meanScore,
 } from '../core/portfolio-filter';
 import { PortfolioService } from './portfolio.service';
 import { DataApiService } from './data-api.service';
@@ -174,8 +175,7 @@ export class PortfolioStore {
     const projects = this.filteredProjects();
     const count = projects.length;
     const totalCost = projects.reduce((s, p) => s + p.costEstimateUsd, 0);
-    const avgConfidence =
-      count === 0 ? 0 : Math.round((projects.reduce((s, p) => s + p.confidenceScore, 0) / count) * 10) / 10;
+    const avgConfidence = meanScore(projects.map((p) => p.confidenceScore));
     const scored = projects.filter(isScoredProject);
     const avgPriority = count === 0 ? 0 : scored.length === 0 ? null
       : Math.round((scored.reduce((sum, project) => sum + project.priorityScore, 0) / scored.length) * 10) / 10;

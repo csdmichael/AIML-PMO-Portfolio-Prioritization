@@ -5,8 +5,18 @@ import {
   sortProjects,
   groupProjects,
   buildHierarchyTree,
+  meanScore,
 } from './portfolio-filter';
 import { Project } from '../models/portfolio.models';
+
+describe('confidence averages', () => {
+  it('leave out projects without a numeric score instead of turning the average into NaN', () => {
+    const scored = createDummyProject('GIS-1', 'Scored', 'BU', 'Site', 50, 80, 100);
+    const unscored = { ...createDummyProject('GIS-2', 'Unscored', 'BU', 'Site', 50, 0, 100), confidenceScore: undefined as unknown as number };
+    expect(groupProjects([scored, unscored], 'none')[0].avgConfidence).toBe(80);
+    expect(meanScore([null, undefined])).toBe(0);
+  });
+});
 
 function createDummyProject(id: string, name: string, bu: string, site: string, priority: number, conf: number, cost: number): Project {
   return {

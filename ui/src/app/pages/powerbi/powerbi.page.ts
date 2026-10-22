@@ -22,6 +22,7 @@ import {
   IonBadge,
 } from '@ionic/angular';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
+import { meanScore } from '../../core/portfolio-filter';
 import * as echarts from 'echarts/core';
 import { BarChart, PieChart, ScatterChart } from 'echarts/charts';
 import {
@@ -797,11 +798,7 @@ export class PowerBiPageComponent implements OnInit {
   readonly mustDoCost = computed(() =>
     this.mustDoProjects().reduce((s, p) => s + p.costEstimateUsd, 0),
   );
-  readonly avgConfidence = computed(() => {
-    const list = this.filteredProjects();
-    if (list.length === 0) return 0;
-    return Math.round((list.reduce((s, p) => s + p.confidenceScore, 0) / list.length) * 10) / 10;
-  });
+  readonly avgConfidence = computed(() => meanScore(this.filteredProjects().map((p) => p.confidenceScore)));
   readonly r5Count = computed(
     () => this.filteredProjects().filter((p) => p.dependencyCount >= 3).length,
   );

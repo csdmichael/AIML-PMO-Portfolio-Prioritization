@@ -1101,20 +1101,20 @@ sklearn.cluster.KMeans(
       category: 'Confidence',
       algorithmShort: 'Weighted Tri-Factor Formulation',
       algorithmUsed: `ConfidenceScore = 100 * (
-  0.35 * Completeness +
+  0.45 * Completeness +
   0.35 * Quality +
-  0.30 * ModelCertainty
+  0.20 * ModelCertainty
 )`,
       description:
-        'Formulates a holistic reliability score (0-100%) that measures whether an AI recommendation should be trusted automatically or reviewed carefully by humans. Blends input signal completeness, automated data quality compliance, and calibrated statistical certainty.',
+        'Formulates a holistic reliability score (0-100%) that measures whether an AI recommendation should be trusted automatically or reviewed carefully by humans. Blends input signal completeness, automated data quality compliance, and calibrated statistical certainty. Data-entry projects that the pipeline has not scored yet use the same formula with ModelCertainty set to 0, so their score is at most 80%. Completeness is the share of the 11 model features with a value. Quality is the mean confidence of those values: an entered value counts 100%, and an AI-prefilled value counts its evidence score.',
       features: [
         {
           name: 'Signal Completeness',
-          column: 'signals_present / 10',
+          column: 'signals_present / 11',
           table: 'silver.project_canonical',
           dataType: 'Float (0.0 to 1.0)',
-          importance: 'Weight: 35%',
-          description: 'Proportion of 10 canonical PMO signals populated across the 11 integrated systems.',
+          importance: 'Weight: 45%',
+          description: 'Share of the 11 model features populated for this project (signals present / 11).',
         },
         {
           name: 'Data Quality Compliance',
@@ -1129,7 +1129,7 @@ sklearn.cluster.KMeans(
           column: 'model_certainty',
           table: 'gold.project_predictions',
           dataType: 'Float (0.0 to 1.0)',
-          importance: 'Weight: 30%',
+          importance: 'Weight: 20%',
           description: 'Platt-calibrated maximum class posterior probability from LightGBM.',
         },
       ],
@@ -1145,19 +1145,19 @@ sklearn.cluster.KMeans(
         scenario: 'Evaluating confidence for an example project.',
         inputs: {
           signals_present: 6,
-          total_signals: 10,
+          total_signals: 11,
           dq_checks_passed: 11,
           dq_checks_evaluated: 13,
           model_certainty: 0.73,
         },
         executionSteps: [
-          'Completeness = 6 / 10 = 0.60 (Contribution: 0.35 * 0.60 = 0.2100).',
+          'Completeness = 6 / 11 = 0.545 (Contribution: 0.45 * 0.545 = 0.2455).',
           'Quality = 11 / 13 = 0.846 (Contribution: 0.35 * 0.846 = 0.2961).',
-          'Certainty = 0.730 (Contribution: 0.30 * 0.730 = 0.2190).',
-          'Total = 100 * (0.2100 + 0.2961 + 0.2190) = 72.51% -> Rounded: 72.5%.',
-          'Threshold evaluation: 72.5% is >= 50% and < 75% -> "Medium".',
+          'Certainty = 0.730 (Contribution: 0.20 * 0.730 = 0.1460).',
+          'Total = 100 * (0.2455 + 0.2961 + 0.1460) = 68.76% -> Rounded: 68.8%.',
+          'Threshold evaluation: 68.8% is >= 50% and < 75% -> "Medium".',
         ],
-        result: 'confidence_score: 72.5%, confidence_level: "Medium".',
+        result: 'confidence_score: 68.8%, confidence_level: "Medium".',
         businessImpact: 'Flags project for human PMO review before authorizing multimillion capital release.',
       },
     },

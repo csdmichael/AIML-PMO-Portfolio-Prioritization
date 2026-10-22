@@ -200,16 +200,19 @@ export function sortProjects(
   return result;
 }
 
+export function meanScore(scores: ReadonlyArray<number | null | undefined>): number {
+  const finite = scores.filter((score): score is number => typeof score === 'number' && Number.isFinite(score));
+  if (finite.length === 0) return 0;
+  return Math.round((finite.reduce((sum, score) => sum + score, 0) / finite.length) * 10) / 10;
+}
+
 export function groupProjects(
   projects: readonly Project[],
   groupBy: GroupByOption,
 ): GroupSummary<Project>[] {
   if (groupBy === 'none') {
     const totalCost = projects.reduce((s, p) => s + p.costEstimateUsd, 0);
-    const avgConfidence =
-      projects.length === 0
-        ? 0
-        : Math.round((projects.reduce((s, p) => s + p.confidenceScore, 0) / projects.length) * 10) / 10;
+    const avgConfidence = meanScore(projects.map((p) => p.confidenceScore));
     return [
       {
         key: 'all',
@@ -251,10 +254,7 @@ export function groupProjects(
   const summaries: GroupSummary<Project>[] = [];
   for (const [key, items] of map.entries()) {
     const totalCost = items.reduce((s, p) => s + p.costEstimateUsd, 0);
-    const avgConfidence =
-      items.length === 0
-        ? 0
-        : Math.round((items.reduce((s, p) => s + p.confidenceScore, 0) / items.length) * 10) / 10;
+    const avgConfidence = meanScore(items.map((p) => p.confidenceScore));
     summaries.push({
       key,
       label: key,
@@ -303,13 +303,13 @@ export function buildHierarchyTree(projects: readonly Project[]): HierarchyNode[
   for (const [bu, siteMap] of buMap.entries()) {
     const siteNodes: HierarchyNode[] = [];
     let buTotalCost = 0;
-    let buConfSum = 0;
+    const buScores: number[] = [];
     let buCount = 0;
 
     for (const [site, projList] of siteMap.entries()) {
       const siteTotalCost = projList.reduce((s, p) => s + p.costEstimateUsd, 0);
-      const siteConfSum = projList.reduce((s, p) => s + p.confidenceScore, 0);
-      const siteAvgConf = projList.length === 0 ? 0 : Math.round((siteConfSum / projList.length) * 10) / 10;
+      const siteScores = projList.map((p) => p.confidenceScore);
+      const siteAvgConf = meanScore(siteScores);
 
       const projNodes: HierarchyNode[] = projList.map((p) => ({
         id: `proj-${p.projectId}`,
@@ -335,11 +335,11 @@ export function buildHierarchyTree(projects: readonly Project[]): HierarchyNode[
       });
 
       buTotalCost += siteTotalCost;
-      buConfSum += siteConfSum;
+      buScores.push(...siteScores);
       buCount += projList.length;
     }
 
-    const buAvgConf = buCount === 0 ? 0 : Math.round((buConfSum / buCount) * 10) / 10;
+    const buAvgConf = meanScore(buScores);
     siteNodes.sort((a, b) => a.name.localeCompare(b.name));
 
     result.push({
