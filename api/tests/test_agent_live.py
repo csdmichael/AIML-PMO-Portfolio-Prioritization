@@ -51,4 +51,7 @@ def test_deployed_chat_matches_onelake_priority_order():
         assert answer["text"].strip()
         for row, project in zip(answer["tableData"]["rows"], expected, strict=True):
             assert row[0] == project["projectId"]
-            assert float(row[1]) == pytest.approx(project[score_key])
+            score = row[1]
+            if score_key == "recordedPriorityScore":
+                score = score.removesuffix(" (saved)").removesuffix(" (last saved)")
+            assert float(score) == pytest.approx(project[score_key])
