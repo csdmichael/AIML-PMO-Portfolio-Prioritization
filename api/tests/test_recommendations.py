@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.agent import FoundryAgentClient, load_agent_settings
 from app.config import load_config
+from app.container import build_services
 from app.lake_paths import LakePaths
 from app.main import create_app
 from app.onelake import LakeUnavailable
@@ -72,6 +73,7 @@ def harness(monkeypatch, lake):
     credentials.bearer_token.return_value = "test-token"
     catalog = Mock()
     catalog.agent_snapshot.return_value = copy.deepcopy(INVENTORY)
+    catalog.export.side_effect = lambda: catalog.agent_snapshot.return_value
     catalog.portfolios.return_value = [
         {"key": "it-infosec", "displayName": "IT - InfoSec", "programs": [{"key": "cloud-program", "displayName": "Cloud"}]},
     ]
@@ -80,7 +82,7 @@ def harness(monkeypatch, lake):
         config=config,
         catalog=catalog,
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
-        recommendation_cache=RecommendationCache(lake=lake, paths=LakePaths(config), state_provider=catalog.agent_snapshot),
+        recommendation_cache=RecommendationCache(lake=lake, paths=LakePaths(config), state_provider=catalog.export),
     )
     post = Mock(return_value=agent_reply(copy.deepcopy(REPORT)))
     monkeypatch.setattr("app.agent.httpx.post", post)
@@ -195,6 +197,17 @@ def test_cache_miss_returns_null_without_running_the_agent(harness):
     assert response.status_code == 200
     assert response.json() is None
     post.assert_not_called()
+
+
+def test_cached_lookup_reads_the_register_once_without_rechecking_policy(harness):
+    client, _ = harness
+    client.get("/v1/recommendations")
+    catalog = client.app.dependency_overrides[get_services]().catalog
+    catalog.agent_snapshot.reset_mock()
+    catalog.export.reset_mock()
+    assert client.get("/v1/recommendations/cached").json() is not None
+    catalog.agent_snapshot.assert_not_called()
+    assert catalog.export.call_count == 1
 
 
 def test_report_is_persisted_and_can_be_read_after_rebuilding_the_cache(harness, lake):
@@ -370,3 +383,8 @@ def test_a_start_during_generation_cannot_publish_a_report(harness):
     post.side_effect = start_during_run
     assert client.get("/v1/recommendations").status_code == 409
     assert client.get("/v1/recommendations/cached").json() is None
+
+
+def test_the_production_cache_reads_the_cached_register_view():
+    services = build_services()
+    assert services.recommendation_cache._state_provider == services.catalog.export

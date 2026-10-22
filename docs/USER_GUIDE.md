@@ -187,7 +187,7 @@ Demo loading reuses the snapshot's recorded priorities and scores; it is not a n
 
 ### AI Recommendations
 
-Opening **AI Recommendations** starts two independent requests: one retrieves the last saved report for the chosen portfolio and question; the other asks the recommendation assistant for a fresh report. You can read the saved report, with its original generation time, while the refresh runs. A successful fresh report replaces it and is saved to the database. If the refresh fails, the saved report remains visible with an error and retry option.
+Opening **AI Recommendations** loads the last saved report for the chosen portfolio and question without calling the recommendation assistant. The assistant runs only when no saved report matches the current data and question, or when you choose Refresh. When you choose Refresh, the saved report stays visible with its original generation time while the assistant runs. A successful fresh report replaces it and is saved to the database. If the refresh fails, the saved report remains visible with an error and retry option.
 
 Recommendations focus only on genuinely new opportunities and confirmed **not-started** projects.
 Started, on-hold and completed work is a protected commitment, not a candidate to stop,

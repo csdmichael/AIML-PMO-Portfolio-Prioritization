@@ -139,7 +139,8 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         options=options,
         agent=FoundryAgentClient(load_agent_settings("portfolio-agent.json"), credentials),
         recommendation_agent=FoundryAgentClient(load_agent_settings("recommendation-agent.json"), credentials),
-        recommendation_cache=RecommendationCache(lake=lake, paths=paths, state_provider=catalog.agent_snapshot),
+        # export(), not agent_snapshot(): the snapshot clears the change cache, so every check reloads each change record.
+        recommendation_cache=RecommendationCache(lake=lake, paths=paths, state_provider=catalog.export),
         intake_agent=FoundryAgentClient(load_agent_settings("intake-agent.json"), credentials),
         tool_tokens=ToolTokenVerifier(),
     )

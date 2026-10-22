@@ -23,7 +23,7 @@
   <rect class="box" x="40" y="100" width="1320" height="100" fill="#e8f2ff" stroke="#3b82c4"/>
   <text class="label" x="64" y="133">Ionic Angular application | Web, tablet and mobile</text>
   <text class="body" x="64" y="162">Portfolio views and six explained charts | Intake and dropdown creation | Project start / finish / completion</text>
-  <text class="small" x="64" y="186">Saved report loads first; a fresh review starts on page entry. Admin edits global, portfolio and project priority weights.</text>
+  <text class="small" x="64" y="186">Saved report loads first; a fresh review runs only on a cache miss or Refresh. Admin edits global, portfolio and project priority weights.</text>
   <path class="flow" d="M700 200 V244"/>
   <text class="small" x="724" y="229">Browser API requests</text>
 

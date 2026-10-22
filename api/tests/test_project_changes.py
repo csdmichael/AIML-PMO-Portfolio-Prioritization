@@ -167,6 +167,24 @@ def test_agent_snapshot_does_not_read_entries_already_in_the_saved_export(harnes
     assert harness.services.paths.project_entry("GIS-0002") in reads
 
 
+def test_recommendation_revisions_reuse_loaded_project_changes(harness, monkeypatch):
+    services = harness.services
+    for number in range(2, 22):
+        services.changes.save(f"GIS-{number:04d}", values={"businessValue": 3})
+    cache = RecommendationCache(lake=harness.lake, paths=services.paths, state_provider=services.catalog.export)
+    revision = cache.revision()
+    reads = []
+    original = harness.lake.read_json
+
+    def read(path):
+        reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(harness.lake, "read_json", read)
+    assert cache.revision() == revision
+    assert [path for path in reads if path.startswith(services.paths.project_changes_folder() + "/")] == []
+
+
 def test_analyzed_reset_export_keeps_its_new_score_instead_of_the_old_replacement(harness):
     services = harness.services
     original = export_document(harness.config)["projects"][0]

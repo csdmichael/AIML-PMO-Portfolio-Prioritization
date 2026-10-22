@@ -102,7 +102,7 @@ def get_cached_recommendations(
     except ValidationError as exc:
         logger.error("The saved recommendation report does not match the report contract")
         raise ProblemError(502, "The saved recommendation report is invalid.", slug="upstream-failure") from exc
-    _check_policy(report, services, portfolioKey)
+    # The report passed _check_policy when it was generated; a matching revision means the register has not changed since.
     return report.model_dump()
 
 

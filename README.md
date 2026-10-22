@@ -6,6 +6,7 @@ Prioritize about 100 GIS and BU projects transparently, using existing enterpris
 
 ## Table of contents
 
+- [Videos](#videos)
 1. [Architecture](#1-architecture)
 2. [Data sources and OneLake layout](#2-data-sources-and-onelake-layout)
 3. [Canonical model, data quality and confidence](#3-canonical-model-data-quality-and-confidence)
@@ -24,6 +25,13 @@ Prioritize about 100 GIS and BU projects transparently, using existing enterpris
 16. [Infrastructure as code (Bicep and Terraform)](#16-infrastructure-as-code-bicep-and-terraform)
 17. [CI/CD (GitHub Actions)](#17-cicd-github-actions)
 18. [Author](#18-author)
+
+## Videos
+
+| Title | Description | Duration | Video link |
+|-------|-------------|----------|------------|
+| 01. System Overview and demo | Overview of the system and a live demo of the PMO portfolio prioritization solution. | 21:44 | [Watch](https://1drv.ms/v/c/4673b287399127d4/IQBGU-7O2-XzQJvqduZYCACoAfX8xGOx4Fwis35Td_nYMa0?e=qKXNzK) |
+| 02. Three Foundry Agents (Project Intake Prefill, Chat, Recommender) | Walkthrough of the three Microsoft Foundry agents: project intake prefill, portfolio chat, and the recommender. | 07:52 | [Watch](https://1drv.ms/v/c/4673b287399127d4/IQCVUECdoueuQ6RJYbJuIbGhAa3J9trYZRpke3OfJjCc9Cc?e=uhE9Ia) |
 
 ## 1. Architecture
 
