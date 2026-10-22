@@ -34,6 +34,18 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'matrix',
+    loadComponent: () =>
+      import('./pages/prioritization-matrix/prioritization-matrix.page').then(
+        (m) => m.PrioritizationMatrixPageComponent
+      ),
+  },
+  {
+    path: 'prioritization-matrix',
+    redirectTo: 'matrix',
+    pathMatch: 'full',
+  },
+  {
     path: 'hierarchy',
     loadComponent: () =>
       import('./pages/hierarchy/hierarchy.page').then((m) => m.HierarchyPageComponent),
