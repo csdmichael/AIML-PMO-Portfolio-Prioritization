@@ -109,7 +109,7 @@ function problemText(err: unknown): string {
             @if (report()) {
               Showing the previous report while your assistant reviews the latest database records and public research.
             } @else {
-              Loading saved recommendations from the database and preparing an updated report. This can take up to two minutes.
+              Checking for saved recommendations. New research runs only if no current report exists or you choose Refresh.
             }
           </span>
         </div>
@@ -321,25 +321,25 @@ export class RecommendationsPageComponent implements OnDestroy {
     this.request?.unsubscribe();
   }
 
-  loadDefault(): void {
+  loadDefault(forceRefresh = false): void {
     this.activeQuery.set(null);
-    this.run(this.dataApi.getRecommendations(this.portfolioKey || undefined));
+    this.run(() => this.dataApi.getRecommendations(this.portfolioKey || undefined), forceRefresh);
   }
 
-  ask(prompt?: string): void {
+  ask(prompt?: string, forceRefresh = false): void {
     const query = (prompt ?? this.researchQuery).trim();
     if (query.length < 3) return;
     this.researchQuery = query;
     this.activeQuery.set(query);
-    this.run(this.dataApi.queryResearcherAgent(query, this.portfolioKey || undefined));
+    this.run(() => this.dataApi.queryResearcherAgent(query, this.portfolioKey || undefined), forceRefresh);
   }
 
   retry(): void {
     const query = this.activeQuery();
     if (query) {
-      this.ask(query);
+      this.ask(query, true);
     } else {
-      this.loadDefault();
+      this.loadDefault(true);
     }
   }
 
@@ -365,7 +365,7 @@ export class RecommendationsPageComponent implements OnDestroy {
     });
   }
 
-  private run(request$: Observable<RecommendationReport>): void {
+  private run(request: () => Observable<RecommendationReport>, forceRefresh: boolean): void {
     this.request?.unsubscribe();
     this.request = new Subscription();
     const scope = JSON.stringify([this.portfolioKey || null, this.activeQuery()]);
@@ -378,37 +378,36 @@ export class RecommendationsPageComponent implements OnDestroy {
     this.error.set(null);
     this.cacheError.set(null);
     this.showingSaved.set(this.report() !== null);
-    let freshReceived = false;
-    const cachedRequest = this.dataApi
+    const refresh = (): void => {
+      this.request!.add(request().subscribe({
+        next: (report) => {
+          this.report.set(report);
+          this.showingSaved.set(false);
+          this.actionStates.set({});
+          this.cacheError.set(null);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(problemText(err));
+          this.loading.set(false);
+        },
+      }));
+    };
+    this.request.add(this.dataApi
       .getCachedRecommendations(this.portfolioKey || undefined, this.activeQuery() || undefined)
       .subscribe({
         next: (cached) => {
-          if (!freshReceived) {
-            if (this.report()?.generatedAtUtc !== cached?.generatedAtUtc) this.actionStates.set({});
-            this.report.set(cached);
-            this.showingSaved.set(cached !== null);
-          }
+          if (this.report()?.generatedAtUtc !== cached?.generatedAtUtc) this.actionStates.set({});
+          this.report.set(cached);
+          this.showingSaved.set(cached !== null);
+          if (cached && !forceRefresh) this.loading.set(false);
+          else refresh();
         },
         error: (err) => {
-          if (!freshReceived) this.cacheError.set(problemText(err));
+          this.cacheError.set(problemText(err));
+          refresh();
         },
-      });
-    this.request.add(cachedRequest);
-    this.request.add(request$.subscribe({
-      next: (report) => {
-        freshReceived = true;
-        cachedRequest.unsubscribe();
-        this.report.set(report);
-        this.showingSaved.set(false);
-        this.actionStates.set({});
-        this.cacheError.set(null);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(problemText(err));
-        this.loading.set(false);
-      },
-    }));
+      }));
   }
 
   private setState(key: string, state: ActionState): void {

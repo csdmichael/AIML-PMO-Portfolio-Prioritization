@@ -28,4 +28,8 @@ def start_pipeline_run(services: Services = Depends(get_services)) -> PipelineRu
 )
 def get_pipeline_run(runId: str, services: Services = Depends(get_services)) -> PipelineRunStatus:
     require_guid(runId, "runId")
-    return PipelineRunStatus.model_validate(services.pipeline.status(runId))
+    result = PipelineRunStatus.model_validate(services.pipeline.status(runId))
+    if result.status == "Completed":
+        services.exports.invalidate()
+        services.changes.invalidate()
+    return result

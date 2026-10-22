@@ -58,6 +58,11 @@ class OptionsStore:
             existing = next((item for item in values if item.casefold() == value.casefold()), None)
             if existing is not None:
                 return existing
+            if list_name == "sponsorLevels":
+                raise ProblemError(
+                    422, "Add the sponsor level in Project Options and choose its relative score before applying it to a project.",
+                    slug="validation-failed",
+                )
             updated = options.model_copy(deep=True)
             setattr(updated, list_name, [*values, value])
             self._save(updated)

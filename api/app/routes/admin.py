@@ -2,16 +2,17 @@
 
 import json
 from datetime import datetime, timezone
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError
 
 from app.container import Services
 from app.contracts import OptionLists, SkillOption
 from app.priority_weights import PriorityWeightsResponse, PriorityWeightsUpdateRequest
 from app.routes.deps import get_fresh_services, get_services
 from app.system_settings import AdminSettings, read_settings
+from app.problems import ProblemError
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -21,6 +22,7 @@ class LookupUpdateRequest(BaseModel):
     businessUnits: list[str] | None = None
     projectStatuses: list[str] | None = None
     sponsorLevels: list[str] | None = None
+    sponsorLevelScores: dict[str, Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]] | None = None
     riskRatings: list[str] | None = None
     skills: list[SkillOption] | None = None
     relationshipTypes: list[str] | None = None
@@ -91,7 +93,10 @@ def update_admin_settings(
     summary="Get all configurable dropdown lookup lists",
 )
 def get_lookups(services: Services = Depends(get_fresh_services)) -> OptionLists:
-    return services.config.data_entry.options
+    options = services.config.data_entry.options.model_copy(deep=True)
+    scores = {**_shared_json(services, "mlModel")["mappings"]["sponsorLevel"], **options.sponsorLevelScores}
+    options.sponsorLevelScores = {level: scores[level] for level in options.sponsorLevels if level in scores}
+    return options
 
 
 @router.put(
@@ -113,6 +118,23 @@ def update_lookups(
         options.projectStatuses = [s.strip() for s in body.projectStatuses if s.strip()]
     if body.sponsorLevels is not None:
         options.sponsorLevels = [s.strip() for s in body.sponsorLevels if s.strip()]
+    if body.sponsorLevelScores is not None:
+        unknown = set(body.sponsorLevelScores) - set(options.sponsorLevels)
+        if unknown:
+            raise ProblemError(422, f"Scores reference unregistered sponsor levels: {', '.join(sorted(unknown))}.", slug="validation-failed")
+        options.sponsorLevelScores = {**options.sponsorLevelScores, **body.sponsorLevelScores}
+    known_scores = _shared_json(services, "mlModel")["mappings"]["sponsorLevel"]
+    scores = {**known_scores, **options.sponsorLevelScores}
+    if len({level.casefold() for level in options.sponsorLevels}) != len(options.sponsorLevels):
+        raise ProblemError(422, "Sponsor level names must be unique, ignoring case.", slug="validation-failed")
+    missing = [level for level in options.sponsorLevels if level not in scores]
+    if missing:
+        raise ProblemError(422, f"Choose a positive score for each new sponsor level: {', '.join(missing)}.", slug="validation-failed")
+    options.sponsorLevelScores = {level: scores[level] for level in options.sponsorLevels}
+    try:
+        options = OptionLists.model_validate(options.model_dump())
+    except ValidationError as error:
+        raise ProblemError(422, "Sponsor scores must be finite positive numbers.", slug="validation-failed") from error
     if body.riskRatings is not None:
         options.riskRatings = [r.strip() for r in body.riskRatings if r.strip()]
     if body.skills is not None:
@@ -120,8 +142,7 @@ def update_lookups(
     if body.relationshipTypes is not None:
         options.relationshipTypes = [r.strip() for r in body.relationshipTypes if r.strip()]
 
-    services.lake.write_json("Files/config/data-entry.json", current.model_dump(), overwrite=True)
-    services.config.data_entry.options = options
+    services.options.replace(options)
     return options
 
 

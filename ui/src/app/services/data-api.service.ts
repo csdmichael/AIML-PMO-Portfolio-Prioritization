@@ -18,6 +18,7 @@ import { OneLakeDatasetList, OneLakeDatasetView } from '../models/onelake.models
 import type { PriorityWeightsResponse, PriorityWeightsUpdateRequest } from '../pages/admin/priority-weights/priority-weights.models';
 import {
   OptionsResponse,
+  DataEntryOptions,
   DemoProjectCatalog,
   DemoResetResult,
   PortfolioItem,
@@ -27,6 +28,7 @@ import {
   CreateProjectResponse,
   ProjectUploadMetadata,
   PipelineRunStatus,
+  PipelineRunStarted,
   IntakeDraft,
   DraftFieldProvenance,
 } from '../models/api.models';
@@ -168,6 +170,10 @@ export class DataApiService {
     return this.http.get<PipelineRunStatus>(`${this.base}/pipeline/runs/${encodeURIComponent(runId)}`);
   }
 
+  startPipelineRun(): Observable<PipelineRunStarted> {
+    return this.http.post<PipelineRunStarted>(`${this.base}/pipeline/runs`, {});
+  }
+
   getCapacityScenarios(): Observable<{ scenarios: CapacityBySkill[] } | CapacityBySkill[]> {
     return this.http.get<{ scenarios: CapacityBySkill[] } | CapacityBySkill[]>(`${this.base}/capacity/scenarios`);
   }
@@ -263,12 +269,12 @@ export class DataApiService {
     return this.http.put<PriorityWeightsResponse>(`${this.base}/admin/priority-weights`, data);
   }
 
-  getLookups(): Observable<any> {
-    return this.http.get<any>(`${this.base}/admin/lookups`);
+  getLookups(): Observable<DataEntryOptions> {
+    return this.http.get<DataEntryOptions>(`${this.base}/admin/lookups`);
   }
 
-  updateLookups(data: any): Observable<any> {
-    return this.http.put<any>(`${this.base}/admin/lookups`, data);
+  updateLookups(data: Partial<DataEntryOptions>): Observable<DataEntryOptions> {
+    return this.http.put<DataEntryOptions>(`${this.base}/admin/lookups`, data);
   }
 
   getRecommendations(portfolioKey?: string): Observable<RecommendationReport> {

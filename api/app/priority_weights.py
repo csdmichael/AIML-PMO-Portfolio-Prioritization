@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import AppConfig
 from app.onelake import LakeConflict, OneLakeClient
+from app.options_store import OptionsStore
 from app.priority_scoring import (
     PRIORITY_WEIGHTS_PATH,
     PriorityWeightError,
@@ -77,10 +78,15 @@ class PriorityWeightsUpdateRequest(BaseModel):
 
 
 class PriorityWeightsService:
-    def __init__(self, config: AppConfig, lake: OneLakeClient) -> None:
+    def refresh_options(self) -> None:
+        if self._options is not None:
+            self._options.current()
+
+    def __init__(self, config: AppConfig, lake: OneLakeClient, options: OptionsStore | None = None) -> None:
         self._config = config
         self._lake = lake
         self._model: dict[str, Any] | None = None
+        self._options = options
         spec = config.api.sharedConfig.files["priorityWeights"]
         self._base = json.loads((config.shared_dir / spec.fileName).read_text(encoding="utf-8"))
 
@@ -181,6 +187,7 @@ class PriorityWeightsService:
         return updated.model_copy(update={"etag": etag})
 
     def _model_config(self) -> dict[str, Any]:
+        self.refresh_options()
         if self._model is None:
             spec = self._config.api.sharedConfig.files.get("mlModel")
             path: Path = self._config.shared_dir / (spec.fileName if spec is not None else "ml-model.json")
@@ -193,7 +200,12 @@ class PriorityWeightsService:
             if not isinstance(model, dict):
                 raise ScoringEvidenceError("The saved analysis scoring configuration is unavailable.")
             self._model = model
-        return self._model
+        contract = getattr(self._config, "data_entry", None)
+        scores = contract.options.sponsorLevelScores if contract is not None else {}
+        return {**self._model, "mappings": {
+            **self._model["mappings"],
+            "sponsorLevel": {**self._model["mappings"]["sponsorLevel"], **scores},
+        }}
 
     def apply_project(
         self, record: Mapping[str, Any], settings: PriorityWeightsResponse | None = None,

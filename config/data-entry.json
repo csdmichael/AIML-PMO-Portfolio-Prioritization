@@ -46,6 +46,12 @@
       "Manager",
       "Individual"
     ],
+    "sponsorLevelScores": {
+      "Executive": 4,
+      "Director": 3,
+      "Manager": 2,
+      "Individual": 1
+    },
     "riskRatings": [
       "Low",
       "Medium",

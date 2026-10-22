@@ -186,6 +186,7 @@ def project_record(pid):
         "effectivePriorityWeights": EFFECTIVE_FIELD_WEIGHTS[pid],
         "priorityScoreState": r["priority_score_state"],
         "priorityScoreReason": PRIORITY_SCORE_ERRORS.get(pid),
+        "analysisResetRevision": clean(r.get("analysis_reset_revision")),
         "ruleOverrides": OVERRIDES[pid],
         "recommendedAction": r["recommended_action"],
         "cluster": r["cluster_name"],
@@ -208,7 +209,7 @@ PORTFOLIO_JSON = {
     "source": "pmo_lakehouse / gold.project_predictions",
     "mainPortfolio": {"key": PORTFOLIO_CFG["mainPortfolioKey"], "displayName": next(p["displayName"] for p in PORTFOLIO_CFG["portfolios"] if p["key"] == PORTFOLIO_CFG["mainPortfolioKey"])},
     "portfolios": [
-        {"key": p["key"], "displayName": p["displayName"], "code": p["code"], "role": p["role"], "projectCount": p["projectCount"], "programs": [{"key": g["key"], "code": g["code"], "displayName": g["displayName"]} for g in p["programs"]]}
+        {"key": p["key"], "displayName": p["displayName"], "code": p["code"], "role": p["role"], "projectCount": int((P["portfolio_key"] == p["key"]).sum()), "programs": [{"key": g["key"], "code": g["code"], "displayName": g["displayName"]} for g in p["programs"]]}
         for p in PORTFOLIO_CFG["portfolios"]
     ],
     "projects": [project_record(pid) for pid in X.index],

@@ -104,6 +104,15 @@ def test_an_existing_option_matched_ignoring_case_is_returned_and_nothing_is_wri
     assert store.add_option("sites", existing.upper()) == existing
     lake.write_json.assert_not_called()
 
+def test_new_sponsor_levels_cannot_bypass_explicit_score_configuration(contract):
+    lake = Mock()
+    lake.read_json.return_value = None
+    store = store_for(contract, lake)
+    with pytest.raises(ProblemError, match="relative score"):
+        store.add_option("sponsorLevels", "CEO")
+    lake.write_json.assert_not_called()
+    assert store.add_option("sponsorLevels", "EXECUTIVE") == "Executive"
+
 
 def test_a_failed_save_leaves_the_options_unchanged(contract):
     lake = Mock()

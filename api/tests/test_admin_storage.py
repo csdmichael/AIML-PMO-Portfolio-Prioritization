@@ -174,7 +174,7 @@ def test_lookups_are_saved_to_onelake_on_every_save(harness):
     assert second.json()["sites"] == ["Fremont"]
     calls = services.lake.write_json.call_args_list
     assert len(calls) == 2
-    assert all(call.kwargs.get("overwrite") is True for call in calls)
+    assert all(call.kwargs == {"etag": None} for call in calls)
 
 
 def test_a_failed_lookups_save_leaves_the_options_unchanged(harness):

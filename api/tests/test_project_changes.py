@@ -149,6 +149,39 @@ def export_project(client, project_id):
     export = client.get("/v1/portfolio").json()
     return next((item for item in export["projects"] if item["projectId"] == project_id), None)
 
+def test_agent_snapshot_does_not_read_entries_already_in_the_saved_export(harness, monkeypatch):
+    saved_entry = pending_entry(harness.config)
+    saved_entry["projectId"] = "GIS-0001"
+    harness.lake.write_json(harness.services.paths.project_entry("GIS-0001"), saved_entry)
+    reads = []
+    original = harness.lake.read_json
+
+    def read(path):
+        reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(harness.lake, "read_json", read)
+    snapshot = harness.services.catalog.agent_snapshot()
+    assert len(snapshot["projects"]) == 2
+    assert harness.services.paths.project_entry("GIS-0001") not in reads
+    assert harness.services.paths.project_entry("GIS-0002") in reads
+
+
+def test_analyzed_reset_export_keeps_its_new_score_instead_of_the_old_replacement(harness):
+    services = harness.services
+    original = export_document(harness.config)["projects"][0]
+    services.changes.save_reset({
+        "revision": "reset-1", "updatedAtUtc": "2026-10-22T00:00:00Z", "action": "reloadSample",
+        "portfolioKey": None, "portfolios": [], "records": {
+            "GIS-0001": {"projectId": "GIS-0001", "resetRevision": "reset-1", "replacement": {**original, "priorityScore": 20}},
+        },
+    }, None)
+    fresh = {**original, "priorityScore": 88, "analysisResetRevision": "reset-1"}
+    result = services.changes.apply(fresh, shape="export", portfolios=services.catalog.portfolio_index)
+    assert result["priorityScore"] == 88
+    before_analysis = services.changes.apply(original, shape="export", portfolios=services.catalog.portfolio_index)
+    assert before_analysis["priorityScore"] == 20
+
 
 def test_saved_weight_scopes_rescore_every_http_view_and_invalidate_recommendations(harness):
     services, client = harness.services, harness.client

@@ -29,6 +29,7 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
 import { ResultBlockComponent } from '../../components/result-block/result-block.component';
 import { ExportTableData } from '../../services/file-export.service';
 import { ConfigService } from '../../services/config.service';
+import { PrioritizationRunService } from '../../services/prioritization-run.service';
 
 @Component({
   selector: 'app-prioritization-page',
@@ -109,6 +110,14 @@ import { ConfigService } from '../../services/config.service';
             </div>
 
             <div class="toolbar-right">
+              <ion-button
+                size="small"
+                [disabled]="analysis.running() || store.isLoading() || (!analysis.unscored().length && !analysis.runId())"
+                (click)="analysis.start()"
+                title="Run the ML notebooks and save weighted priority scores for all unscored projects across portfolios"
+              >
+                {{ analysis.running() ? 'Prioritizing...' : analysis.runId() ? 'Resume status check' : 'Prioritize unscored projects (' + analysis.unscored().length + ')' }}
+              </ion-button>
               <!-- Sort control -->
               <div class="control-wrap">
                 <span class="control-label">Sort:</span>
@@ -187,6 +196,23 @@ import { ConfigService } from '../../services/config.service';
           </div>
 
           <!-- TABLE TOOLS / EXPORT BLOCK -->
+          @if (analysis.message()) {
+            <p class="ion-padding-horizontal" role="status">{{ analysis.message() }}</p>
+          }
+          @if (analysis.runId()) {
+            <p class="ion-padding-horizontal">Analysis run: {{ analysis.runId() }}</p>
+          }
+          @if (analysis.error()) {
+            <p class="ion-padding-horizontal" role="alert">{{ analysis.error() }}</p>
+          }
+          @if (analysis.completed() && !store.isLoading() && !store.loadError()) {
+            <p class="ion-padding-horizontal" role="status">
+              Saved scores reloaded. {{ analysis.unscored().length }} projects remain unscored.
+              @if (analysis.unscored().length) {
+                Review their missing fields or analysis reasons; no scores were invented.
+              }
+            </p>
+          }
           @if (showTableTools()) {
             <div class="table-tools-container">
               <app-result-block [table]="getExportTableData()"></app-result-block>
@@ -1130,6 +1156,7 @@ import { ConfigService } from '../../services/config.service';
 })
 export class PrioritizationPageComponent {
   readonly store = inject(PortfolioStore);
+  readonly analysis = inject(PrioritizationRunService);
   private readonly configService = inject(ConfigService);
   readonly showTableTools = signal<boolean>(false);
   readonly mobileFiltersOpen = signal<boolean>(false);

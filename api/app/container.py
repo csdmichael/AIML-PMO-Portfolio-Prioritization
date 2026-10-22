@@ -75,7 +75,10 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         entries=entries, paths=paths, contract=config.data_entry,
         cache=TtlCache(api.cache.ttlSeconds), reset_cache=TtlCache(api.cache.ttlSeconds),
     )
-    priority_weights = PriorityWeightsService(config, lake)
+    options = OptionsStore(
+        lake=lake, contract=config.data_entry, path=api.oneLake.lookupsFile, ttl_seconds=api.cache.ttlSeconds,
+    )
+    priority_weights = PriorityWeightsService(config, lake, options)
     catalog = Catalog(
         exports=exports, entries=entries, paths=paths, statuses=api.projects, contract=config.data_entry, changes=changes,
         priority_weights=priority_weights,
@@ -115,9 +118,6 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
         job_type=values.pipeline_job_type,
         workspace_name=values.workspace_name,
         accepted_status=api.pipeline.acceptedStatus,
-    )
-    options = OptionsStore(
-        lake=lake, contract=config.data_entry, path=api.oneLake.lookupsFile, ttl_seconds=api.cache.ttlSeconds,
     )
     return Services(
         config=config,

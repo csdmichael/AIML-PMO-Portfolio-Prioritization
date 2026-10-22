@@ -107,7 +107,8 @@ class ProjectChanges:
             return None
         values: Mapping[str, Any] = change.get("values") or {}
         replacement = change.get("replacement")
-        applied = dict(replacement if isinstance(replacement, Mapping) else record)
+        already_analyzed = change.get("resetRevision") is not None and record.get("analysisResetRevision") == change["resetRevision"]
+        applied = dict(replacement if isinstance(replacement, Mapping) and not already_analyzed else record)
         for key, value in values.items():
             if shape == "export" and key == "primarySkill":
                 value = self._skill_names.get(str(value), value)

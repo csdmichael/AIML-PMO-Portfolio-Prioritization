@@ -44,6 +44,20 @@ export function isScoredProject(project: Project): project is Project & { priori
     && project.priorityScoreState !== 'awaiting-analysis' && project.priorityScoreState !== 'requires-analysis';
 }
 
+export function priorityAverage(projects: readonly Project[]): { value: number | null; count: number; saved: boolean } {
+  const current = projects.filter(isScoredProject).map(project => project.priorityScore);
+  const recorded = projects
+    .filter(project => project.priorityScoreState !== 'awaiting-analysis')
+    .map(project => project.recordedPriorityScore)
+    .filter((score): score is number => typeof score === 'number' && Number.isFinite(score));
+  const scores = current.length ? current : recorded;
+  return {
+    value: scores.length ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length * 10) / 10 : null,
+    count: scores.length,
+    saved: current.length === 0 && recorded.length > 0,
+  };
+}
+
 export function filterProjects(projects: readonly Project[], criteria: FilterCriteria): Project[] {
   const searchNormalized = criteria.search.trim().toLowerCase();
 

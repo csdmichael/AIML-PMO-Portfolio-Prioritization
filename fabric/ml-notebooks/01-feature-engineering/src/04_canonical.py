@@ -85,6 +85,7 @@ RECORD_COUNTS = {
 SIGNAL_KEYS = ["go_live_date", "business_value", "sponsor_priority", "regulatory_security", "primary_skill", "cost_usd", "dependencies", "risk", "dt_alignment", "effort_person_weeks"]
 
 canonical, provenance, coverage, dq_rows = [], [], [], []
+check_contexts = {}
 for pid in ALL_IDS:
     portfolio_name = resolve("portfolio", [("planview", cell(PV, pid, "portfolio")), ("excel_intake", cell(XLD, pid, "portfolio"))], provenance, pid)
     portfolio = PORTFOLIO_BY_NAME.get(portfolio_name)
@@ -140,14 +141,7 @@ for pid in ALL_IDS:
     story_points = (cell(ado_agg, pid, "points") or 0) + (cell(jira_agg, pid, "points") or 0)
     effort = resolve("effort_person_weeks", [("ms_project", None if msp_hours_value is None else msp_hours_value / 40), ("excel_intake", cell(XLD, pid, "effort")), ("ado_jira", story_points * 0.5 if story_points else None)], provenance, pid)
     user_base_raw = resolve("user_base", [("planview", cell(PV, pid, "user_base") or cell(PV, pid, "users_impacted")), ("powerapps", cell(PA, pid, "cr5f2_userbase")), ("excel_intake", cell(XLD, pid, "user_base"))], provenance, pid)
-    if user_base_raw is None:
-        num_part = int(re.sub(r"\D", "", pid)[-2:] or "10")
-        user_base = 5000 if num_part % 5 == 0 else (1200 if num_part % 2 == 0 else 350)
-    else:
-        try:
-            user_base = int(float(user_base_raw))
-        except (ValueError, TypeError):
-            user_base = 350
+    user_base = parse_number(user_base_raw)
 
     signal_values = [go_live, value, sponsor_priority, regulatory, skill_code, cost, deps, risk, dt_flag, effort, user_base]
     signals_present = sum(1 for v in signal_values if v is not None)
@@ -160,6 +154,7 @@ for pid in ALL_IDS:
     }
     for check_id, evaluated, passed, detail in run_checks(pid, context):
         dq_rows.append((pid, check_id, int(bool(passed)) if evaluated else None, int(evaluated), detail))
+    check_contexts[pid] = context
 
     for source in SOURCE_NAMES:
         count = int(RECORD_COUNTS[source].get(pid, 0))
@@ -181,6 +176,7 @@ for pid in ALL_IDS:
         "sponsor_email": sponsor_email,
         "sponsor_roster_match": int(sponsor_match),
         "sponsor_level_code": sponsor_priority,
+        "sponsor_level_name": next((name for name, score in MAP["sponsorLevel"].items() if score == sponsor_priority), None),
         "project_status": status,
         "protected_program": int(protected),
         "go_live_date": go_live,
@@ -201,6 +197,31 @@ for pid in ALL_IDS:
         "project_id_raw": raw_code,
     })
 
+canonical, ui_affected = merge_ui_analysis_inputs(canonical, UI_ENTRIES, UI_CHANGES, UI_PORTFOLIOS, CONFIG)
+(EXPORTS / "analysis-portfolios.json").write_text(json.dumps(PORTFOLIO_CFG), encoding="utf-8")
+active_ids = {row["project_id"] for row in canonical}
+def ui_provenance_keys(pid):
+    keys = set(ui_affected.get(pid, set()))
+    if "primary_skill_code" in keys:
+        keys.add("primary_skill")
+    return keys
+
+
+provenance = [row for row in provenance if row[0] in active_ids and row[1] not in ui_provenance_keys(row[0])]
+coverage = [row for row in coverage if row[0] in active_ids]
+dq_rows = [row for row in dq_rows if row[0] in active_ids and row[0] not in ui_affected]
+for row in canonical:
+    pid = row["project_id"]
+    if pid not in ui_affected:
+        continue
+    provenance.extend((pid, key, "ui_entries") for key in SIGNAL_KEYS + ["user_base"] if key in ui_provenance_keys(pid))
+    row["sponsor_roster_match"] = int(str(row.get("executive_sponsor") or "").strip().lower() in ROSTER_BY_NAME)
+    context = {
+        "go_live_candidates": [], "cost_candidates": [], **check_contexts.get(pid, {}),
+        **row, "sponsor_roster_match": bool(row.get("sponsor_roster_match")),
+    }
+    for check_id, evaluated, passed, detail in run_checks(pid, context):
+        dq_rows.append((pid, check_id, int(bool(passed)) if evaluated else None, int(evaluated), detail))
 CANON = pd.DataFrame(canonical)
 CANON["sponsor_priority"] = CANON["sponsor_priority"].astype("float")
 PROV = pd.DataFrame(provenance, columns=["project_id", "signal", "source"])
@@ -213,7 +234,10 @@ print(f"DQ checks evaluated: {len(DQ)}, failed: {int((DQ['passed'] == 0).sum())}
 
 # %%
 PORTFOLIO_CODE = dict(zip(CANON["project_id"], CANON["portfolio_code"]))
-DEP = edge_table.copy()
+ui_edges, ui_edge_projects = ui_dependency_edges(UI_ENTRIES, UI_CHANGES)
+DEP = edge_table[~edge_table["from_id"].isin(ui_edge_projects)].copy()
+if ui_edges:
+    DEP = pd.concat([DEP, pd.DataFrame(ui_edges)], ignore_index=True)
 DEP = DEP[DEP["from_id"].isin(PORTFOLIO_CODE) & DEP["to_id"].isin(PORTFOLIO_CODE)].copy()
 DEP["from_portfolio_code"] = DEP["from_id"].map(PORTFOLIO_CODE)
 DEP["to_portfolio_code"] = DEP["to_id"].map(PORTFOLIO_CODE)

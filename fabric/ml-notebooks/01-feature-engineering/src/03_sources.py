@@ -4,7 +4,7 @@
 
 # %%
 def cell(source, pid, column=None):
-    if source is None or pid not in source.index:
+    if source is None or pid not in source.index or (column is not None and column not in source.columns):
         return None
     value = source.loc[pid] if column is None else source.at[pid, column]
     return None if is_blank(value) else value

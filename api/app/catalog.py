@@ -136,6 +136,8 @@ class Catalog:
         return self._changes.extend_export(value) if isinstance(value, dict) else {}
 
     def export(self) -> dict[str, Any]:
+        if self._priority_weights is not None:
+            self._priority_weights.refresh_options()
         export = self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
         projects = export.get("projects")
         if isinstance(projects, list):
@@ -178,23 +180,17 @@ class Catalog:
                 status=self._statuses.statusPending,
             )
             exported.update(self._provisional.score(record))
+            exported.update(
+                priorityScore=None, fieldWeightedScore=None, priorityScoreState="awaiting-analysis",
+                priorityScoreReason="Awaiting saved project analysis.",
+            )
             records.append(exported)
         return records
 
     def agent_snapshot(self) -> dict[str, Any]:
         """Read the full register, including pending work, without inventing analysis scores."""
         self._changes.invalidate()
-        snapshot = self._changes.apply_export(self._export(), portfolios=self.portfolio_index)
-        projects = list(snapshot.get("projects") or [])
-        known = {item["projectId"] for item in projects}
-        portfolios = self.portfolio_index()
-        for _, entry in self._entries.list(self._paths.project_entries_folder()):
-            if entry.get("projectId") and entry["projectId"] not in known:
-                record = self._changes.apply(entry, shape="entry", portfolios=lambda: portfolios)
-                if record is not None:
-                    projects.append({**record, **self._summary_from_entry(record, portfolios)})
-        snapshot = {**snapshot, "projects": projects}
-        return self._priority_weights.apply_export(snapshot) if self._priority_weights is not None else snapshot
+        return self.export()
 
     def _export_projects(self) -> list[dict[str, Any]]:
         return [item for item in self._export().get("projects") or [] if isinstance(item, dict)]

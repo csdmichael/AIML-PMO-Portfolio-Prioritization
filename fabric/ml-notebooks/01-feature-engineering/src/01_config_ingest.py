@@ -30,6 +30,9 @@ from pyspark.sql.types import StructType, StructField, StringType
 LAKE = Path("/lakehouse/default")
 CFG_DIR = LAKE / "Files" / "config"
 CONFIG = json.loads((CFG_DIR / "ml-model.json").read_text(encoding="utf-8"))
+BASE_SPONSOR_NAMES = {score: name for name, score in CONFIG["mappings"]["sponsorLevel"].items()}
+ENTRY_CONFIG = json.loads((CFG_DIR / "data-entry.json").read_text(encoding="utf-8"))
+CONFIG["mappings"]["sponsorLevel"].update(ENTRY_CONFIG["options"].get("sponsorLevelScores", {}))
 SOURCES = json.loads((CFG_DIR / "data-sources.json").read_text(encoding="utf-8"))
 PORTFOLIO_CFG = json.loads((CFG_DIR / "portfolios.json").read_text(encoding="utf-8"))
 RAW = LAKE / SOURCES["lakehouseRawRoot"]

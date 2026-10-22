@@ -71,12 +71,15 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
         and (query.kind == "projectInventory" or not p.get("isDeleted"))
     ]
     awaiting = []
+    requires_analysis = []
+    matched_count = len(selected)
     if query.kind == "projects":
         awaiting = [
-            p for p in selected if p.get("priorityScoreState") in {"awaiting-analysis", "requires-analysis"}
+            p for p in selected if p.get("priorityScoreState") == "awaiting-analysis"
             or (p.get("status") == "pending" and p.get("priorityScore") is None)
         ]
-        selected = [p for p in selected if p not in awaiting]
+        requires_analysis = [p for p in selected if p.get("priorityScoreState") == "requires-analysis" and p not in awaiting]
+        selected = [p for p in selected if p not in awaiting and p not in requires_analysis]
     required = {"projects": ("priorityScore",), "budgetByBusinessUnit": ("costEstimateUsd",)}.get(query.kind, ())
     if any(
         isinstance(p.get(field), bool) or not isinstance(p.get(field), (int, float)) or not math.isfinite(p[field])
@@ -129,6 +132,11 @@ def query_portfolio(snapshot: Any, query: PortfolioQuery) -> dict[str, Any]:
         "totalMatching": total, "truncated": total > query.offset + len(records),
         "offset": query.offset, "awaitingAnalysisCount": len(awaiting),
         "awaitingAnalysisProjectIds": [p["projectId"] for p in awaiting[:25]],
+        "requiresAnalysisCount": len(requires_analysis),
+        "requiresAnalysisProjects": [
+            {"projectId": p["projectId"], "reason": p.get("priorityScoreReason")} for p in requires_analysis[:25]
+        ],
+        "totalRegisteredMatching": matched_count,
     }
     if len(json.dumps(result).encode("utf-8")) > 64000:
         raise ProblemError(502, "The Fabric query result exceeds the evidence size limit. Narrow the query.", slug="upstream-failure")

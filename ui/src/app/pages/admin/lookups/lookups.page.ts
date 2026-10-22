@@ -20,6 +20,7 @@ import {
 } from '@ionic/angular';
 import { DataApiService } from '../../../services/data-api.service';
 import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/loading-skeleton.component';
+import { problemMessage } from '../../../core/problem-detail';
 
 @Component({
   selector: 'app-admin-lookups-page',
@@ -47,6 +48,12 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ion-content class="ion-padding lookups-page-content">
+      @if (error()) {
+        <p role="alert">{{ error() }}</p>
+      }
+      @if (saved()) {
+        <p role="status">Project options saved. Sponsor scores apply to current weighted priorities; run analysis to update ML predictions.</p>
+      }
       <div class="page-header">
         <div class="header-left">
           <h2 class="page-title">Project Options</h2>
@@ -230,7 +237,7 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
               <div class="card-header-row">
                 <div>
                   <ion-card-title>Sponsor Levels</ion-card-title>
-                  <ion-card-subtitle>Executive hierarchy tier classifications.</ion-card-subtitle>
+                  <ion-card-subtitle>Higher scores mean higher sponsor priority. The highest configured score is 100% of the sponsor factor. For example, Executive = 4 and CEO = 5 makes Executive 80% and CEO 100%.</ion-card-subtitle>
                 </div>
                 <ion-badge color="primary">{{ sponsorLevels().length }} Levels</ion-badge>
               </div>
@@ -245,6 +252,10 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
                     (keyup.enter)="addSponsorLevel()"
                   ></ion-input>
                 </ion-item>
+                <ion-item lines="none">
+                  <ion-input type="number" label="Relative score" min="0.01" step="any"
+                    [(ngModel)]="newSponsorScore"></ion-input>
+                </ion-item>
                 <ion-button color="primary" [disabled]="!newSponsorLevel.trim()" (click)="addSponsorLevel()">
                   <ion-icon name="add-outline" slot="start"></ion-icon>
                   Add Level
@@ -256,6 +267,8 @@ import { LoadingSkeletonComponent } from '../../../components/loading-skeleton/l
                   <div class="item-row">
                     <span class="item-index">{{ idx + 1 }}</span>
                     <span class="item-name">{{ sl }}</span>
+                    <ion-input type="number" [label]="sl + ' score'" min="0.01" step="any"
+                      [ngModel]="sponsorLevelScores()[sl]" (ngModelChange)="setSponsorScore(sl, $event)"></ion-input>
                     <div class="item-actions">
                       <button type="button" class="action-btn delete" (click)="deleteSponsorLevel(idx)">
                         <ion-icon name="trash-outline"></ion-icon>
@@ -416,18 +429,22 @@ export class LookupsPageComponent implements OnInit {
 
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly saved = signal(false);
   activeCategory = 'sites';
 
   readonly sites = signal<string[]>([]);
   readonly businessUnits = signal<string[]>([]);
   readonly projectStatuses = signal<string[]>([]);
   readonly sponsorLevels = signal<string[]>([]);
+  readonly sponsorLevelScores = signal<Record<string, number>>({});
   readonly riskRatings = signal<string[]>([]);
 
   newSiteName = '';
   newBuName = '';
   newStatusName = '';
   newSponsorLevel = '';
+  newSponsorScore: number | null = null;
   newRiskRating = '';
 
   ngOnInit(): void {
@@ -437,10 +454,14 @@ export class LookupsPageComponent implements OnInit {
         this.businessUnits.set(res.businessUnits || []);
         this.projectStatuses.set(res.projectStatuses || []);
         this.sponsorLevels.set(res.sponsorLevels || []);
+        this.sponsorLevelScores.set(res.sponsorLevelScores ?? {});
         this.riskRatings.set(res.riskRatings || []);
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: (err) => {
+        this.error.set(problemMessage(err, 'Unable to load project options.'));
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -479,12 +500,35 @@ export class LookupsPageComponent implements OnInit {
 
   addSponsorLevel(): void {
     const val = this.newSponsorLevel.trim();
-    if (!val || this.sponsorLevels().includes(val)) return;
+    this.error.set(null);
+    this.saved.set(false);
+    if (!val || this.sponsorLevels().some(level => level.toLowerCase() === val.toLowerCase())) {
+      this.error.set('Enter a unique sponsor level name.');
+      return;
+    }
+    const score = Number(this.newSponsorScore);
+    if (!Number.isFinite(score) || score <= 0) {
+      this.error.set('Enter a positive relative score for the new sponsor level.');
+      return;
+    }
     this.sponsorLevels.update((list) => [...list, val]);
+    this.sponsorLevelScores.update(scores => ({ ...scores, [val]: score }));
     this.newSponsorLevel = '';
+    this.newSponsorScore = null;
+  }
+
+  setSponsorScore(level: string, value: number | string | null): void {
+    this.sponsorLevelScores.update(scores => ({ ...scores, [level]: Number(value) }));
+    this.saved.set(false);
   }
 
   deleteSponsorLevel(index: number): void {
+    const level = this.sponsorLevels()[index];
+    this.sponsorLevelScores.update(scores => {
+      const updated = { ...scores };
+      delete updated[level];
+      return updated;
+    });
     this.sponsorLevels.update((list) => list.filter((_, i) => i !== index));
   }
 
@@ -500,6 +544,12 @@ export class LookupsPageComponent implements OnInit {
   }
 
   saveLookups(): void {
+    this.error.set(null);
+    this.saved.set(false);
+    if (this.sponsorLevels().some(level => !Number.isFinite(this.sponsorLevelScores()[level]) || this.sponsorLevelScores()[level] <= 0)) {
+      this.error.set('Each sponsor level needs a positive relative score.');
+      return;
+    }
     this.isSaving.set(true);
     this.dataApi
       .updateLookups({
@@ -507,11 +557,18 @@ export class LookupsPageComponent implements OnInit {
         businessUnits: this.businessUnits(),
         projectStatuses: this.projectStatuses(),
         sponsorLevels: this.sponsorLevels(),
+        sponsorLevelScores: this.sponsorLevelScores(),
         riskRatings: this.riskRatings(),
       })
       .subscribe({
-        next: () => this.isSaving.set(false),
-        error: () => this.isSaving.set(false),
+        next: () => {
+          this.isSaving.set(false);
+          this.saved.set(true);
+        },
+        error: (err) => {
+          this.error.set(problemMessage(err, 'Unable to save project options.'));
+          this.isSaving.set(false);
+        },
       });
   }
 }

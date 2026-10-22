@@ -6,6 +6,7 @@ import {
   groupProjects,
   buildHierarchyTree,
   meanScore,
+  priorityAverage,
 } from './portfolio-filter';
 import { Project } from '../models/portfolio.models';
 
@@ -15,6 +16,30 @@ describe('confidence averages', () => {
     const unscored = { ...createDummyProject('GIS-2', 'Unscored', 'BU', 'Site', 50, 0, 100), confidenceScore: undefined as unknown as number };
     expect(groupProjects([scored, unscored], 'none')[0].avgConfidence).toBe(80);
     expect(meanScore([null, undefined])).toBe(0);
+  });
+});
+
+describe('Overview priority averages', () => {
+  const project = createDummyProject('GIS-1', 'Scored', 'BU', 'Site', 70, 80, 100);
+  const pending: Project = { ...project, projectId: 'GIS-101', priorityScore: null, priorityScoreState: 'awaiting-analysis' };
+
+  it('keeps the average of 100 prioritized projects when a new unscored project is entered', () => {
+    const scored = Array.from({ length: 100 }, (_, index) => ({ ...project, projectId: `GIS-${index}`, priorityScore: index % 2 ? 80 : 60 }));
+    expect(priorityAverage([...scored, pending])).toEqual({ value: 70, count: 100, saved: false });
+  });
+
+  it('labels recorded scores separately when current weighting lacks evidence', () => {
+    const saved = Array.from({ length: 100 }, (_, index) => ({
+      ...project, projectId: `GIS-${index}`, priorityScore: null, recordedPriorityScore: 75,
+      priorityScoreState: 'requires-analysis' as const,
+    }));
+    expect(priorityAverage([...saved, pending])).toEqual({ value: 75, count: 100, saved: true });
+    expect(priorityAverage([pending])).toEqual({ value: null, count: 0, saved: false });
+  });
+
+  it('does not mix historic scores into a current weighted average', () => {
+    const saved: Project = { ...project, priorityScore: null, recordedPriorityScore: 95, priorityScoreState: 'requires-analysis' };
+    expect(priorityAverage([project, pending, saved])).toEqual({ value: 70, count: 1, saved: false });
   });
 });
 

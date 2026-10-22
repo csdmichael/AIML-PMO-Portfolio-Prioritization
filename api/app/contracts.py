@@ -3,7 +3,7 @@
 Extra keys are allowed so these contracts can be returned to clients as they are written.
 """
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -22,6 +22,7 @@ class OptionLists(Contract):
     sites: list[str]
     projectStatuses: list[str]
     sponsorLevels: list[str]
+    sponsorLevelScores: dict[str, Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]] = Field(default_factory=dict)
     riskRatings: list[str]
     skills: list[SkillOption]
     relationshipTypes: list[str]

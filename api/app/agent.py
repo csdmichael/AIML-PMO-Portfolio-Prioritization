@@ -73,6 +73,7 @@ class AgentSettings(BaseModel):
     maxOutputTokens: int
     instructions: str
     responseStyleInstructions: str | None = None
+    reasoningEffort: Literal["none", "minimal", "low", "medium", "high"] | None = None
     tools: list[Annotated[McpToolSettings | BingToolSettings, Field(discriminator="type")]]
     evidence: EvidenceSettings
 
@@ -264,6 +265,8 @@ class FoundryAgentClient:
             "tool_choice": tool_choice,
             "max_tool_calls": 4,
         }
+        if settings.reasoningEffort is not None:
+            payload["reasoning"] = {"effort": settings.reasoningEffort}
         try:
             response = httpx.post(
                 f"{settings.projectEndpoint.rstrip('/')}/openai/responses",

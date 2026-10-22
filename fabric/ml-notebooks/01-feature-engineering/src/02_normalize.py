@@ -110,7 +110,8 @@ def sponsor_code_from_excel(value):
 def sponsor_code_from_roster(job_level):
     if is_blank(job_level):
         return None
-    return MAP["rosterJobLevelSponsor"].get(str(job_level).strip(), MAP["defaultSponsorLevel"])
+    code = MAP["rosterJobLevelSponsor"].get(str(job_level).strip(), MAP["defaultSponsorLevel"])
+    return sponsor_code(BASE_SPONSOR_NAMES.get(code))
 
 
 ROSTER = INGESTED["src_hr_roster.employees"].copy()

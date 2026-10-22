@@ -21,7 +21,9 @@ EXPORTS = LAKE / "Files" / "exports"
 MODELS = LAKE / "Files" / "models"
 EXPORTS.mkdir(parents=True, exist_ok=True)
 CONFIG = json.loads((CFG_DIR / "ml-model.json").read_text(encoding="utf-8"))
-PORTFOLIO_CFG = json.loads((CFG_DIR / "portfolios.json").read_text(encoding="utf-8"))
+ENTRY_CONFIG = json.loads((CFG_DIR / "data-entry.json").read_text(encoding="utf-8"))
+CONFIG["mappings"]["sponsorLevel"].update(ENTRY_CONFIG["options"].get("sponsorLevelScores", {}))
+PORTFOLIO_CFG = json.loads((EXPORTS / "analysis-portfolios.json").read_text(encoding="utf-8"))
 SCORED_AT = dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)
 TIERS = CONFIG["tiers"]["order"]
 FEATURE_NAMES = json.loads((MODELS / "feature_names.json").read_text(encoding="utf-8"))

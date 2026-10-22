@@ -135,7 +135,7 @@ describe('AI recommendations page', () => {
     expect(status?.textContent).toContain('decision: must be a tier');
   });
 
-  it('shows the persisted report before the agent finishes, then replaces it with the fresh report', () => {
+  it('reuses a valid persisted report without invoking the agent until Refresh', () => {
     const fresh = new Subject<RecommendationReport>();
     const api = createApi({
       getCachedRecommendations: vi.fn(() => of(report)),
@@ -143,10 +143,13 @@ describe('AI recommendations page', () => {
     });
     const fixture = render(api);
     const page = fixture.componentInstance;
-    expect(page.loading()).toBe(true);
+    expect(page.loading()).toBe(false);
     expect(fixture.nativeElement.querySelector('.item-title')?.textContent).toContain('Review GIS-0002');
     expect(fixture.nativeElement.querySelector('.report-status')?.textContent).toContain('Previous');
-
+    expect(api.getRecommendations).not.toHaveBeenCalled();
+    page.retry();
+    expect(page.loading()).toBe(true);
+    expect(api.getRecommendations).toHaveBeenCalledTimes(1);
     fresh.next({ ...report, summary: 'Updated evidence from the agent.' });
     fixture.detectChanges();
     expect(page.loading()).toBe(false);
@@ -159,30 +162,36 @@ describe('AI recommendations page', () => {
       getCachedRecommendations: vi.fn(() => of(report)),
       getRecommendations: vi.fn(() => throwError(() => ({ error: { detail: 'Foundry is unavailable.' } }))),
     }));
+    fixture.componentInstance.retry();
+    fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.item-card')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.error-text')?.textContent).toContain('AI service is unavailable.');
     expect(fixture.componentInstance.showingSaved()).toBe(true);
   });
 
-  it('still loads a saved report when its read completes after a refresh failure', () => {
+  it('waits for the saved report and skips generation when the cache returns a hit', () => {
     const cached = new Subject<RecommendationReport | null>();
-    const fixture = render(createApi({
+    const api = createApi({
       getCachedRecommendations: vi.fn(() => cached),
       getRecommendations: vi.fn(() => throwError(() => ({ error: { detail: 'Agent timed out.' } }))),
-    }));
+    });
+    const fixture = render(api);
     cached.next(report);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.item-card')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('.error-text')?.textContent).toContain('Agent timed out.');
+    expect(api.getRecommendations).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error()).toBeNull();
   });
 
-  it('does not let a slow cache read overwrite fresh agent results', () => {
+  it('does not start a fresh request while a cache read is outstanding', () => {
     const cached = new Subject<RecommendationReport | null>();
-    const fixture = render(createApi({ getCachedRecommendations: vi.fn(() => cached) }));
+    const api = createApi({ getCachedRecommendations: vi.fn(() => cached) });
+    const fixture = render(api);
+    expect(api.getRecommendations).not.toHaveBeenCalled();
     cached.next({ ...report, summary: 'Older report' });
     fixture.detectChanges();
-    expect(fixture.componentInstance.report()?.summary).toBe(report.summary);
-    expect(fixture.componentInstance.showingSaved()).toBe(false);
+    expect(fixture.componentInstance.report()?.summary).toBe('Older report');
+    expect(fixture.componentInstance.showingSaved()).toBe(true);
   });
 
   it('reports a cache read failure while continuing the agent refresh', () => {

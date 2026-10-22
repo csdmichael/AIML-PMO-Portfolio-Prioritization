@@ -52,6 +52,7 @@ export interface DataEntryOptions {
   sites: string[];
   projectStatuses: string[];
   sponsorLevels: string[];
+  sponsorLevelScores?: Record<string, number>;
   riskRatings: string[];
   skills: SkillOption[];
   relationshipTypes: string[];
@@ -169,13 +170,20 @@ export interface CreateProjectResponse {
   warnings?: string[];
 }
 
+export interface PipelineRunStarted {
+  runId: string;
+  jobInstanceId: string;
+  status: string;
+  retryAfterSeconds?: number | null;
+}
+
 export interface PipelineRunStatus {
   runId: string;
   jobInstanceId?: string;
   status: 'NotStarted' | 'InProgress' | 'Completed' | 'Failed' | 'Cancelled';
   startTimeUtc?: string;
   endTimeUtc?: string;
-  failureReason?: string;
+  failureReason?: { message?: string; errorCode?: string } | null;
 }
 
 export interface DraftFieldProvenance {

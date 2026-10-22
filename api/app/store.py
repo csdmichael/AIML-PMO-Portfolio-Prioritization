@@ -29,6 +29,9 @@ class ExportReader:
     def read(self, lake_path: str) -> Any:
         return self._cache.get_or_load(lake_path, lambda: self._load(lake_path))
 
+    def invalidate(self) -> None:
+        self._cache.invalidate()
+
     def _load(self, lake_path: str) -> Any:
         found = self._lake.read_json(lake_path)
         if found is None:

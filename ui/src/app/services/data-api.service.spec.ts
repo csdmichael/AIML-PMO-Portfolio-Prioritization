@@ -250,6 +250,14 @@ describe('DataApiService', () => {
     req.flush({ runId: 'run-999', status: 'Completed' });
   });
 
+  it('starts the configured pipeline without client-supplied notebook IDs', () => {
+    service.startPipelineRun().subscribe();
+    const req = httpController.expectOne('/api/v1/pipeline/runs');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({ runId: 'run-999', jobInstanceId: 'job-999', status: 'NotStarted' });
+  });
+
   it('should handle 404 RFC 9457 problem document when lake export is missing', () => {
     let errorResponse: any;
     service.getPortfolio().subscribe({

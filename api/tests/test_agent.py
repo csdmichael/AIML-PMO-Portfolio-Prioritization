@@ -96,6 +96,7 @@ def test_foundry_executes_native_mcp_without_client_function_loop(setup):
     post.assert_called_once()
     first = post.call_args
     assert first.kwargs["json"]["agent"]["version"] == load_agent_settings().agentVersion
+    assert first.kwargs["json"]["reasoning"] == {"effort": "low"}
     messages = first.kwargs["json"]["input"]
     assert messages[0] == {
         "type": "message", "role": "system", "content": load_agent_settings().responseStyleInstructions,
@@ -267,3 +268,22 @@ def test_inventory_checks_all_statuses_without_requiring_scores():
     ranked = query_portfolio(snapshot, query.model_copy(update={"kind": "projects", "notStartedOnly": True, "search": "", "limit": 25}))
     assert ranked["records"] == []
     assert ranked["awaitingAnalysisProjectIds"] == ["GIS-0002"]
+
+
+def test_rankings_distinguish_new_projects_from_existing_tiers_with_missing_scoring_evidence():
+    snapshot = {"projects": [
+        {"projectId": f"GIS-{index:04}", "priorityScore": None, "priorityScoreState": "requires-analysis",
+         "finalTier": "Must-do-now", "priorityScoreReason": "userBase is missing.", "status": "processed"}
+        for index in range(1, 46)
+    ] + [
+        {"projectId": "GIS-0101", "priorityScore": None, "priorityScoreState": "awaiting-analysis", "status": "pending"},
+    ]}
+    result = query_portfolio(snapshot, PortfolioQuery.model_validate(QUERY))
+    assert result["records"] == []
+    assert result["totalRegisteredMatching"] == 45
+    assert result["requiresAnalysisCount"] == 45
+    assert result["awaitingAnalysisCount"] == 0
+    assert len(result["requiresAnalysisProjects"]) == 25
+    all_tiers = query_portfolio(snapshot, PortfolioQuery.model_validate({**QUERY, "tier": ""}))
+    assert all_tiers["awaitingAnalysisCount"] == 1
+    assert all_tiers["requiresAnalysisCount"] == 45

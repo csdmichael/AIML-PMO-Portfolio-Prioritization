@@ -24,6 +24,7 @@ import {
   exportProjectsToCsv,
   isScoredProject,
   meanScore,
+  priorityAverage,
 } from '../core/portfolio-filter';
 import { PortfolioService } from './portfolio.service';
 import { DataApiService } from './data-api.service';
@@ -176,9 +177,8 @@ export class PortfolioStore {
     const count = projects.length;
     const totalCost = projects.reduce((s, p) => s + p.costEstimateUsd, 0);
     const avgConfidence = meanScore(projects.map((p) => p.confidenceScore));
-    const scored = projects.filter(isScoredProject);
-    const avgPriority = count === 0 ? 0 : scored.length === 0 ? null
-      : Math.round((scored.reduce((sum, project) => sum + project.priorityScore, 0) / scored.length) * 10) / 10;
+    const average = priorityAverage(projects);
+    const avgPriority = count === 0 ? 0 : average.value;
     const mustDoNowCount = projects.filter((p) => p.finalTier === 'Must-do-now').length;
     const proceedCount = projects.filter((p) => p.finalTier === 'Proceed').length;
     const canWaitCount = projects.filter((p) => p.finalTier === 'Can wait').length;
@@ -189,7 +189,8 @@ export class PortfolioStore {
       totalCost,
       avgConfidence,
       avgPriority,
-      scoredProjectCount: scored.length,
+      scoredProjectCount: average.count,
+      avgPriorityUsesSavedScores: average.saved,
       mustDoNowCount,
       proceedCount,
       canWaitCount,
@@ -221,6 +222,7 @@ export class PortfolioStore {
   }
 
   private loadDataset(): void {
+    this.isLoading.set(true);
     const normalizePf = (p: Project): Project =>
       p.portfolio === 'IT InfoSec' ? { ...p, portfolio: 'IT - InfoSec' } : p;
 

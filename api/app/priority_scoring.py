@@ -178,9 +178,12 @@ def compute_field_weighted_score(
             months = _number(_value(row, "monthsToGoLive", "months", "months_to_go_live"), field)
             factors[field] = min(1.0, max(0.0, (horizon - months) / horizon)) * 100.0
         elif field == "sponsorPriority":
-            factors[field] = _mapped_number(
+            maximum = max(_number(value, field) for value in mappings["sponsorLevel"].values())
+            if maximum <= 0:
+                raise ScoringEvidenceError("Sponsor scores must have a positive maximum.")
+            factors[field] = min(100.0, max(0.0, _mapped_number(
                 _value(row, "sponsorLevel", "sponsor_priority"), mappings["sponsorLevel"], field,
-            ) / 4.0 * 100.0
+            ) / maximum * 100.0))
         elif field == "dtAlignment":
             factors[field] = 100.0 if _boolean(_value(row, "dtAlignment", "dt_alignment"), config, field) else 0.0
         elif field == "risk":

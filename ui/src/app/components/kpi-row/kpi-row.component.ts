@@ -64,12 +64,13 @@ import { PortfolioStore } from '../../services/portfolio.store';
         <ion-col size="6" size-sm="4" size-lg="2">
           <ion-card class="kpi-card" tabindex="0" role="region" aria-label="Average Priority Score">
             <ion-card-content>
-              <div class="kpi-label">Avg Priority</div>
+              <div class="kpi-label">{{ store.metrics().avgPriorityUsesSavedScores ? 'Avg Priority (saved)' : 'Avg Priority' }}</div>
               <div class="kpi-value">
-                {{ store.metrics().avgPriority ?? 'Awaiting analysis' }}
+                {{ store.metrics().avgPriority ?? 'No scored projects' }}
               </div>
-              @if (store.metrics().scoredProjectCount < store.metrics().count) {
-                <small>{{ store.metrics().scoredProjectCount }} projects with available scores</small>
+              <small>{{ store.metrics().scoredProjectCount }} projects with {{ store.metrics().avgPriorityUsesSavedScores ? 'saved' : 'current' }} scores</small>
+              @if (store.metrics().avgPriorityUsesSavedScores) {
+                <small>Current weighted scores need refreshed evidence. New unscored projects are excluded.</small>
               }
             </ion-card-content>
           </ion-card>

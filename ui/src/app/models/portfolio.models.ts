@@ -1,6 +1,6 @@
 import type { PriorityScoreMetadata } from '../pages/admin/priority-weights/priority-weights.models';
 
-export type SponsorLevel = 'Executive' | 'Director' | 'Manager' | 'Individual' | 'Unknown';
+export type SponsorLevel = string;
 export type ProjectStatus = 'Planning' | 'Active' | 'On Hold' | 'Completed' | 'Backlog';
 export interface ProjectProgressRecord {
   projectId: string;

@@ -9,7 +9,7 @@ P["model_certainty"] = pd.Series(CERTAINTY, index=X.index)
 for i in range(len(TIERS)):
     P[f"prob_{i}"] = PROBA[:, i]
 P["final_tier"] = P["ml_tier"]
-P["sponsor_level"] = P["sponsor_priority"].map(lambda v: None if is_blank(v) else SPONSOR_NAME_BY_CODE.get(int(v)))
+P["sponsor_level"] = P["sponsor_level_name"]
 P["months"] = P["months_to_go_live"].astype(float)
 P["regulatory"] = P["regulatory_security"].fillna(0).astype(int)
 P["protected"] = P["protected_program"].fillna(0).astype(int)
