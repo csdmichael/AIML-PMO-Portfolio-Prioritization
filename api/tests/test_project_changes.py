@@ -324,6 +324,27 @@ def test_pending_entries_are_in_the_portfolio_export_that_every_view_reads(harne
     assert [item["projectId"] for item in harness.client.get("/v1/portfolio").json()["projects"]] == ["GIS-0001"]
 
 
+def test_exporting_reads_only_pending_entries_that_are_not_exported_or_removed(harness, monkeypatch):
+    paths = harness.services.paths
+    harness.lake.files[paths.project_entry("GIS-0003")] = (
+        {**pending_entry(harness.config), "projectId": "GIS-0003", "projectName": "Removed before export"},
+        "etag-removed",
+    )
+    harness.services.changes.save("GIS-0003", deleted=True)
+    reads: list[str] = []
+    read_entry = EntryStore.get
+
+    def tracked(self, lake_path):
+        if lake_path.startswith(f"{paths.project_entries_folder()}/"):
+            reads.append(lake_path)
+        return read_entry(self, lake_path)
+
+    monkeypatch.setattr(EntryStore, "get", tracked)
+    projects = harness.client.get("/v1/portfolio").json()["projects"]
+    assert [item["projectId"] for item in projects] == ["GIS-0001", "GIS-0002"]
+    assert reads == [paths.project_entry("GIS-0002")]
+
+
 def test_changes_to_unknown_projects_are_not_found(harness):
     status = harness.config.data_entry.options.projectStatuses[-1]
     assert harness.client.patch("/v1/projects/GIS-9999", json={"projectStatus": status}).status_code == 404

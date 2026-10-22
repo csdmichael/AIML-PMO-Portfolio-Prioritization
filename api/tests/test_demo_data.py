@@ -148,6 +148,8 @@ def test_new_projects_can_be_created_after_clearing(harness):
     response = harness.client.post("/v1/projects", params={"runPipeline": False}, json=values)
     assert response.status_code == 201
     assert projects(harness)["totalItems"] == 1
+    created = response.json()["projectId"]
+    assert [item["projectId"] for item in harness.client.get("/v1/portfolio").json()["projects"]] == [created]
 
 
 def test_reloading_restores_removed_records_and_discards_older_edits_but_allows_new_edits(harness):

@@ -141,12 +141,18 @@ class Catalog:
         return self._priority_weights.apply_export(export) if self._priority_weights is not None else export
 
     def _pending_export_projects(self, known_ids: set[str]) -> list[dict[str, Any]]:
-        """Data-entry projects the pipeline has not exported yet, with export key names so every view reads them."""
-        pending = [
-            entry
-            for _, entry in self._entries.list(self._paths.project_entries_folder())
-            if entry.get("projectId") and str(entry["projectId"]) not in known_ids
-        ]
+        """Data-entry projects the pipeline has not exported yet, with export key names so every view reads them.
+
+        Entry files are named after their project, so exported and permanently removed projects are skipped
+        before their files are read from OneLake.
+        """
+        pending: list[dict[str, Any]] = []
+        for project_id in self._entries.names(self._paths.project_entries_folder()):
+            if project_id in known_ids or (self._changes.get(project_id) or {}).get("deleted"):
+                continue
+            entry = self._entries.get(self._paths.project_entry(project_id))
+            if entry is not None:
+                pending.append({**entry, "projectId": project_id})
         if not pending:
             return []
         portfolios = self.portfolio_index()
