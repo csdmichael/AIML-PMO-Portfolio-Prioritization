@@ -19,7 +19,7 @@ def test_deployed_chat_matches_onelake_priority_order():
         portfolio.raise_for_status()
         projects = portfolio.json()["projects"]
         expected = sorted(
-            [project for project in projects if project["finalTier"] == "Must-do-now"
+            [project for project in projects if project.get("finalTier") == "Must-do-now"
              and isinstance(project.get("priorityScore"), (int, float))],
             key=lambda project: project["priorityScore"], reverse=True,
         )[:5]
