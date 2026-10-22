@@ -19,6 +19,7 @@ from app.priority_weights import PriorityWeightsService
 from app.project_changes import ProjectChanges
 from app.project_import import ProjectImport
 from app.projects import ProjectService
+from app.provisional_confidence import ProvisionalConfidence, load_ml_model
 from app.recommendation_cache import RecommendationCache
 from app.store import EntryStore, ExportReader
 
@@ -78,6 +79,7 @@ def build_services(config: AppConfig | None = None, credentials: CredentialProvi
     catalog = Catalog(
         exports=exports, entries=entries, paths=paths, statuses=api.projects, contract=config.data_entry, changes=changes,
         priority_weights=priority_weights,
+        provisional_confidence=ProvisionalConfidence(load_ml_model(config)),
     )
     projects = ProjectService(
         lake=lake,

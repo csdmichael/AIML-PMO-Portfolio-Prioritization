@@ -345,6 +345,15 @@ def test_exporting_reads_only_pending_entries_that_are_not_exported_or_removed(h
     assert reads == [paths.project_entry("GIS-0002")]
 
 
+def test_pending_projects_have_a_provisional_confidence_in_every_view(harness):
+    pending = next(item for item in harness.client.get("/v1/portfolio").json()["projects"] if item["projectId"] == "GIS-0002")
+    assert pending["confidenceScore"] == 75.9
+    assert pending["confidenceLevel"] == "High"
+    listed = next(item for item in harness.client.get("/v1/projects").json()["items"] if item["projectId"] == "GIS-0002")
+    assert listed["confidenceScore"] == 75.9
+    assert harness.client.get("/v1/projects/GIS-0002").json()["confidenceScore"] == 75.9
+
+
 def test_changes_to_unknown_projects_are_not_found(harness):
     status = harness.config.data_entry.options.projectStatuses[-1]
     assert harness.client.patch("/v1/projects/GIS-9999", json={"projectStatus": status}).status_code == 404

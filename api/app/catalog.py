@@ -12,6 +12,7 @@ from app.problems import ProblemError
 from app.priority_weights import PriorityWeightsService
 from app.project_changes import ProjectChanges
 from app.project_progress import PROGRESS_FIELDS
+from app.provisional_confidence import ProvisionalConfidence, default_provisional_confidence
 from app.store import EntryStore, ExportReader
 
 T = TypeVar("T")
@@ -113,6 +114,7 @@ class Catalog:
         contract: DataEntryContract,
         changes: ProjectChanges,
         priority_weights: PriorityWeightsService | None = None,
+        provisional_confidence: ProvisionalConfidence | None = None,
     ) -> None:
         self._exports = exports
         self._entries = entries
@@ -121,6 +123,7 @@ class Catalog:
         self._contract = contract
         self._changes = changes
         self._priority_weights = priority_weights
+        self._provisional = provisional_confidence if provisional_confidence is not None else default_provisional_confidence()
 
     def options(self) -> CatalogOptions:
         return CatalogOptions(contract=self._contract, catalog=self)
@@ -174,6 +177,7 @@ class Catalog:
                 program=program.get("displayName"),
                 status=self._statuses.statusPending,
             )
+            exported.update(self._provisional.score(record))
             records.append(exported)
         return records
 
@@ -261,7 +265,7 @@ class Catalog:
             applied = self._changes.apply({**entry, "projectId": project_id}, shape="entry", portfolios=self.portfolio_index)
             if applied is None:
                 return None
-            applied = {**applied, "projectId": project_id, "status": self._statuses.statusPending}
+            applied = {**applied, "projectId": project_id, "status": self._statuses.statusPending, **self._provisional.score(applied)}
             return self._priority_weights.apply_project(applied) if self._priority_weights is not None else applied
         if missing is not None:
             raise missing
@@ -317,8 +321,7 @@ class Catalog:
             "goLiveDate": entry.get("goLiveDate"),
             "primarySkill": entry.get("primarySkill"),
             "riskRating": entry.get("riskRating"),
-            "confidenceLevel": None,
-            "confidenceScore": None,
+            **self._provisional.score(entry),
             "finalTier": None,
             "priorityScore": None,
             "recommendedAction": None,
