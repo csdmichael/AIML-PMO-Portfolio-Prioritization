@@ -462,6 +462,8 @@ To set up a new environment, create the Bing connection first, then the agents:
 
 The agent script skips agents that already exist. Add `-CreateNextVersion` only to publish the next immutable version of an existing agent after you change its definition and pin the new version. The Bing script reads the subscription and resource group from [pmo-deployment.json](infra/config/pmo-deployment.json), the Foundry project from [portfolio-agent.json](api/config/portfolio-agent.json), and the connection settings from [bing-grounding.json](infra/config/bing-grounding.json). It warns if an agent references a different connection ID.
 
+Agent invocation uses a pinned `agent_reference`. Do not send a request-level `reasoning` override: Foundry rejects that combination with HTTP 400 (`invalid_payload`). Model reasoning settings belong to the deployed agent version. Cache-first recommendations and bounded tool calls remain the runtime latency controls.
+
 The API checks every agent reply before the UI sees it. A prefill or recommendation reply must show that Bing was called. A recommendation reply may cite only projects that the OneLake tool returned in that run, and a decision action must target one of them. A malformed source URL is dropped, not shown.
 
 #### OneLake dataset API for the UI

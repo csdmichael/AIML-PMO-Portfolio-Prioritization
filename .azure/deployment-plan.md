@@ -18,6 +18,10 @@ Generated: 2026-10-14T13:52:00-07:00
 
 **Path:** Modify Existing
 
+**Current update (2026-10-22):** App-only API/UI release plus both rebuilt Fabric notebooks. Correct agent analysis-state counts and use cache-first recommendations; add the Prioritization pipeline action and UI-entry ingestion; configure relative sponsor scores; preserve Overview averages when unscored projects are added. User explicitly requested commit, publish and deploy and confirmed the existing subscription. Reuse existing main-branch API/UI/Fabric workflows; no infrastructure apply, network changes, new permissions, capacity changes, or automatic pipeline execution. Publish notebook definitions only; pipeline execution remains an explicit UI action.
+
+**Agent request correction (2026-10-22):** Reproduced chat HTTP 502 through the deployed UI proxy. Direct Foundry A/B requests returned HTTP 400 `invalid_payload`, parameter `reasoning`, message "Not allowed when agent is specified"; the same agent-reference request without the override returned HTTP 200. Remove request-level reasoning configuration and cover chat, recommendations and intake request payloads with regression tests. Publish API-only through the existing workflow, then exercise both affected live endpoints. Preserve agent versions, identities, permissions, networking, cache-first recommendations and tool/evidence validation.
+
 ---
 
 ## 2. Requirements
@@ -103,6 +107,9 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 - [x] Update plan status to `Ready for Validation`
 - [x] Run Azure validation and record proof
 - [x] All validation checks pass
+  - [x] 2026-10-22 1. Core Validation: 334 API tests passed, one opt-in live test skipped; 170 UI tests passed; production build and shared config/OpenAPI checks passed. Azure CLI/auth and read-only template validation/what-if returned OVERALL PASS. What-if shows 16 create, 35 modify, 35 delete: no infrastructure apply is authorized or will run.
+  - [x] 2026-10-22 2. Docker Build: not applicable to the existing Python App Service ZIP hosting.
+  - [x] 2026-10-22 3. Azure Policy Validation: resource-group policy query returned empty; both existing app targets are Running. Preserve all existing network and identity scopes.
   - [x] Current release 1. Core Validation: CLI/auth, API tests (304 passed, one opt-in live test skipped), production builds, shared configuration/OpenAPI consistency, PowerShell gateway tests and existing targets pass. UI: 135 unique tests passed across the full run (134 passed) and corrected architecture subset (4 passed). Changed-file TypeScript lint passes. Full Bicep validate/what-if is outside this app-only release and is not being applied.
   - [x] Current release 2. Docker Build: not applicable; existing built-in Python App Service runtimes.
   - [x] Current release 3. Azure Policy Validation: applicable resource-group policy assignments returned empty; all three existing apps are Running, APIM public access remains Disabled, and the approved 1,800-second API startup allowance is preserved.
@@ -123,6 +130,10 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 ---
 
 ## 8. Validation Proof
+
+- 2026-10-22 agent request correction: focused regression tests first reproduced three failures for the unsupported reasoning override. After removing it, 337 API tests passed and one opt-in live test skipped. Shared config and generated OpenAPI checks passed. A corrected real Foundry/OneLake chat round trip completed in 11.4 seconds with validated query provenance, accurately reporting 45 registered Must-do-now projects awaiting refreshed scoring evidence. Azure CLI confirmed the previously approved subscription and existing API target Running. No identity, permission, infrastructure or live project changes.
+- 2026-10-22 20:38 UTC: `api\.venv\Scripts\python.exe -m pytest -q` from API: 334 passed, one optional live test skipped, exit 0. `npm test -- --watch=false` from UI: 29 files, 170 tests passed; `npm run build`: exit 0. Shared config checks, generated OpenAPI, notebook `--all --check`, gateway operation/schema tests passed. Local full Spark execution remains unverified: notebook runtime dependency restoration was blocked by the package host TLS handshake; pure notebook input/scoring regression tests passed.
+- 2026-10-22 20:38 UTC: `validate-deployment.ps1 -Scope group -ResourceGroup m365-myaacoub -Template infra\bicep\main.bicep -Parameters infra\bicep\main.parameters.json -Subscription cf824570-a8ba-497a-a184-0a52f1830aa9`: OVERALL PASS. What-if (16 create / 35 modify / 35 delete) is informational only; no infrastructure apply. `az webapp list` verified existing UI/API Running; policy assignments empty. User confirmed existing subscription. App-only publish and notebook definition deployment only.
 
 - 2026-10-21 project-save correction: four targeted regression tests reproduced the old failure. After correction, all 24 Data Entry tests pass, changed-file ESLint passes, and the production UI build succeeds. An in-memory API reproduction confirmed the old projectDescription key returns 422 with a field-specific issue and no writes; sending the same description as Notes succeeds. The UI regression retains the canonical-payload assertion. No live projects were created for verification.
 - 2026-10-21 current release: `uv run pytest -q --tb=short` passed 304 tests with one opt-in live-agent test skipped; `tools.sync_shared_config --check` passes and generated OpenAPI includes project progress. Both `npm run build` production builds passed. `npm test -- --watch=false` passed 134 UI tests; updating the changed diagram expectation and rerunning the four-test architecture subset passed, covering all 135 unique tests. Changed-file ESLint passes. Both PowerShell gateway suites passed, including preservation of the existing tool request/responses and explicit failures without policy, identity or network writes. Exact HTTP integration verifies scores 70.2 (global), 58.2 (portfolio), and 70.2 (project), immediate list/detail/export updates, preserved model evidence, pending null scores, and recommendation revision invalidation. Azure CLI is authenticated to the approved subscription/tenant; all existing targets are running, no applicable resource-group policies were returned, APIM stays private, and no new roles or hosting resources are introduced. Static role review: this release leaves all Bicep/Terraform role assignments unchanged; the SchemaOnly publication branch returns before the existing provisioning/identity routines.
@@ -149,6 +160,8 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 - 2026-10-17 agent release: Runtime identity's existing project-scoped Foundry Project Runtime User assignment verified. API App Service Running, no resource-group policy assignments.
 
 ## Role Assignment Verification
+
+- 2026-10-22: Existing API user-assigned runtime and tools identities confirmed. Static template review retains Key Vault-scoped Secrets Officer only; no role, identity or infrastructure changes are in this release. The app-only workflow reuses these assignments.
 
 - Status: Verified (static scope review).
 - Existing backend identity retains OneLake permissions and project-scoped Foundry Project Runtime User.

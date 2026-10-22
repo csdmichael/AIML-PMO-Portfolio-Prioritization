@@ -1,6 +1,7 @@
 """Exercise the real orchestrator, query route, and outbound HTTP boundary."""
 
 import json
+import time
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -96,7 +97,7 @@ def test_foundry_executes_native_mcp_without_client_function_loop(setup):
     post.assert_called_once()
     first = post.call_args
     assert first.kwargs["json"]["agent"]["version"] == load_agent_settings().agentVersion
-    assert first.kwargs["json"]["reasoning"] == {"effort": "low"}
+    assert "reasoning" not in first.kwargs["json"]
     messages = first.kwargs["json"]["input"]
     assert messages[0] == {
         "type": "message", "role": "system", "content": load_agent_settings().responseStyleInstructions,
@@ -110,6 +111,21 @@ def test_foundry_executes_native_mcp_without_client_function_loop(setup):
     assert "Not for the model" not in json.dumps(first.kwargs["json"])
     credentials.bearer_token.assert_called_once_with(load_agent_settings().tokenScope)
     exports.read.assert_not_called()  # Only the authenticated tool route reads the lake.
+
+
+@pytest.mark.parametrize("filename", [
+    "portfolio-agent.json", "recommendation-agent.json", "intake-agent.json",
+])
+def test_agent_references_do_not_override_version_reasoning(setup, filename):
+    _, post, _, credentials, _ = setup
+    settings = load_agent_settings(filename)
+    agent = FoundryAgentClient(settings, credentials)
+    agent._invoke([{"type": "message", "role": "user", "content": "Check records."}], time.monotonic() + 10)
+    payload = post.call_args.kwargs["json"]
+    assert payload["agent"] == {
+        "type": "agent_reference", "name": settings.agentName, "version": settings.agentVersion,
+    }
+    assert "reasoning" not in payload
 
 
 @pytest.mark.parametrize("payload", [
