@@ -1,9 +1,16 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { AppComponent } from './app.component';
 import { ConfigService } from './services/config.service';
+
+async function settleIonApp(fixture: ComponentFixture<AppComponent>): Promise<void> {
+  // ion-app starts a short readiness timer once it loads; finish it before the test environment is torn down.
+  const appElement = fixture.nativeElement.querySelector('ion-app') as (HTMLElement & { componentOnReady?: () => Promise<unknown> }) | null;
+  await appElement?.componentOnReady?.();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+}
 
 const TEST_CONFIG = {
   api: { basePath: '/api/v1', timeoutMs: 30000, pipelinePollIntervalMs: 15000 },
@@ -73,6 +80,7 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+    await settleIonApp(fixture);
   });
 
   it('should toggle documentation category expansion', async () => {
@@ -103,5 +111,6 @@ describe('AppComponent', () => {
     // Toggle to collapse
     app.toggleCategory('documentation');
     expect(app.isCategoryExpanded('documentation')).toBe(false);
+    await settleIonApp(fixture);
   });
 });
