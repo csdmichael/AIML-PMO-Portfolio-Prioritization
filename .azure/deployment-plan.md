@@ -4,6 +4,27 @@
 
 Generated: 2026-10-14T13:52:00-07:00
 
+**503 recovery (2026-10-23):** User approved UI-only recovery in the existing
+subscription and resource group. Platform logs show missing `oryx-manifest.toml`,
+missing `antenv`, and `No module named uvicorn`. Deployment
+`24e57a88-5b50-44d6-97de-71c719a8a400` was interrupted by an SCM restart;
+the next workflow failed with `DeploymentInProgress`. Both deployments are now
+complete/failed, so rerun only the failed deployment job of UI run `39875734095`,
+reusing the successful build for commit `b484c8e`. Do not restart or reconfigure
+the site while its remote build is active. No infrastructure apply, capacity,
+networking, identity, permission, API, or project-data changes are authorized.
+
+Recovery validation: the exact revision's production UI build passed, with
+170 UI tests and a successful UI-host test step. On 2026-10-23, the Azure
+validation helper returned OVERALL PASS for CLI, authentication, Bicep
+compilation, resource-group validation, and what-if. What-if still reports
+16 create, 35 modify, 35 delete; none of these changes will be applied.
+Resource-group policy assignments are empty. Docker validation is not
+applicable to this Python App Service ZIP deployment. Resource Health reports
+Available, but the public overview reproducibly returns HTTP 503; successful
+deployment must be followed by public health, overview, static-asset, and
+read-only API verification.
+
 ---
 
 ## 1. Project Overview
@@ -133,6 +154,11 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 
 ## 8. Validation Proof
 
+- 2026-10-23, UI-only 503 recovery: `validate-deployment.ps1 -Scope group -ResourceGroup m365-myaacoub -Template infra\bicep\main.bicep -Parameters infra\bicep\main.parameters.json -Subscription cf824570-a8ba-497a-a184-0a52f1830aa9` returned OVERALL PASS. What-if: 16 create, 35 modify, 35 delete; infrastructure apply remains prohibited.
+- `gh run view 39875734095`: production UI build, 170 UI tests, and UI-host tests succeeded for the exact recovery revision. Rerun failed deployment only, reusing its built artifact.
+- `az policy assignment list` at resource-group scope returned `[]`. No container build applies. Static RBAC review confirms the existing user-assigned identity and Key Vault-scoped assignment are unchanged; no role changes are needed for package recovery.
+- `az webapp log deployment list`: the interrupted deployment and its temporary entry are both complete/failed; no active deployment was reported before recovery.
+
 - 2026-10-22 saved ranking live verification: API workflow `39860842688` succeeded for `9ab8fbc`. The deployed integration test passed against exact saved IDs/order/scores. Playwright verified the existing top-five suggestion returned 200 and rendered all five named projects with last saved score 90.0 and project citations. A preliminary test run correctly matched IDs/order but exposed a supported score-cell suffix `(saved)`; the live assertion now accepts that explicit label without weakening numeric comparisons. Keep analysis counts scoped to query filters and omit unrelated counts from ranking answers.
 - 2026-10-22 saved ranking correction: six focused regressions reproduced the missing top five, mixed-score/tie behavior and invalid saved-score failures. All 343 API tests passed after correction, with one opt-in live test skipped; shared config and OpenAPI consistency checks passed. Read-only live export confirms the five highest saved Must-do-now IDs are GIS-0009, GIS-0010, GIS-0012, GIS-0017 and GIS-0019, each with saved score 90. Deployment and live chat must be verified against these exact IDs and order.
 - 2026-10-22 agent correction deployment: API workflow `39858317789` succeeded for commit `2418a5b`. The first probes reached the outgoing worker; an explicit existing-app restart activated the release, and API health then returned 200. The opt-in deployed chat integration test passed. Playwright verified the actual Copilot suggestion returned 200 in 7.1 seconds with query provenance. Recommendations generated and saved a valid grounded report; reload showed the saved report in 5.7 seconds with zero refresh/generation requests and no error card. One earlier generated proposal was rejected by the existing Planning/name safeguard; retry succeeded without relaxing validation. No project or decision actions were applied.
@@ -201,6 +227,19 @@ This scoped rollout adds one dedicated managed identity, one Entra API applicati
 ---
 
 ## 9. Deployment
+
+2026-10-23 recovery: UI workflow `39875734095`, attempt 2, completed successfully.
+App Service deployment `f836ed13-d5d7-4267-8631-42c28aaa38fa` rebuilt the locked
+Python dependencies and restored the Oryx manifest and compressed runtime.
+After verifying deployment status 4/complete and allowing the build to finish,
+restarted only `azuittlyg2gcvfsso` to clear its previous failed-start state.
+At approximately 21:28 UTC, `/healthz` returned HTTP 200 with
+`{"status":"ok","staticFolderExists":true}`. `/overview`, its JavaScript bundle,
+and `/api/v1/portfolio` through the UI proxy returned HTTP 200. A real browser
+finished loading the overview with 101 projects, populated KPIs, and priority
+charts. The existing identity's Key Vault-scoped Secrets Officer assignment was
+verified live. No shared-plan capacity, API, networking, permission, or project
+data changes were made.
 
 2026-10-17: Published commit `8615600` using `infra\scripts\deploy.ps1 -Mode publish -Component ui`.
 App Service deployment `117b14e5-4fe5-431f-9fde-888d4848c0f6` reported
